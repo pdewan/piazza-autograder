@@ -18,7 +18,7 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("(My\\sQ&A).*= .*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_CLASS_QA = Pattern.compile("(Class\\sQ&A).*=.*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
-	private Pattern GRADE_NOTES = Pattern.compile(".*?Notes:\\s*(.*)", Pattern.CASE_INSENSITIVE);
+	//private Pattern GRADE_NOTES = Pattern.compile(".*?Notes:\\s*(.*)", Pattern.CASE_INSENSITIVE);
 
 	// this is the map of all the diaries, the keys are the user's names and the
 	// values are the
@@ -35,10 +35,11 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 
 	// populate the diaries variable
 	public void updateAllDiaries() throws ClientProtocolException, NotLoggedInException, IOException { 
-		// do updates here
+		
 		BufferedWriter br = new BufferedWriter(new FileWriter("/Users/Johnson/desktop/test.txt"));
 		int count = 0;
 		for (Map<String, Object> post : this.getAllPosts()) {
+			@SuppressWarnings("unchecked")
 			Map<String, String> top = ((List<Map<String, String>>) post.get("history")).get(0);
 			String content = top.get("content").toLowerCase();
 			
@@ -79,17 +80,16 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 		br.write(Integer.toString(count));
 		br.close();
 		this.lastUpdateTime = Instant.now();
-		// System.out.println(lastUpdateTime.toString());
 	}
 
 	private List<String> get_grades(String name)
 			throws ClientProtocolException, NotLoggedInException, IOException {
 		Map<String, Object> diary = this.diaries.get(name);
-		//System.out.println(diary.get("history"));
 		@SuppressWarnings("unchecked")
 		String diary_content = ((List<Map<String, String>>) diary.get("history")).get(0).get("content");
 		
-		int count = 0;
+		int count = 0;    //count the number of occurrence of word "instruction or Instruction"
+		
 		if(diary_content.contains("diary") || diary_content.contains("Diary")) {
 			diary_content = diary_content.replaceAll("</p>", "<SPLIT>");
 			String[] content_arr = diary_content.split("<SPLIT>");
@@ -202,7 +202,7 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 		BufferedWriter br = new BufferedWriter(new FileWriter(path));
 		
 		List<List<String>> grades = this.getDiaryGrades();
-		br.write("Name, Total Diary Grade, Total OA Grade\n");
+		br.write("Name, Total Grade\n");
 
 		for (List<String> g : grades) {
 			for (String s : g) {

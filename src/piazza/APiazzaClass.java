@@ -67,8 +67,10 @@ public class APiazzaClass implements PiazzaClass {
 		}
 		return posts;
 	}
-
-	public String getAuthorId(Map<String, Object> post) { // get author id of the post
+	
+	
+	// get author id of the post
+	public String getAuthorId(Map<String, Object> post) { 
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> hist = (List<Map<String, Object>>) post.get("change_log");
 		String authorId = "";

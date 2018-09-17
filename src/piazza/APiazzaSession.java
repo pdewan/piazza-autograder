@@ -54,6 +54,7 @@ public class APiazzaSession implements PiazzaSession {
 		HttpPost login = new HttpPost(piazzaLogic);    //创建请求方法实例，发送post请求，指定请求url
 		
 		login.setEntity(new StringEntity(loginData));  //发送请求参数(如需要)
+		
 		login.setHeader("Accept", "application/json");
 		login.setHeader("Content-type", "application/json");
 		
@@ -85,9 +86,6 @@ public class APiazzaSession implements PiazzaSession {
 			return null;
 		
 		String stringData = EntityUtils.toString(resp.getEntity());
-		//System.out.println(stringData);
-		//BufferedWriter br = new BufferedWriter(new FileWriter("/Users/Johnson/desktop/test.json"));
-		//br.write(new JSONObject(stringData));
 		
 		return new JSONObject(stringData).toMap();
 	}
@@ -99,31 +97,4 @@ public class APiazzaSession implements PiazzaSession {
 		
 		return this.getResp(requestData, APIEndpt);
 	}
-
-	
-//	@Override
-//	public PiazzaClass getClass(String classID) throws NotLoggedInException, UnsupportedEncodingException {
-//		// TODO Auto-generated method stub
-//		if (!loggedIn) {
-//			throw new NotLoggedInException("You have not logged in");
-//		}
-//		String data = new JSONObject()
-//				.put("method", "content.get")
-//				.put("params", new JSONObject()
-//						.put("cid", classID).toString()).toString();
-//		
-//		HttpPost getClass = new HttpPost(piazzaLogic);
-//		
-//		getClass.setEntity(new StringEntity(data));
-//		getClass.setHeader("Accept", "application/json");
-//		getClass.setHeader("Content-type", "application/json");
-//		
-//		CloseableHttpResponse resp = httpClient.execute(getClass);
-//		
-//		if (resp.getStatusLine().getStatusCode() != 200) {
-//			return null;
-//		}
-//		
-//		return new PiazzaClass();
-//	}
 }
