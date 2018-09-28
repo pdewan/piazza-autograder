@@ -42,8 +42,8 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 			@SuppressWarnings("unchecked")
 			Map<String, String> top = ((List<Map<String, String>>) post.get("history")).get(0);
 			String content = top.get("content").toLowerCase();
-			
-			if (content.contains("diary")) {
+			//if(content.contains("Yuyang Sun")) System.out.println("00000000000");
+			if (content.contains("diary") || content.contains("Diary")) {
 				if (content.indexOf(',') != -1) {
 					int findIndex = content.indexOf("Diary");
 					findIndex = findIndex==-1? content.indexOf("diary"):findIndex;
@@ -67,7 +67,7 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 //					br.write("\n\n");
 					String name = content.toLowerCase().substring(startIndex, findIndex);
 					//String name = content.toLowerCase().substring(0,1);
-//				    br.write(name);
+//				    br.write(name)
 					br.write(name);
 				    br.write("\n\n\n");
 					br.write(content);
@@ -95,18 +95,18 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 			diary_content = diary_content.replaceAll("</p>", "<SPLIT>");
 			String[] content_arr = diary_content.split("<SPLIT>");
 			for(String line : content_arr) {
-				if(line.contains("instructor") || line.contains("Instructor")) count++;
+				if(line.contains("instructor") || line.contains("Instructor")||line.contains("professor")||line.contains("Professor")) count++;
 			}
 		}
 		int total_grade = 5*count;;
 		
 		
-		String aid = this.getAuthorId(diary);
-		if (aid.equals("")) {
+		String uid = this.getAuthorId(diary);
+		if (uid.equals("")) {
 			return null;
 		}
-		String authorname = this.getUserName(aid);
-		String email = this.getUserEmail(aid);
+		String authorname = this.getUserName(uid);
+		String email = this.getUserEmail(uid);
 
 		int totalDiaryGrade = 0;
 		int totalQAGrade = 0;
@@ -192,6 +192,7 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 	public List<List<String>> getDiaryGrades() throws ClientProtocolException, NotLoggedInException, IOException {
 		List<List<String>> grades = new ArrayList<List<String>>();
 		for (String name : this.diaries.keySet()) {
+			
 			System.out.println(name);
 			List<String> g = this.get_grades(name);
 			System.out.println(g.toString());

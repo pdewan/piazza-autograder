@@ -47,6 +47,11 @@ public class Tester {
 		
 		APiazzaClassWithDiaries comp401p = new APiazzaClassWithDiaries(email, password, classID);
 		
+//		System.out.println(comp401p.getUserEmail("j6p0uehc5wz20u"));
+//		System.out.println(comp401p.getUserEmail("jl6pcmp4yf612"));
+//		System.exit(0);
+		
+		
 //		comp401p.getDiaryGrades();
 		comp401p.generateDiaryGradesCSV("/Users/Johnson/desktop/401diaries.csv");
 		

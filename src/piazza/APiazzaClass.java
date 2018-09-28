@@ -34,6 +34,12 @@ public class APiazzaClass implements PiazzaClass {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> feed = (List<Map<String, Object>>) ((Map<String, Object>) this.getResults(resp))
 				.get("feed");
+		BufferedWriter br = new BufferedWriter(new FileWriter("/Users/Johnson/desktop/401.txt"));
+		for(Map<String,Object> item: feed) {
+			br.write(item.get("id").toString());
+			br.write("\n\n\n");
+		}
+		br.close();
 		return feed;
 	}
 
@@ -60,11 +66,15 @@ public class APiazzaClass implements PiazzaClass {
 	
 	
 	public List<Map<String, Object>> getAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
-		List<Map<String, Object>> feed = this.getFeed(150, 20);
+		List<Map<String, Object>> feed = this.getFeed(9999, 0);
 		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
 		for (Map<String, Object> item : feed) {
+			String id = (String) item.get("id");
 			posts.add(this.getPost((String) item.get("id")));
 		}
+		System.out.println(">>>>>>>>");
+		System.out.println(feed.size());
+		System.out.println(">>>>>>>>");
 		return posts;
 	}
 	
