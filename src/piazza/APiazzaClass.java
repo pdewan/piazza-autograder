@@ -3,6 +3,7 @@ package piazza;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class APiazzaClass implements PiazzaClass {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> feed = (List<Map<String, Object>>) ((Map<String, Object>) this.getResults(resp))
 				.get("feed");
-		BufferedWriter br = new BufferedWriter(new FileWriter("/Users/Johnson/desktop/401.txt"));
+		BufferedWriter br = new BufferedWriter(new FileWriter("/Users/Yifan/desktop/401.txt"));
 		for(Map<String,Object> item: feed) {
 			br.write(item.get("id").toString());
 			br.write("\n\n\n");
@@ -54,7 +55,7 @@ public class APiazzaClass implements PiazzaClass {
 	}
 	
 	
-    // get post provided class id
+    // get post provided content id
 	public Map<String, Object> getPost(String cid) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().put("cid", cid);
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
@@ -66,7 +67,7 @@ public class APiazzaClass implements PiazzaClass {
 	
 	
 	public List<Map<String, Object>> getAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
-		List<Map<String, Object>> feed = this.getFeed(9999, 0);
+		List<Map<String, Object>> feed = this.getFeed(999999, 0);
 		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
 		for (Map<String, Object> item : feed) {
 			String id = (String) item.get("id");
@@ -101,12 +102,18 @@ public class APiazzaClass implements PiazzaClass {
 		return (String) this.getUser(uid).get("email");
 	}
 
-	public boolean createPost(String title, String content) {
-		// TODO fill-in
-		return true;
+	public boolean createFollowup(String cid, String post) throws ClientProtocolException, NotLoggedInException, IOException {
+		String date = LocalDate.now().toString();
+		String post1 = "<p>This is another auto post test<br>Your diary grade up to " + date +" is:  " + 100 + "<br>" + "If you have any questions on your grading, please talk to TAs/Dewan</p>";
+		JSONObject data = new JSONObject().put("cid", "jnudo16g3qe5d0").put("subject", post1).put("nid", "jkws0l0gvcr7it")
+				.put("type", "followup").put("content", "").put("anonymous", "no");
+		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
+		System.out.println(resp.toString());
+		return resp != null? true:false;
 	}
 
-	public boolean createFollowup(String postToReply, String content, boolean anonymous) {
+
+	public boolean createPost(String postToReply, String content, boolean anonymous) {
 		// TODO fill-in
 		return true;
 	}

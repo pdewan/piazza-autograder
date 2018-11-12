@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
-public class APiazzaClassWithDiaries extends APiazzaClass {
+public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("(My\\sQ&A).*= .*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_CLASS_QA = Pattern.compile("(Class\\sQ&A).*=.*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
@@ -29,7 +29,7 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
     private Map<String, String> cids = new HashMap<>();
     private Map<String, String> final_grades = new HashMap<>();
 	
-	public APiazzaClassWithDiaries(String email, String password, String classID)
+	public APiazzaClassWithDiaries_TA(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		super(email, password, classID);
 		this.updateAllDiaries();
@@ -59,59 +59,156 @@ public class APiazzaClassWithDiaries extends APiazzaClass {
 					}else {
 						continue;
 					}
-					count++;
+					count++;	
 					String name = content.toLowerCase().substring(startIndex, findIndex);
 					this.cids.put(name, (String) post.get("id"));
 					this.diaries.put(name, post);
-					//System.out.println(name);
 				}
 			}
 		}
 		this.lastUpdateTime = Instant.now();
 	}
 
-	private List<String> get_grades(String name)
-			throws ClientProtocolException, NotLoggedInException, IOException {
+	private List<String> get_grades(String name) throws ClientProtocolException, NotLoggedInException, IOException {
 		Map<String, Object> diary = this.diaries.get(name);
-		@SuppressWarnings("unchecked")
-		String diary_content = ((List<Map<String, String>>) diary.get("history")).get(0).get("content");
-		
-		int count = 0;    //count the number of occurrence of word "instruction or Instruction"
-		
-		if(diary_content.contains("diary") || diary_content.contains("Diary")) {
-			diary_content = diary_content.replaceAll("/p>", "<SPLIT>");
-			diary_content = diary_content.replaceAll("br", "<SPLIT>");
-			diary_content = diary_content.replaceAll("\n", "<SPLIT>");
-			diary_content = diary_content.replaceAll("li", "<SPLIT>");
-			String[] content_arr = diary_content.split("<SPLIT>");
-			for(String line : content_arr) {
-				if(line.contains("I:") || line.contains("instructor") || line.contains("Instructor")||line.contains("professor")||line.contains("Professor")) count++;
-			}
-		}
-		
-		int total_grade = 5*count;
-		final_grades.put(name, ""+total_grade);
 		
 		String uid = this.getAuthorId(diary);
 		if (uid.equals("")) {
 			return null;
 		}
 		String authorname = this.getUserName(uid);
-		String email = this.getUserEmail(uid);
-
-		int totalDiaryGrade = 0;
-		int totalQAGrade = 0;
+	
 
 		List<String> grades = new ArrayList<String>();
+	
 		
+		//String date = null;
+		int diaryGrade = 0;
+		int QAGrade = 0;
+		String comments = null;
 		
-		grades  = new ArrayList<String>(Arrays.asList(authorname,total_grade+""));
+		for (Map<String, Object> reply : (List<Map<String, Object>>) diary.get("children")) {
+			
+			
+			// If TAs post in a "answer box" 
+			if(reply.get("history") != null) {
+				List<Map<String, String>> sub_children = (List<Map<String, String>>) reply.get("history");
+				String subject2;
+				Map<String, String> content = sub_children.get(0);
+					if(content.get("content") != null) {
+						subject2 = content.get("content");
+						subject2 = subject2.replaceAll("<p>", "<SPLIT>");
+						String[] lines = subject2.split("<SPLIT>");
+						for (String line : lines) {
+							line = line.replace("&#43;", "+");
+							line = line.replace("&amp;", "&");
+							
+							Matcher m = this.GRADE_MY_QA.matcher(line);
+							if(m.find()) {
+								diaryGrade += Integer.parseInt(m.group(2));
+							}
+							
+							Matcher n = this.GRADE_CLASS_QA.matcher(line);
+							if(n.find()) {
+								QAGrade += Integer.parseInt(n.group(2));
+							}
+						
+						}
+					}
+			}
+			
+			
+			// If TAs post in a "followup box" and also update in the same box
+			if(reply.get("children") != null) {
+				List<Map<String, String>> sub_children = (List<Map<String, String>>) reply.get("children");
+				String subject1;
+				//System.out.println(subject1);
+				for(Map<String, String> sub : sub_children) {
+					if(sub.get("subject") != null) {
+						subject1 = sub.get("subject");
+						subject1 = subject1.replaceAll("<p>", "<SPLIT>");
+						//subject1 = subject1.replaceAll("br", "<SPLIT>");
+						//subject1 = subject1.replaceAll("\n", "<SPLIT>");
+						String[] lines = subject1.split("<SPLIT>");
+						for (String line : lines) {
+							line = line.replace("&#43;", "+");
+							line = line.replace("&amp;", "&");
+
+							Matcher m = this.GRADE_MY_QA.matcher(line);
+							if(m.find()) {
+								diaryGrade += Integer.parseInt(m.group(2));
+							}
+							
+							Matcher n = this.GRADE_CLASS_QA.matcher(line);
+							if(n.find()) {
+								QAGrade += Integer.parseInt(n.group(2));
+							}
+						
+						}
+					}
+				}
+			}
+			
+			// If TAs post in a "followup box" and update in another "followup box"
+			String subject = (String) reply.get("subject");
+			
+			if (subject == null || !subject.contains("Date")) continue;
+			
+			subject = subject.replaceAll("<p>", "<SPLIT>");
+			String[] lines = subject.split("<SPLIT>");
+
+			
+			String graderId = (String) reply.get("uid");
+			String graderName = this.getUserName(graderId);
+
+			for (String line : lines) {
+				line = line.replace("&#43;", "+");
+				line = line.replace("&amp;", "&");
+				
+				
+				Matcher m = this.GRADE_MY_QA.matcher(line);
+				if(m.find()) {
+					diaryGrade += Integer.parseInt(m.group(2));
+				}
+				
+				Matcher n = this.GRADE_CLASS_QA.matcher(line);
+				if(n.find()) {
+					QAGrade += Integer.parseInt(n.group(2));
+				}
+				
+			}
+
+			if (comments != null) comments = comments.replaceAll("</p>", "");
+			
+			
+//				String graderId = reply.get("uid");
+//				String graderName = this.getUserName(graderId); 
+				String graderEmail = this.getUserEmail(graderId);
+
+				String s1 = (String) reply.get("updated");
+				//date = s1.split("T")[0];
+				
+
+				//if (!((String) this.getUser(graderId).get("role")).equals("student")) {
+					
+					//totalDiaryGrade += Integer.parseInt(diaryGrade);
+					//totalQAGrade += Integer.parseInt(QAGrade);
+					
+//					grades.add(new ArrayList<String>(Arrays.asList(email, authorname, diaryGrade, QAGrade, graderName,
+//							graderEmail, date, comments, diary_content))); 		
+		
+		}
+		grades  = new ArrayList<String>(Arrays.asList(authorname,QAGrade+diaryGrade+""));
+		
+		// line breaker
+		//grades  = new ArrayList<String>(Arrays.asList(authorname,total_grade+""));
 		
 		System.out.println("Name: " + authorname);
-		System.out.println("Count: " + count);
-		System.out.println("Total Grade: " + total_grade);
-    	System.out.println("My Q&A Grade: " + totalDiaryGrade);
-		System.out.println("Class O&A Grade: " + totalQAGrade);
+		System.out.println("grade: " + QAGrade+diaryGrade+"");
+//		System.out.println("Count: " + count);
+//		System.out.println("Total Grade: " + total_grade);
+//    	System.out.println("My Q&A Grade: " + totalDiaryGrade);
+//		System.out.println("Class O&A Grade: " + totalQAGrade);
 		System.out.println("---------");
 		return grades;
 	}

@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import piazza.APiazzaClass;
 import piazza.APiazzaClassWithDiaries;
+import piazza.APiazzaClassWithDiaries_TA;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
@@ -47,14 +48,16 @@ public class Tester {
 		
 		APiazzaClassWithDiaries comp401p = new APiazzaClassWithDiaries(email, password, classID);
 		
+		APiazzaClassWithDiaries_TA comp401t = new APiazzaClassWithDiaries_TA(email, password, classID);
+		
 //		System.out.println(comp401p.getUserEmail("j6p0uehc5wz20u"));
 //		System.out.println(comp401p.getUserEmail("jl6pcmp4yf612"));
 //		System.exit(0);
 		
 		
 //		comp401p.getDiaryGrades();
-		comp401p.generateDiaryGradesCSV("/Users/Johnson/desktop/401diaries.csv");
-		
+		comp401p.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries.csv");
+		comp401t.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_TA.csv");
 		System.out.println("DONE!");
 		
 //		System.out.println(comp401p.getDiaryGrades().toString());
@@ -65,9 +68,7 @@ public class Tester {
 //
 //		for (List<String> g: grades) {
 //			System.out.println(Arrays.toString(g.toArray()));
-//		}
-		String a = "asd"
-;		
+//		}		
 	}
 
 }

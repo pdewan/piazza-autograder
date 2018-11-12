@@ -10,12 +10,15 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
@@ -27,7 +30,8 @@ public class APiazzaSession implements PiazzaSession {
 	private CookieStore cookieJar = new BasicCookieStore();
 	private HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieJar);
 	private CloseableHttpClient httpClient = builder.build();  //创建http对象
-
+	
+	HttpContext context = new BasicHttpContext();
 	private boolean loggedIn = false;
 	
 	private Map<String, Object> getCookies() {
@@ -58,7 +62,10 @@ public class APiazzaSession implements PiazzaSession {
 		login.setHeader("Accept", "application/json");
 		login.setHeader("Content-type", "application/json");
 		
-		CloseableHttpResponse resp = httpClient.execute(login);  //调用HttpClient对象的execute(HttpUriRequest request)发送请求，该方法返回一个HttpResponse
+		
+		context.setAttribute(ClientContext.COOKIE_STORE, cookieJar);
+		
+		CloseableHttpResponse resp = httpClient.execute(login, context);  //调用HttpClient对象的execute(HttpUriRequest request)发送请求，该方法返回一个HttpResponse
 		
 		if (resp.getStatusLine().getStatusCode() != 200) {
 			throw new LoginFailedException("Incorrect login credentials.");
@@ -79,8 +86,9 @@ public class APiazzaSession implements PiazzaSession {
 		request.setHeader("Accept", "application/json");
 		request.setHeader("Content-type", "application/json");
 		request.setHeader("CSRF-Token", (String)this.getCookies().get("session_id"));
+		//request.setHeader("CSRF-Token", (String)this.getCookies().get("session_id"));
 		
-		CloseableHttpResponse resp = httpClient.execute(request);
+		CloseableHttpResponse resp = httpClient.execute(request, context);
 		
 		if (resp.getStatusLine().getStatusCode() != 200)
 			return null;
@@ -94,7 +102,7 @@ public class APiazzaSession implements PiazzaSession {
 		String requestData = new JSONObject()
 				.put("method", method)
 				.put("params", params).toString();
-		
+		//System.out.println(cookieJar);
 		return this.getResp(requestData, APIEndpt);
 	}
 }
