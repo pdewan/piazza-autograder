@@ -1,10 +1,11 @@
-package piazza;
+ package piazza;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
@@ -16,6 +17,7 @@ public class APiazzaClass implements PiazzaClass {
 
 	protected PiazzaSession mySession = null;
 	protected String cid;
+	private Map<String, String> map = new HashMap<>();    // key: cid   value: uid
 
 	public APiazzaClass(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
@@ -61,24 +63,30 @@ public class APiazzaClass implements PiazzaClass {
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
+		
+		@SuppressWarnings("unchecked")
+		Map<String, String> change_log = ((List<Map<String, String>>) post.get("change_log")).get(0);
+		if(change_log.get("type").equals("create")) map.put(cid, change_log.get("uid"));
+		
 		return post;
 	}
-
 	
+	public Map<String, String> getMap(){
+		return map;
+	}
 	
 	public List<Map<String, Object>> getAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
 		List<Map<String, Object>> feed = this.getFeed(999999, 0);
 		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
 		for (Map<String, Object> item : feed) {
 			String id = (String) item.get("id");
+			if(id.equals("jlo17ck1vlu6pv")) {
+				System.out.println("stop");
+			}
 			posts.add(this.getPost((String) item.get("id")));
 		}
-		System.out.println(">>>>>>>>");
-		System.out.println(feed.size());
-		System.out.println(">>>>>>>>");
 		return posts;
 	}
-	
 	
 	// get author id of the post
 	public String getAuthorId(Map<String, Object> post) { 
@@ -93,6 +101,7 @@ public class APiazzaClass implements PiazzaClass {
 		}
 		return authorId;
 	}
+
 
 	public String getUserName(String uid) throws ClientProtocolException, NotLoggedInException, IOException {
 		return (String) this.getUser(uid).get("name");

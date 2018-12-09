@@ -12,7 +12,9 @@ import org.json.JSONObject;
 
 import piazza.APiazzaClass;
 import piazza.APiazzaClassWithDiaries;
+import piazza.APiazzaClassWithDiaries_2;
 import piazza.APiazzaClassWithDiaries_TA;
+import piazza.APiazzaClassWithDiaries_Yicheng;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
@@ -46,9 +48,13 @@ public class Tester {
 //			System.out.println("==================");
 //		}
 		
-		APiazzaClassWithDiaries comp401p = new APiazzaClassWithDiaries(email, password, classID);
+//		APiazzaClassWithDiaries comp401p = new APiazzaClassWithDiaries(email, password, classID);
 		
-		APiazzaClassWithDiaries_TA comp401t = new APiazzaClassWithDiaries_TA(email, password, classID);
+		APiazzaClassWithDiaries_2 comp401p2 = new APiazzaClassWithDiaries_2(email, password, classID);
+		
+//		APiazzaClassWithDiaries_TA comp401t = new APiazzaClassWithDiaries_TA(email, password, classID);
+		
+		//APiazzaClassWithDiaries_Yicheng comp401_y = new APiazzaClassWithDiaries_Yicheng(email, password, classID);
 		
 //		System.out.println(comp401p.getUserEmail("j6p0uehc5wz20u"));
 //		System.out.println(comp401p.getUserEmail("jl6pcmp4yf612"));
@@ -56,8 +62,10 @@ public class Tester {
 		
 		
 //		comp401p.getDiaryGrades();
-		comp401p.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries.csv");
-		comp401t.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_TA.csv");
+//		comp401p.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries.csv");
+		comp401p2.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_test1.csv");
+		//comp401t.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_TA.csv");
+		//comp401_y.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_yicheng.csv");
 		System.out.println("DONE!");
 		
 //		System.out.println(comp401p.getDiaryGrades().toString());

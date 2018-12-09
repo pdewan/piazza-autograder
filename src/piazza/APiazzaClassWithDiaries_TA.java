@@ -19,7 +19,7 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("(My\\sQ&A).*= .*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_CLASS_QA = Pattern.compile("(Class\\sQ&A).*=.*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
-	//private Pattern GRADE_NOTES = Pattern.compile(".*?Notes:\\s*(.*)", Pattern.CASE_INSENSITIVE);
+	private Pattern GRADE_DATE = Pattern.compile(".*?Date:\\s*([0-9]+/[0-9]+).*", Pattern.CASE_INSENSITIVE);
 
 	// this is the map of all the diaries, the keys are the user's names and the
 	// values are the
@@ -69,26 +69,27 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 		this.lastUpdateTime = Instant.now();
 	}
 
+	@SuppressWarnings("unchecked")
 	private List<String> get_grades(String name) throws ClientProtocolException, NotLoggedInException, IOException {
 		Map<String, Object> diary = this.diaries.get(name);
 		
-		String uid = this.getAuthorId(diary);
-		if (uid.equals("")) {
-			return null;
-		}
-		String authorname = this.getUserName(uid);
+		String diary_content = ((List<Map<String, String>>)diary.get("history")).get(0).get("content");
+		
+		String aid = this.getAuthorId(diary);
+		if (aid.equals("")) { return null; }
+		String authorname = this.getUserName(aid);
+		String email = this.getUserEmail(aid);
 	
 
 		List<String> grades = new ArrayList<String>();
 	
 		
 		//String date = null;
-		int diaryGrade = 0;
-		int QAGrade = 0;
+		int my_QAGrade = 0;
+		int class_QAGrade = 0;
 		String comments = null;
 		
 		for (Map<String, Object> reply : (List<Map<String, Object>>) diary.get("children")) {
-			
 			
 			// If TAs post in a "answer box" 
 			if(reply.get("history") != null) {
@@ -105,12 +106,12 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 							
 							Matcher m = this.GRADE_MY_QA.matcher(line);
 							if(m.find()) {
-								diaryGrade += Integer.parseInt(m.group(2));
+								my_QAGrade += Integer.parseInt(m.group(2));
 							}
 							
 							Matcher n = this.GRADE_CLASS_QA.matcher(line);
 							if(n.find()) {
-								QAGrade += Integer.parseInt(n.group(2));
+								class_QAGrade += Integer.parseInt(n.group(2));
 							}
 						
 						}
@@ -136,12 +137,12 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 
 							Matcher m = this.GRADE_MY_QA.matcher(line);
 							if(m.find()) {
-								diaryGrade += Integer.parseInt(m.group(2));
+								my_QAGrade += Integer.parseInt(m.group(2));
 							}
 							
 							Matcher n = this.GRADE_CLASS_QA.matcher(line);
 							if(n.find()) {
-								QAGrade += Integer.parseInt(n.group(2));
+								class_QAGrade += Integer.parseInt(n.group(2));
 							}
 						
 						}
@@ -157,10 +158,6 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 			subject = subject.replaceAll("<p>", "<SPLIT>");
 			String[] lines = subject.split("<SPLIT>");
 
-			
-			String graderId = (String) reply.get("uid");
-			String graderName = this.getUserName(graderId);
-
 			for (String line : lines) {
 				line = line.replace("&#43;", "+");
 				line = line.replace("&amp;", "&");
@@ -168,12 +165,12 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 				
 				Matcher m = this.GRADE_MY_QA.matcher(line);
 				if(m.find()) {
-					diaryGrade += Integer.parseInt(m.group(2));
+					my_QAGrade += Integer.parseInt(m.group(2));
 				}
 				
 				Matcher n = this.GRADE_CLASS_QA.matcher(line);
 				if(n.find()) {
-					QAGrade += Integer.parseInt(n.group(2));
+					class_QAGrade += Integer.parseInt(n.group(2));
 				}
 				
 			}
@@ -183,7 +180,7 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 			
 //				String graderId = reply.get("uid");
 //				String graderName = this.getUserName(graderId); 
-				String graderEmail = this.getUserEmail(graderId);
+				//String graderEmail = this.getUserEmail(graderId);
 
 				String s1 = (String) reply.get("updated");
 				//date = s1.split("T")[0];
@@ -198,13 +195,13 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 //							graderEmail, date, comments, diary_content))); 		
 		
 		}
-		grades  = new ArrayList<String>(Arrays.asList(authorname,QAGrade+diaryGrade+""));
+		grades  = new ArrayList<String>(Arrays.asList(email, authorname, class_QAGrade+"", my_QAGrade+"", diary_content));
 		
 		// line breaker
 		//grades  = new ArrayList<String>(Arrays.asList(authorname,total_grade+""));
 		
 		System.out.println("Name: " + authorname);
-		System.out.println("grade: " + QAGrade+diaryGrade+"");
+		System.out.println("grade: " + class_QAGrade+my_QAGrade+"");
 //		System.out.println("Count: " + count);
 //		System.out.println("Total Grade: " + total_grade);
 //    	System.out.println("My Q&A Grade: " + totalDiaryGrade);
@@ -235,7 +232,7 @@ public class APiazzaClassWithDiaries_TA extends APiazzaClass {
 		BufferedWriter br = new BufferedWriter(new FileWriter(path));
 		
 		List<List<String>> grades = this.getDiaryGrades();
-		br.write("Name, Total Grade\n");
+		br.write("Email, Name, class Q&A, My Q&A\n");
 
 		System.out.println(">>>>>>>>>>>>>>>>>>>>");
 		for (List<String> g : grades) {
