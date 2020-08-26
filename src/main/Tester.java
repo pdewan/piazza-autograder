@@ -50,14 +50,13 @@ public class Tester {
 		String classID = config.getString("class_id");
 		
 		
-//		String filePath = "/Path/To/Where/File/Is/Saved";
-		String filePath = "/Users/jedidiah/desktop/yay2.csv";
+		String filePath = "/Path/To/Where/File/Is/Saved";
 		String contactName = "one of the TAs";
 		
 		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName);
 		
 		// Set the method to the desired operation. See the Method enum declaration for details
-		comp533.setMethod(Method.UPDATE_CSV_FROM_PIAZZA);
+		comp533.setMethod(Method.REGULAR_GRADING_WITH_CSV);
 		comp533.generateDiaryGradesCSV(filePath);
 		
 		System.out.println("DONE!");
