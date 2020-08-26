@@ -5,6 +5,7 @@ import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
@@ -13,6 +14,7 @@ import org.json.JSONObject;
 import piazza.APiazzaClass;
 import piazza.APiazzaClassWithDiaries;
 import piazza.APiazzaClassWithDiaries_2;
+import piazza.APiazzaClassWithDiaries_3;
 import piazza.APiazzaClassWithDiaries_TA;
 import piazza.APiazzaClassWithDiaries_Yicheng;
 import piazza.LoginFailedException;
@@ -20,6 +22,16 @@ import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
 
 public class Tester {
+	
+	/* Regular grading involves grading the newest set of diary entries within the current grading period by
+	 * posting a followup post to each students' diary and generating summary and detailed .csv files
+	 * Update csv is used mainly in the case where there were manual changes made to the diary grades from directly and manually
+	 * changing student diary grades from within the followup post on Piazza. In this case, only an updated summary .csv file is generated
+	 */
+	public enum Method {
+		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA;
+	}
+	
 	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		
 		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
@@ -37,46 +49,20 @@ public class Tester {
 		String password = config.getString("password");
 		String classID = config.getString("class_id");
 		
-
-//		PiazzaClass comp401 = new APiazzaClass(email, password, classID);
-		//List<Map<String, Object>> posts = comp401.getAllPosts();
 		
-//		for (Map<String, Object> post : posts) {
-//			Map<String, Object> top = ((List<Map<String, Object>>)post.get("history")).get(0);
-//			System.out.println(top.get("subject"));
-//			System.out.println(top.get("content"));
-//			System.out.println("==================");
-//		}
+//		String filePath = "/Path/To/Where/File/Is/Saved";
+		String filePath = "/Users/jedidiah/desktop/yay2.csv";
+		String contactName = "one of the TAs";
 		
-//		APiazzaClassWithDiaries comp401p = new APiazzaClassWithDiaries(email, password, classID);
+		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName);
 		
-		APiazzaClassWithDiaries_2 comp401p2 = new APiazzaClassWithDiaries_2(email, password, classID);
+		// Set the method to the desired operation. See the Method enum declaration for details
+		comp533.setMethod(Method.UPDATE_CSV_FROM_PIAZZA);
+		comp533.generateDiaryGradesCSV(filePath);
 		
-//		APiazzaClassWithDiaries_TA comp401t = new APiazzaClassWithDiaries_TA(email, password, classID);
-		
-		//APiazzaClassWithDiaries_Yicheng comp401_y = new APiazzaClassWithDiaries_Yicheng(email, password, classID);
-		
-//		System.out.println(comp401p.getUserEmail("j6p0uehc5wz20u"));
-//		System.out.println(comp401p.getUserEmail("jl6pcmp4yf612"));
-//		System.exit(0);
-		
-		
-//		comp401p.getDiaryGrades();
-//		comp401p.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries.csv");
-		comp401p2.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_test1.csv");
-		//comp401t.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_TA.csv");
-		//comp401_y.generateDiaryGradesCSV("/Users/Yifan/desktop/401diaries_yicheng.csv");
 		System.out.println("DONE!");
 		
-//		System.out.println(comp401p.getDiaryGrades().toString());
-		
-//		List<List<String>> grades = comp401p.getDiaryGrades();
-		
-//		System.out.println(grades);
-//
-//		for (List<String> g: grades) {
-//			System.out.println(Arrays.toString(g.toArray()));
-//		}		
+		configReader.close();
 	}
 
 }
