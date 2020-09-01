@@ -138,6 +138,17 @@ public class APiazzaClass implements PiazzaClass {
 		JSONObject data = new JSONObject().put("cid", cid).put("subject", post)
 				.put("type", "followup").put("content", "").put("anonymous", "no");
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
+                if (resp == null) return false;
+                // mark resolved {{{
+                String followupID = resp.get("id").toString();
+                data = new JSONObject()
+                  .put("cid", followupID)
+                  .put("resolved", "true");
+                resp = mySession.piazzaAPICall(
+                    "content.mark_resolved",
+                    data,
+                    piazzaLogic);
+                // }}}
 //		System.out.println(resp.toString());
 		return resp != null? true:false;
 	}
