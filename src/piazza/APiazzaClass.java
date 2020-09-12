@@ -140,7 +140,8 @@ public class APiazzaClass implements PiazzaClass {
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
                 if (resp == null) return false;
                 // mark resolved {{{
-                String followupID = resp.get("id").toString();
+                Map<String, Object> res = (Map<String, Object>) resp.get("result");
+                String followupID = res.get("id").toString();
                 data = new JSONObject()
                   .put("cid", followupID)
                   .put("resolved", "true");
