@@ -57,13 +57,15 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
     
     private String currentYear;
     private String contactName;
+    private String fullRegradeNote;
     
-	public APiazzaClassWithDiaries_3(String email, String password, String classID, String contactName)
+	public APiazzaClassWithDiaries_3(String email, String password, String classID, String contactName, String fullRegradeNote)
 			throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 			super(email, password, classID);
 			this.updateAllDiaries();
 			currentYear = Integer.toString(LocalDate.now().getYear());
 			this.contactName = contactName;
+			this.fullRegradeNote = fullRegradeNote;
 	}
 
 	// populate the diaries variable
@@ -164,42 +166,46 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		int myQATotFromPrevFollowups = 0;
 		int classQATotFromPrevFollowups = 0;
 		
-		// Checks for grade followups from previous gradings
-		for (Map<String, String> reply : (List<Map<String, String>>)diary.get("children")) {
-			String subject = reply.get("subject");
-			if (subject == null)
-				continue;
-			subject = subject.replaceAll("<p>", "<SPLIT>");
-			subject = subject.replaceAll("br", "<SPLIT>");
-			String[] lines = subject.split("<SPLIT>");
-			String month = null;
-			String day = null;
-			
-			// Extracting the month and day from the graded followups to find the most recent one
-			month = this.getNthGroupIfMatch(this.GRADE_DATE, subject, 1);
-			day = this.getNthGroupIfMatch(this.GRADE_DATE, subject, 2);
-			// Get the cumulative grade from the most recent grading followup
-			String grade = this.getNthGroupIfMatch(this.DIARY_GRADE, subject, 1);
-			String gradingPeriodStart = this.getNthGroupIfMatch(this.GRADING_PERIOD, subject, 1);
-			String gradingPeriodEnd = this.getNthGroupIfMatch(this.GRADING_PERIOD, subject, 2);
-			String myQAGrade = this.getNthGroupIfMatch(this.GRADE_MY_QA, subject, 1);
-			String classQAGrade = this.getNthGroupIfMatch(this.GRADE_CLASS_QA, subject, 1);
-			
-			if (month != null && day != null && grade != null) {
-				myQATotFromPrevFollowups += Integer.parseInt(myQAGrade);
-				classQATotFromPrevFollowups += Integer.parseInt(classQAGrade);
-				Map<String, String> followupMap = new HashMap<String, String>();
-				if (gradingPeriodStart == null) { // There may be no grading period if there were no new diary posts since the last grading period
-					followupMap.put(START_DATE, NO_START_DATE);
-				} else {
-					followupMap.put(START_DATE, gradingPeriodStart);
+		// We want to trick the grader into doing a full regrade by not processing any Piazza followups
+		// Making it think that it hasn't graded this diary before
+		if (method != Method.FULL_REGRADE) {
+			// Checks for grade followups from previous gradings
+			for (Map<String, String> reply : (List<Map<String, String>>)diary.get("children")) {
+				String subject = reply.get("subject");
+				if (subject == null)
+					continue;
+				subject = subject.replaceAll("<p>", "<SPLIT>");
+				subject = subject.replaceAll("br", "<SPLIT>");
+				String[] lines = subject.split("<SPLIT>");
+				String month = null;
+				String day = null;
+				
+				// Extracting the month and day from the graded followups to find the most recent one
+				month = this.getNthGroupIfMatch(this.GRADE_DATE, subject, 1);
+				day = this.getNthGroupIfMatch(this.GRADE_DATE, subject, 2);
+				// Get the cumulative grade from the most recent grading followup
+				String grade = this.getNthGroupIfMatch(this.DIARY_GRADE, subject, 1);
+				String gradingPeriodStart = this.getNthGroupIfMatch(this.GRADING_PERIOD, subject, 1);
+				String gradingPeriodEnd = this.getNthGroupIfMatch(this.GRADING_PERIOD, subject, 2);
+				String myQAGrade = this.getNthGroupIfMatch(this.GRADE_MY_QA, subject, 1);
+				String classQAGrade = this.getNthGroupIfMatch(this.GRADE_CLASS_QA, subject, 1);
+				
+				if (month != null && day != null && grade != null) {
+					myQATotFromPrevFollowups += Integer.parseInt(myQAGrade);
+					classQATotFromPrevFollowups += Integer.parseInt(classQAGrade);
+					Map<String, String> followupMap = new HashMap<String, String>();
+					if (gradingPeriodStart == null) { // There may be no grading period if there were no new diary posts since the last grading period
+						followupMap.put(START_DATE, NO_START_DATE);
+					} else {
+						followupMap.put(START_DATE, gradingPeriodStart);
+					}
+					followupMap.put(END_DATE, gradingPeriodEnd);
+					//followupMap.put(MY_QA_GRADE, Integer.toString(myQATotFromPrevFollowups));
+					//followupMap.put(CLASS_QA_GRADE, Integer.toString(classQATotFromPrevFollowups));
+					followupMap.put(TOTAL_GRADE, grade);
+					followupGrades.put(convertMoD(month, day), followupMap);
+					//followupGrades.put(convertMoD(month, day), Integer.parseInt(grade));
 				}
-				followupMap.put(END_DATE, gradingPeriodEnd);
-				//followupMap.put(MY_QA_GRADE, Integer.toString(myQATotFromPrevFollowups));
-				//followupMap.put(CLASS_QA_GRADE, Integer.toString(classQATotFromPrevFollowups));
-				followupMap.put(TOTAL_GRADE, grade);
-				followupGrades.put(convertMoD(month, day), followupMap);
-				//followupGrades.put(convertMoD(month, day), Integer.parseInt(grade));
 			}
 		}
 
@@ -408,7 +414,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			grades.add(g);
 			gradesList.put(name, g);
 		}
-		if (method == Method.REGULAR_GRADING_WITH_CSV) {
+		if (method == Method.REGULAR_GRADING_WITH_CSV || method == Method.FULL_REGRADE) {
 			this.autoPost(gradesList);			
 		}
 		return grades;
@@ -461,7 +467,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		}
 		brSummary.close();
 		
-		if (method == Method.REGULAR_GRADING_WITH_CSV) {
+		if (method == Method.REGULAR_GRADING_WITH_CSV || method == Method.FULL_REGRADE) {
 			// The variable used for generating the detailed .csv
 			List<List<String>> detailed_string =  new ArrayList<List<String>>();
 			// Populate it based on the string representations of the individual grades
@@ -510,7 +516,11 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 					+ "My Q&A: " + grades.get(MY_QA_COUNT) + "*5 = " + grades.get(MY_QA_GRADE) + "<br>"
 					+ "Class Q&A: " + grades.get(CLASS_QA_COUNT) + "*5 = " + grades.get(CLASS_QA_GRADE) + "<br>"
 					+ "Total diary grade up to " + date + " is: " + grades.get(TOTAL_GRADE) + "<br>"
-					+ "If you have any questions regarding your grade, please talk to " + contactName + "</p>";
+					+ "If you have any questions regarding your grade, please talk to " + contactName;
+			if (method == Method.FULL_REGRADE) {
+				post += "<br>" + fullRegradeNote;
+			}
+			post += "</p>";
 			this.createFollowup(cid, post);
 		}
 	}

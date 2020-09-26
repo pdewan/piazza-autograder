@@ -27,9 +27,11 @@ public class Tester {
 	 * posting a followup post to each students' diary and generating summary and detailed .csv files
 	 * Update csv is used mainly in the case where there were manual changes made to the diary grades from directly and manually
 	 * changing student diary grades from within the followup post on Piazza. In this case, only an updated summary .csv file is generated
+	 * Full regrade is used in the case of regrading all existing diary entries, regardless of whether they are in the current grading period or not
+	 * A followup post is made with a note specifying the full regrade, and summary and detailed .csv files are generated
 	 */
 	public enum Method {
-		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA;
+		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE;
 	}
 	
 	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
@@ -52,8 +54,9 @@ public class Tester {
 		
 		String filePath = "/Path/To/Where/File/Is/Saved";
 		String contactName = "one of the TAs";
+		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
-		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName);
+		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName, fullRegradeNote);
 		
 		// Set the method to the desired operation. See the Method enum declaration for details
 		comp533.setMethod(Method.REGULAR_GRADING_WITH_CSV);
