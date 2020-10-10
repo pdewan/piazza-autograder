@@ -3,21 +3,19 @@ package piazza;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Date;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
-
-import com.sun.jna.platform.win32.OaIdl.DATE;
 
 import main.Tester.Method;
 
@@ -62,7 +60,6 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 	public APiazzaClassWithDiaries_3(String email, String password, String classID, String contactName, String fullRegradeNote)
 			throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 			super(email, password, classID);
-			this.updateAllDiaries();
 			currentYear = Integer.toString(LocalDate.now().getYear());
 			this.contactName = contactName;
 			this.fullRegradeNote = fullRegradeNote;
@@ -146,10 +143,6 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 	// Parses the diary post and calculates the grade for the student specified
 	private IndividualGrade get_grades(String name) throws ClientProtocolException, NotLoggedInException, IOException {
 		Map<String, Object> diary = this.diaries.get(name);
-		List<String> individualGradeSummary = new ArrayList<String>();
-		List<List<String>> individualGradeDetailed = new ArrayList<>();
-		Map<String, String> gradeMap = new HashMap<String, String>();
-		
  		String aid = this.getAuthorId(diary);
 		if (aid.equals("")) { return null; }
 		String authorname = this.getUserName(aid);
@@ -158,8 +151,28 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		@SuppressWarnings("unchecked")
 		String diary_content = ((List<Map<String, String>>) diary.get("history")).get(0).get("content");
 		
+		return generateGrades(diary, aid, authorname, email, name, diary_content);
+	}
+	
+	private IndividualGrade getGradeFromFile(String filePath) {
+		String diary_content = "";
+		try {
+			diary_content = new String(Files.readAllBytes(Paths.get(filePath)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    return generateGrades(null, "", "", "", "", diary_content);
+		
+	}
+	
+	private IndividualGrade generateGrades(Map<String, Object> diary, String aid, String authorname, String email,
+											String name, String diary_content) {
+		
 		Map<String, String> date_comment = new HashMap<>();  // key: TA_date --> value: TA_note
 
+		List<String> individualGradeSummary = new ArrayList<String>();
+		List<List<String>> individualGradeDetailed = new ArrayList<>();
+		Map<String, String> gradeMap = new HashMap<String, String>();
 		// Used to hold dates and their respective grading components from the grade followups
 		Map<ADate, Map<String, String>> followupGrades = new HashMap<>();
 		// These variables will hold the cumulative grade total from the grades recorded within the followup posts
@@ -168,7 +181,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		
 		// We want to trick the grader into doing a full regrade by not processing any Piazza followups
 		// Making it think that it hasn't graded this diary before
-		if (method != Method.FULL_REGRADE) {
+		if (method == Method.REGULAR_GRADING_WITH_CSV || method == Method.UPDATE_CSV_FROM_PIAZZA) {
 			// Checks for grade followups from previous gradings
 			for (Map<String, String> reply : (List<Map<String, String>>)diary.get("children")) {
 				String subject = reply.get("subject");
@@ -220,7 +233,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			mostRecentGrade = Integer.parseInt(followupGrades.get(mostRecentDate).get(TOTAL_GRADE));
 		}
 		
-		// If the method is UPDATE_CSV_FROM_PIAZZA, we can just pull data from the followups and return from get_grades() early
+		// If the method is UPDATE_CSV_FROM_PIAZZA, we can just pull data from the followups and return from generateGrades() early
 		if (method == Method.UPDATE_CSV_FROM_PIAZZA) {
 			String endDate = "";
 			// In the case that followupGrades do not exist yet for this student, supply default values for gradeMap and endDate
@@ -424,7 +437,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		this.method = method;
 	}
 	
-	public void generateDiaryGradesCSV(String path) throws IOException, NotLoggedInException {
+	public void generateDiaryGrades(String path) throws IOException, NotLoggedInException {
 		// Assume that the path ends in the file extension .csv
 		// Want to write two files: one is the summary, one is the detailed version
 		LocalDate ld = LocalDate.now();
@@ -432,7 +445,20 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		
 		String summaryPath = path.substring(0, path.length() - 4) + "_" + date + "_summary.csv";
 		String detailedPath = path.substring(0, path.length() - 4) + "_" + date + "_detailed.csv";
-
+		
+		if (method == Method.READ_FROM_FILE) {
+			IndividualGrade grade = this.getGradeFromFile(path);
+			Map<String, String> gradeMap = grade.getMapRepresentation();
+			System.out.println("Grading period: " + generateGradingPeriod(gradeMap) + "\n"
+					+ "My Q&A: " + gradeMap.get(MY_QA_COUNT) + "*5 = " + gradeMap.get(MY_QA_GRADE) + "\n"
+					+ "Class Q&A: " + gradeMap.get(CLASS_QA_COUNT) + "*5 = " + gradeMap.get(CLASS_QA_GRADE) + "\n"
+					+ "Total diary grade up to " + date + " is: " + gradeMap.get(TOTAL_GRADE) + "\n"
+					);
+			return;
+		}
+		
+		// Fetch the diary posts from Piazza
+		this.updateAllDiaries();
 		
 		// Get a list of individual grades
 		List<IndividualGrade> grades = this.getDiaryGrades();
