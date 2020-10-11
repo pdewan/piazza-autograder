@@ -1,12 +1,8 @@
  package main;
 
-import java.util.Arrays;
-import java.util.List;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
@@ -29,9 +25,11 @@ public class Tester {
 	 * changing student diary grades from within the followup post on Piazza. In this case, only an updated summary .csv file is generated
 	 * Full regrade is used in the case of regrading all existing diary entries, regardless of whether they are in the current grading period or not
 	 * A followup post is made with a note specifying the full regrade, and summary and detailed .csv files are generated
+	 * Read from file is used to output Q&A scores to System.out from a text file containing the diary content of a single student
+	 * The file path of the input file should be passed into generateDiaryGrades()
 	 */
 	public enum Method {
-		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE;
+		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE, READ_FROM_FILE;
 	}
 	
 	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
@@ -52,7 +50,8 @@ public class Tester {
 		String classID = config.getString("class_id");
 		
 		
-		String filePath = "/Path/To/Where/File/Is/Saved";
+		String outputFilePath = "/Path/To/Where/File/Is/Saved";
+		//String inputFilePath = "/Path/To/Where/File/Is/Saved";
 		String contactName = "one of the TAs";
 		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
@@ -60,7 +59,8 @@ public class Tester {
 		
 		// Set the method to the desired operation. See the Method enum declaration for details
 		comp533.setMethod(Method.REGULAR_GRADING_WITH_CSV);
-		comp533.generateDiaryGradesCSV(filePath);
+		comp533.generateDiaryGrades(outputFilePath);
+		
 		
 		System.out.println("DONE!");
 		
