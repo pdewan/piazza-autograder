@@ -173,6 +173,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		List<String> individualGradeSummary = new ArrayList<String>();
 		List<List<String>> individualGradeDetailed = new ArrayList<>();
 		Map<String, String> gradeMap = new HashMap<String, String>();
+		String earliestDiaryDate = null;
 		// Used to hold dates and their respective grading components from the grade followups
 		Map<ADate, Map<String, String>> followupGrades = new HashMap<>();
 		// These variables will hold the cumulative grade total from the grades recorded within the followup posts
@@ -203,6 +204,15 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 				String myQAGrade = this.getNthGroupIfMatch(this.GRADE_MY_QA, subject, 1);
 				String classQAGrade = this.getNthGroupIfMatch(this.GRADE_CLASS_QA, subject, 1);
 				
+				if (earliestDiaryDate == null) {
+					// Initialize earliestDiaryDate based on the first follow-up post
+					earliestDiaryDate = gradingPeriodStart;
+				} else if (gradingPeriodStart.equals(earliestDiaryDate)) {
+					// If a future post regrades the first diary, that means it is a full regrade
+					// in which case we need to reset the grade counts for myQA and classQA
+					myQATotFromPrevFollowups = 0;
+					classQATotFromPrevFollowups = 0;
+				}
 				if (month != null && day != null && grade != null) {
 					myQATotFromPrevFollowups += Integer.parseInt(myQAGrade);
 					classQATotFromPrevFollowups += Integer.parseInt(classQAGrade);
