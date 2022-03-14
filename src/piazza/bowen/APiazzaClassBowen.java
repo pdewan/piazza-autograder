@@ -1,4 +1,4 @@
- package piazza;
+ package piazza.bowen;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
+
+import piazza.PiazzaClass;
 
 import java.io.File;
 import org.apache.commons.io.FileUtils;

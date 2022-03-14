@@ -1,4 +1,4 @@
-package piazza;
+package piazza.bowen;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

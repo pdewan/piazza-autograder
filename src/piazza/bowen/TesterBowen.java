@@ -1,4 +1,4 @@
- package main;
+ package piazza.bowen;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -9,16 +9,10 @@ import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
-import main.TesterBowen.Method;
-import piazza.APiazzaClassBowen;
-import piazza.APiazzaClassWithDiariesBowen;
-import piazza.APiazzaClassWithDiaries_2Bowen;
-import piazza.APiazzaClassWithDiaries_3Bowen;
-import piazza.APiazzaClassWithDiaries_TABowen;
-import piazza.APiazzaClassWithDiaries_YichengBowen;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
+import piazza.bowen.TesterBowen.Method;
 
 public class TesterBowen {
 	

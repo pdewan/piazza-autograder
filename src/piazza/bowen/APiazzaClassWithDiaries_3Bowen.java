@@ -1,4 +1,4 @@
-package piazza;
+package piazza.bowen;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
-import main.TesterBowen.Method;
+import piazza.bowen.TesterBowen.Method;
 
 public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 

@@ -1,4 +1,4 @@
-package piazza;
+package piazza.bowen;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
-public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
+public class APiazzaClassWithDiaries_2Bowen extends APiazzaClassBowen {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("(My\\sQ&A).*= .*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_CLASS_QA = Pattern.compile("(Class\\sQ&A).*=.*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_DATE = Pattern.compile(".*?Date:\\s*([0-9]+/[0-9]+).*", Pattern.CASE_INSENSITIVE);
-	private Pattern DIARY_DATE = Pattern.compile(".*?([0-9]+/[0-9]+).*",Pattern.CASE_INSENSITIVE);
+	private Pattern DIARY_DATE = Pattern.compile(".*?([0-9]+/[0-9]+)",Pattern.CASE_INSENSITIVE);
 	private Pattern DIARY_DATE1 = Pattern.compile(".*?([0-9]+)/([0-9]+).*",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_NOTES = Pattern.compile(".*?Notes.*?(.*)", Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_NOTES1 = Pattern.compile(".*?Notes.*?\n(.*)", Pattern.CASE_INSENSITIVE);
@@ -34,12 +34,13 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 	private Instant lastUpdateTime = null;
     private Map<String, String> cids = new HashMap<>();
     private Map<String, String> final_grades = new HashMap<>();
+    
     private int counter = 0;
 	
-	public APiazzaClassWithDiariesBowen(String email, String password, String classID)
+	public APiazzaClassWithDiaries_2Bowen(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		super(email, password, classID);
-		this.updateAllDiaries();
+	this.updateAllDiaries();
 	}
 
 	// populate the diaries variable
@@ -50,31 +51,42 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 			@SuppressWarnings("unchecked")
 			Map<String, String> top = ((List<Map<String, String>>) post.get("history")).get(0);
 			String content = top.get("content").toLowerCase();
+			
 			if (content.contains("diary") || content.contains("Diary")) {
-				if (content.indexOf(',') != -1) {
-					int findIndex = content.indexOf("Diary");
-					findIndex = findIndex==-1? content.indexOf("diary"):findIndex;
-					int startIndex = findIndex;
-					if(content.charAt(findIndex-2)==',') {
-						for(int i = findIndex-3; i>=0; i--) {
-							char c = content.charAt(i);
-							if(c == ',') {
-								startIndex = i+1;
-								break;
-							}
-						}
-					}else {
-						continue;
-					}
-					String name = content.toLowerCase().substring(startIndex, findIndex);
-					this.cids.put(name, (String) post.get("id"));
-					counter++;
-					this.diaries.put(name, post);
-					System.out.println("-----------");
-					System.out.println(name);
-					System.out.println("-----------");
+				String cid = (String) post.get("id");
+				String uid = this.getMap().get(cid);
+				
+				if(uid.equals("jl3w7coi5lj2c") && content.contains("Instructor")) {
+					System.out.println("stop");
 				}
-			}
+				
+				Map<String, Object> user = this.getUser(uid);
+				String role = (String)user.get("role");
+				if(!role.equals("student")) continue;
+				String name = this.getUserName(uid);
+				if(!content.contains("Instructor") && !content.contains("instructor")) continue;
+//				if (content.indexOf(',') != -1) {
+//					int findIndex = content.indexOf("Diary");
+//					findIndex = findIndex==-1? content.indexOf("diary"):findIndex;
+//					int startIndex = findIndex;
+//					if(content.charAt(findIndex-2)==',') {
+//						for(int i = findIndex-3; i>=0; i--) {
+//							char c = content.charAt(i);
+//							if(c == ',') {
+//								startIndex = i+1;
+//								break;
+//							}
+//						}
+//					}else {
+//						continue;
+//					}
+//					String name = content.toLowerCase().substring(startIndex, findIndex);
+					//this.cids.put(name, (String) post.get("id"));
+					this.cids.put(name,cid);
+					this.diaries.put(name, post);
+					counter++;
+					//System.out.println(name);
+				}
 		}
 		this.lastUpdateTime = Instant.now();
 		System.out.println("---------\n"+counter+"\n----------");
@@ -165,11 +177,15 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 				each_date = each_date.replaceAll("my Q&A", "<breaker>my Q&A");          // in case of lower case
 				each_date = each_date.replaceAll("Class Q&A", "<breaker>Class Q&A");
 				each_date = each_date.replaceAll("class Q&A", "<breaker>class Q&A");
+				
 				String each_date_content = each_date;
+				each_date_content = each_date_content.replaceAll("\n", "<newline>");
 				String[] content_arr = each_date.split("<breaker>");
 				for(String line : content_arr) {
 					if(line.contains("My Q&A") || line.contains("my Q&A")) {
 						line = line.replaceAll("<li>", "<p>");
+						line = line.replaceAll("br", "<p>");
+						line = line.replaceAll("\n", "<p>");
 						String[] split = line.split("<p");
 						for(String l : split) {
 							line = line.replaceAll("<li>", "<p>");
@@ -178,6 +194,8 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 						}
 					}
 					if(line.contains("Class Q&A") || line.contains("class Q&A")) {
+						line = line.replaceAll("\n", "<p>");
+						line = line.replaceAll("br", "<p>");
 						String[] split = line.split("<p");
 						for(String l : split) {
 							if(l.contains("I:") || l.contains("instructor") || l.contains("Instructor")
@@ -200,7 +218,7 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 				
 				each_date_grade = new ArrayList<String>(Arrays.asList(email, authorname, classQA_grade+"", myQA_grade+"",
 												 "n/a", "n/a", "2018-"+post_date, each_date_content));
-				individual_grade.add(each_date_grade);		
+				individual_grade.add(each_date_grade);		  
 			}
 			
 			
@@ -241,6 +259,7 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 		for (String name : this.diaries.keySet()) {
 			
 			System.out.println(name);
+			
 			List<List<String>> g = this.get_grades(name);
 			//System.out.println(g.toString());
 			grades.addAll(g);
@@ -258,6 +277,7 @@ public class APiazzaClassWithDiariesBowen extends APiazzaClassBowen {
 		List<List<String>> grades = this.getDiaryGrades();
 		br.write("Student Email, Student Name, Class Q&A, My Q&A, Grading TA, TA's Email, Post Date, Comment, UUID\n");
 
+		System.out.println(">>>>>>>>>>>>>>>>>>>>");
 		System.out.println(grades.size());
 		for (List<String> g : grades) {
 			for (String s : g) {
