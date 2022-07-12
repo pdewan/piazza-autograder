@@ -1,4 +1,4 @@
-package piazza.bowen;
+package piazza.nlp;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -17,15 +17,16 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
+import main.Tester.Method;
 import piazza.ADate;
+import piazza.APiazzaClass;
 import piazza.AnIndividualGrade;
 import piazza.IndividualGrade;
 import piazza.LoginFailedException;
 import piazza.MyDate;
 import piazza.NotLoggedInException;
-import piazza.bowen.TesterBowen.Method;
 
-public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
+public class APiazzaDiaryPD extends APiazzaClass {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("My.*?=\\s(\\d+)",Pattern.CASE_INSENSITIVE);
 	private Pattern GRADE_CLASS_QA = Pattern.compile("Class.*?=\\s(\\d+)",Pattern.CASE_INSENSITIVE);
@@ -63,7 +64,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
     private String contactName;
     private String fullRegradeNote;
     
-	public APiazzaClassWithDiaries_3Bowen(String email, String password, String classID, String contactName, String fullRegradeNote)
+	public APiazzaDiaryPD(String email, String password, String classID, String contactName, String fullRegradeNote)
 			throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 			super(email, password, classID);
 			currentYear = Integer.toString(LocalDate.now().getYear());
@@ -72,29 +73,21 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 	}
 
 	// populate the diaries variable
-	// change （原本没有String path)
-	public void updateAllDiaries(String path) throws ClientProtocolException, NotLoggedInException, IOException { 
-		List<List<String>> name_onyen_uid_dictionary= new ArrayList<>();
-		List<String> name_onyen_uid_dictionary_individual = new ArrayList<String>();
-		List<String> name_list = new ArrayList<String>();
-		List<String> uid_list = new ArrayList<String>();
-		List<String> onyen_list = new ArrayList<String>();
+	public void updateAllDiaries() throws ClientProtocolException, NotLoggedInException, IOException { 
 		for (Map<String, Object> post : this.getAllPosts()) {
 			@SuppressWarnings("unchecked")
 			Map<String, String> top = ((List<Map<String, String>>) post.get("history")).get(0);
 			String content = top.get("content").toLowerCase();
-			 
+			
 			if (content.contains("diary") || content.contains("Diary")) {
 				String cid = (String) post.get("id");
-				
 				String uid = this.getMap().get(cid);
-				//System.out.println("uid: " + uid);
+				//System.out.println("cid: " + cid);
 				
 				Map<String, Object> user = this.getUser(uid);
 				if(user == null) continue;
 				String role = (String)user.get("role");
 				if(!role.equals("student")) continue;
-				
 				String name = this.getUserName(uid);
 				if(!content.contains("Instructor") && !content.contains("instructor")) continue;
 //					String name = content.toLowerCase().substring(startIndex, findIndex);
@@ -103,41 +96,8 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 					this.diaries.put(name, post);
 					counter++;
 					//System.out.println(name);
-					
-					// change （原本没有以下代码）
-					String onyen = content.split("\\r?\\n")[2].split("[,]", 0)[0].replace("<p>", "");
-					if (!name_list.contains(name) && !uid_list.contains(onyen) && !onyen_list.contains(uid)) {
-						name_list.add(name);
-						onyen_list.add(onyen);
-						uid_list.add(uid);
-						name_onyen_uid_dictionary_individual.add(name);
-						name_onyen_uid_dictionary_individual.add(onyen);
-						name_onyen_uid_dictionary_individual.add(uid);
-						name_onyen_uid_dictionary.add(name_onyen_uid_dictionary_individual);
-					}
 				}
 		}
-		// change （原本没有以下代码）
-		String dictionaryPath = path.substring(0, path.length() - 4) + "_name_onyen_uid_dictionary.csv";
-		BufferedWriter brDictionary = new BufferedWriter(new FileWriter(dictionaryPath));
-		brDictionary.write("Student Name, onyen, UID\n");
-		String s = "";
-		for (List<String> g : name_onyen_uid_dictionary) {
-			for (int i = 0; i < g.size() - 1; i++) { // g.size() - 1 because we don't want an ending comma to generate an unneeded blank column
-				s = g.get(i);
-				if (s != null) {
-					s = s.replaceAll(",", " ");
-					brDictionary.write("\"" + s + "\"");
-				}
-				brDictionary.write(", ");
-			}
-			s = g.get(g.size() - 1); // write the last element
-			s = s.replaceAll(",", " ");
-			brDictionary.write("\"" + s + "\"");
-			brDictionary.write("\n");
-		}
-		brDictionary.close();
-		
 		this.lastUpdateTime = Instant.now();
 		System.out.println("---------\n"+counter+"\n----------");
 	}
@@ -306,7 +266,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 			individualGradeSummary = new ArrayList<String>(Arrays.asList(email, authorname, generateGradingPeriod(gradeMap), 
 														Integer.toString(myQATotFromPrevFollowups),
 														Integer.toString(classQATotFromPrevFollowups), gradeMap.get(TOTAL_GRADE),
-														"n/a", "n/a", currentYear+"-"+endDate.replace('/', '-'), diary_content.replaceAll("\n", " "), "n/a", aid)); // change （原本没有最后两列）
+														"n/a", "n/a", currentYear+"-"+endDate.replace('/', '-'), diary_content.replaceAll("\n", " ")));
 			// Note that individualGradedDetailed and gradeMap are empty at this point, as they are not needed for UPDATE_CSV_FROM_PIAZZA
 			return new AnIndividualGrade(individualGradeSummary, individualGradeDetailed, gradeMap);
 		}
@@ -445,7 +405,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 			
 			individualGradeSummary = new ArrayList<String>(Arrays.asList(email, authorname, generateGradingPeriod(gradeMap), 
 													Integer.toString(cumulativeMyQAGrade), Integer.toString(cumulativeClassQAGrade),
-													gradeMap.get(TOTAL_GRADE), "n/a", "n/a", currentYear+"-"+post_date, "n/a", aid)); // change （原本没有最后两列）
+													gradeMap.get(TOTAL_GRADE), "n/a", "n/a", currentYear+"-"+post_date));
 			
 			int size = date_comment.size();
 			for (int i = 0; i < individualGradeDetailed.size(); i++) {
@@ -515,7 +475,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 		}
 		
 		// Fetch the diary posts from Piazza
-		this.updateAllDiaries(path); // change （原本没有path）
+		this.updateAllDiaries();
 		
 		// Get a list of individual grades
 		List<IndividualGrade> grades = this.getDiaryGrades();
@@ -528,7 +488,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 		}
 		BufferedWriter brSummary = new BufferedWriter(new FileWriter(summaryPath));
 		
-		brSummary.write("Student Email, Student Name, Most Recent Grading Period, My Q&A Total, Class Q&A Total, Total Grade, Grading TA, TA's Email, Last Post Date, Diary Text, UUID\n");
+		brSummary.write("Student Email, Student Name, Most Recent Grading Period, My Q&A Total, Class Q&A Total, Total Grade, Grading TA, TA's Email, Last Post Date, Diary Text\n");
 		
 		System.out.println(">>>>>>>>>>>>>>>>>>>>");
 		System.out.println(grades.size());
@@ -559,7 +519,7 @@ public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 			}
 			BufferedWriter brDetailed = new BufferedWriter(new FileWriter(detailedPath));
 			
-			brDetailed.write("Student Email, Student Name, My Q&A, Class Q&A, Grading TA, TA's Email, Post Date, Comment, Diary Content, UUID\n");
+			brDetailed.write("Student Email, Student Name, My Q&A, Class Q&A, Grading TA, TA's Email, Post Date, Comment, Diary Content\n");
 
 			System.out.println(">>>>>>>>>>>>>>>>>>>>");
 			System.out.println(grades.size());

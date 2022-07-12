@@ -1,4 +1,4 @@
- package piazza.bowen;
+package piazza.nlp;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -22,38 +22,39 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class APiazzaClassBowen implements PiazzaClass {
+public class APiazzaClassRecursivePosts implements PiazzaClass {
 
 	final String piazzaLogic = "https://piazza.com/logic/api";
 
 	protected PiazzaSession mySession = null;
 	protected String cid;
-	private Map<String, String> map = new HashMap<>();    // key: cid   value: uid
+	private Map<String, String> map = new HashMap<>(); // key: cid value: uid
 	private String incompletePostsFile;
-	public APiazzaClassBowen(String email, String password, String classID, String anIncompletePostsFile)
+
+	public APiazzaClassRecursivePosts(String email, String password, String classID, String anIncompletePostsFile)
 			throws ClientProtocolException, IOException, LoginFailedException {
 		this.mySession = new APiazzaSession();
 		this.mySession.login(email, password);
 		this.cid = classID;
 		incompletePostsFile = anIncompletePostsFile;
 	}
-	public APiazzaClassBowen(String email, String password, String classID)
+
+	public APiazzaClassRecursivePosts(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
 		this(email, password, classID, "incompletePostsFile");
 	}
-	
-	public void setIncompletePostsFile (String anIncompletePostsFile) {
+
+	public void setIncompletePostsFile(String anIncompletePostsFile) {
 		incompletePostsFile = anIncompletePostsFile;
 
 	}
 
-	
-	// get feed from 
+	// get feed from
 	public List<Map<String, Object>> getFeed(int limit, int offset)
 			throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().put("limit", limit).put("offset", offset).put("sort", "updated").put("nid",
 				this.cid);
-		////System.out.println(data.toString());
+		//// System.out.println(data.toString());
 		Map<String, Object> resp = this.mySession.piazzaAPICall("network.get_my_feed", data, piazzaLogic);
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> feed = (List<Map<String, Object>>) ((Map<String, Object>) this.getResults(resp))
@@ -72,101 +73,122 @@ public class APiazzaClassBowen implements PiazzaClass {
 		JSONObject data = new JSONObject().put("ids", new String[] { uid }).put("nid", this.cid);
 		Map<String, Object> resp = this.mySession.piazzaAPICall("network.get_users", data, piazzaLogic);
 //		//System.out.println("UserId: " + resp.toString());
-		if (((List<Map<String, Object>>) this.getResults(resp)).size() == 0) return null;
+		if (((List<Map<String, Object>>) this.getResults(resp)).size() == 0)
+			return null;
 		@SuppressWarnings("unchecked")
 		Map<String, Object> user = ((List<Map<String, Object>>) this.getResults(resp)).get(0);
 		return user;
 	}
-	
-	
-    // get post provided content id
+
+	// get post provided content id
 	public Map<String, Object> getPost(String cid) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().put("cid", cid);
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
 		@SuppressWarnings("unchecked")
 		Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
-		
-		//System.out.println(post);
+
+		// System.out.println(post);
 		@SuppressWarnings("unchecked")
 		Map<String, String> change_log = ((List<Map<String, String>>) post.get("change_log")).get(0);
-		if(change_log.get("type").equals("create")) map.put(cid, change_log.get("uid"));
-		
+		if (change_log.get("type").equals("create"))
+			map.put(cid, change_log.get("uid"));
+
 		return post;
 	}
-	
-	public Map<String, String> getMap(){
+
+	public Map<String, String> getMap() {
 		return map;
 	}
-	
+
+	public Map<String, Object> toPostInfo(Map<String, Object> item, boolean isChild) {
+		HashMap<String, Object> postInfo = new HashMap();
+		try {
+			String id = (String) item.get("id");
+			postInfo.put("id", id);
+			postInfo.put("type", item.get("type"));
+			String uid = null;
+			String content = null;
+			List<Map<String, Object>> children = null;
+
+			if (!isChild) {
+				Map<String, Object> post = getPost(id);
+
+				List<Map<String, Object>> historyList = (List<Map<String, Object>>) post.get("history");
+				Map<String, Object> latestElement = historyList.get(0);
+				content = (String) latestElement.get("content");
+				postInfo.put("subject", item.get("subject"));
+				List<Map<String, Object>> uidList = (List<Map<String, Object>>) post.get("change_log");
+				Map<String, Object> uidMap = (Map<String, Object>) uidList.get(0);
+				uid = (String) uidMap.get("uid");
+				children = (List<Map<String, Object>>) post.get("children");
+			} else {
+				content = (String) item.get("subject");
+				children = (List<Map<String, Object>>) item.get("children");
+				uid = (String) item.get("uid");
+
+			}
+			postInfo.put("content", content);
+
+//			postInfo.put("subject", latestElement.get("subject"));
+			postInfo.put("updated", item.get("updated"));
+			postInfo.put("uid", uid);
+			String anEmail = getUserEmail(uid);
+			String aUserName = getUserName(uid);
+			if (anEmail == null) {
+				anEmail = "noreply@piazza.com";
+			}
+			postInfo.put("userName", aUserName);
+			postInfo.put("email", anEmail);
+			postInfo.put("tags", item.get("tags"));
+//			postInfo.put("timeCreated", post.get("modified"));
+			postInfo.put("no_answer_followup", item.get("no_answer_followup"));
+			if (children != null && !children.isEmpty()) {
+				List<Map<String, Object>> aChildren = new ArrayList();
+				for (Map<String, Object> child : children) {
+
+					Map<String, Object> aChildPost = toPostInfo(child, true);
+					aChildren.add(aChildPost);
+				}
+				postInfo.put("children", aChildren);
+			}
+			Thread.sleep(3000);
+
+			// System.out.println("Post content: " + this.getPost(id));
+		} catch (Exception e) {
+			e.printStackTrace();
+
+		}
+		return postInfo;
+
+	}
+
 	public List<Map<String, Object>> getAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
 		List<Map<String, Object>> feed = this.getFeed(999999, 0);
 		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
-		
-		// The following helps to display a visual of the percentage of completion due to having to wait with Thread.sleep
+
+		// The following helps to display a visual of the percentage of completion due
+		// to having to wait with Thread.sleep
 		double maxSize = feed.size();
 		int numItemsProcessed = 0;
 //		org.json.simple.JSONObject result = new org.json.simple.JSONObject();
 		JSONObject result = new JSONObject();
 
-		// Time how long it takes to access the feed given that we are waiting one second between each request
+		// Time how long it takes to access the feed given that we are waiting one
+		// second between each request
 		long startTime = System.currentTimeMillis();
-		
+
 		for (Map<String, Object> item : feed) {
-			numItemsProcessed++;		
-			HashMap<String, Object> postInfo = new HashMap();
-			postInfo.put("id", item.get("id"));
-			postInfo.put("type", item.get("type"));
-			postInfo.put("title", item.get("subject"));
+//			String id = (String) item.get("id");
+			Map<String, Object> postInfo = toPostInfo(item, false);
+			result.put("Post" + numItemsProcessed, postInfo);
+			numItemsProcessed++;
 			double percentage = numItemsProcessed / maxSize;
 			System.out.println(Math.round(percentage * 100) + "% complete");
-			String id = (String) item.get("id");
-			//result.put("id", item.get("id"));
-			//result.put("type", item.get("type"));
-			//result.put("title", item.get("subject"));
-			ArrayList<Map<String, Object>> contentArray = (ArrayList<Map<String, Object>>)this.getPost(id).get("history");
-			Map<String, Object> contentMap = (Map<String, Object>) contentArray.toArray()[0];
-			String content = (String) contentMap.get("content");
-			ArrayList<Map<String, Object>> uidArray = (ArrayList<Map<String, Object>>)item.get("log");
-			Map<String, Object> uidMap = (Map<String, Object>) uidArray.toArray()[0];
-			String uid = (String) uidMap.get("u");
-			//content = content.replaceAll("\n", "");
-			//content = content.replaceAll("<p>", "");
-			//ontent = content.replaceAll("<\\/li>", "");
-			//content = content.replaceAll("<\\/strong>", "");
-			//content = content.replaceAll("<li style=\\\"margin:0;padding:0\\\">", "");
-			//content = content.replaceAll("<\\/ol>", "");
-			//content = content.replaceAll("<\\/md>", "");
-			//content = content.replaceAll("#pin", "");
-			//content = content.replaceAll("<" + StringUtils.substringBetween(content, "<", ">") + ">", "");
-			//content = content.replaceAll("<" + StringUtils.substringBetween(content, "<img", ">") + ">", "");
-			//content = content.replaceAll("<\\/p>", "");
-			postInfo.put("cleanedContent", content);
-			postInfo.put("uid", uid);
-			postInfo.put("tags", item.get("tags"));
-			postInfo.put("timeCreated", item.get("modified"));
-			postInfo.put("totalFollowUpPosts", item.get("no_answer_followup"));
-			//result.put("cleanedContent", content);
-			//result.put("tags", item.get("tags"));
-			//result.put("timeCreated", item.get("modified"));
-			//result.put("totalFollowUpPosts", item.get("no_answer_followup"));
-			//System.out.println("id: " + id);
-			result.put("Post" + numItemsProcessed, postInfo);
-			posts.add(this.getPost(id));
-			//System.out.println("Post content: " + this.getPost(id));
-			
-			
-			// Sleep as to not overwhelm the Piazza backend with requests and get thrown errors for it
-			try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
 		}
-		
+
 		long endTime = System.currentTimeMillis();
 		System.out.println("Accessing feed took " + (endTime - startTime) / 1000 + " seconds");
-		
-		
+
 		try {
 //			FileWriter fileWriter = new FileWriter("C:\\Users\\gubow\\COMP 691H\\Find Incomplete Post\\COMP 301 Summer 2021.json");
 			FileWriter fileWriter = new FileWriter(incompletePostsFile);
@@ -180,12 +202,12 @@ public class APiazzaClassBowen implements PiazzaClass {
 			e.printStackTrace();
 		}
 		System.out.println("JSON file created successfully");
-		
+
 		return posts;
 	}
-	
+
 	// get author id of the post
-	public String getAuthorId(Map<String, Object> post) { 
+	public String getAuthorId(Map<String, Object> post) {
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> hist = (List<Map<String, Object>>) post.get("change_log");
 		String authorId = "";
@@ -198,7 +220,6 @@ public class APiazzaClassBowen implements PiazzaClass {
 		return authorId;
 	}
 
-
 	public String getUserName(String uid) throws ClientProtocolException, NotLoggedInException, IOException {
 		return (String) this.getUser(uid).get("name");
 	}
@@ -207,14 +228,14 @@ public class APiazzaClassBowen implements PiazzaClass {
 		return (String) this.getUser(uid).get("email");
 	}
 
-	public boolean createFollowup(String cid, String post) throws ClientProtocolException, NotLoggedInException, IOException {
-		JSONObject data = new JSONObject().put("cid", cid).put("subject", post)
-				.put("type", "followup").put("content", "").put("anonymous", "no");
+	public boolean createFollowup(String cid, String post)
+			throws ClientProtocolException, NotLoggedInException, IOException {
+		JSONObject data = new JSONObject().put("cid", cid).put("subject", post).put("type", "followup")
+				.put("content", "").put("anonymous", "no");
 		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
 //		//System.out.println(resp.toString());
-		return resp != null? true:false;
+		return resp != null ? true : false;
 	}
-
 
 	public boolean createPost(String postToReply, String content, boolean anonymous) {
 		// TODO fill-in
@@ -223,7 +244,7 @@ public class APiazzaClassBowen implements PiazzaClass {
 
 	private Object getResults(Map<String, Object> resp) {
 		if (resp.get("error") != null) {
-			//System.out.println("Error in resp: " + resp.get("error"));
+			// System.out.println("Error in resp: " + resp.get("error"));
 			return null;
 		}
 		return resp.get("result");

@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
+import piazza.LoginFailedException;
+import piazza.NotLoggedInException;
+
 public class APiazzaClassWithDiaries_2Bowen extends APiazzaClassBowen {
 
 	private Pattern GRADE_MY_QA = Pattern.compile("(My\\sQ&A).*= .*?\\+?(\\d+)",Pattern.CASE_INSENSITIVE);

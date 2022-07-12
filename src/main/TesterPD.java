@@ -1,20 +1,23 @@
- package piazza.bowen;
+ package main;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
+import piazza.APiazzaClass;
+import piazza.APiazzaClassWithDiaries;
+import piazza.APiazzaClassWithDiaries_2;
+import piazza.APiazzaClassWithDiaries_3;
+import piazza.APiazzaClassWithDiaries_TA;
+import piazza.APiazzaClassWithDiaries_Yicheng;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
-import piazza.bowen.TesterBowen.Method;
 
-public class TesterBowen {
+public class TesterPD {
 	
 	/* Regular grading involves grading the newest set of diary entries within the current grading period by
 	 * posting a followup post to each students' diary and generating summary and detailed .csv files
@@ -25,10 +28,10 @@ public class TesterBowen {
 	 * Read from file is used to output Q&A scores to System.out from a text file containing the diary content of a single student
 	 * The file path of the input file should be passed into generateDiaryGrades()
 	 */
-	public enum Method {
-		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE, READ_FROM_FILE;
-	}
-	
+//	public enum Method {
+//		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE, READ_FROM_FILE;
+//	}
+//	
 	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		
 		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
@@ -47,21 +50,21 @@ public class TesterBowen {
 		String classID = config.getString("class_id");
 		
 		
-		String outputFilePath = "/Users/gubow/COMP 691H/524posts.csv";
+//		String outputFilePath = "/Path/To/Where/File/Is/Saved";
+		String outputFilePath = "C:\\Users\\dewan\\Downloads\\PiazzaOutput\\allposts.csv";
+
 		//String inputFilePath = "/Path/To/Where/File/Is/Saved";
 		String contactName = "one of the TAs";
 		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
-		//APiazzaDiaryPD comp524 = new APiazzaDiaryPD(email, password, classID, contactName, fullRegradeNote);
-		APiazzaClassBowen comp524 = new APiazzaClassBowen(email, password, classID);
-		List<Map<String, Object>> allPosts;
-		// comp533.updateAllDiaries(outputFilePath);
-		// Set the method to the desired operation. See the Method enum declaration for details
-		//comp524.setMethod(Method.READ_FROM_FILE);
-		comp524.getAllPosts();
-		System.out.println("DONE!");
+		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName, fullRegradeNote);
 		
-		//System.out.println(onePost);
+		// Set the method to the desired operation. See the Method enum declaration for details
+		comp533.setMethod(Tester.Method.REGULAR_GRADING_WITH_CSV);
+		comp533.generateDiaryGrades(outputFilePath);
+		
+		
+		System.out.println("DONE!");
 		
 		configReader.close();
 	}

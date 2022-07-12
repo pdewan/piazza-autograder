@@ -1,4 +1,4 @@
- package piazza.bowen;
+ package piazza.nlp;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -12,9 +12,8 @@ import org.json.JSONObject;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
-import piazza.bowen.TesterBowen.Method;
 
-public class TesterBowen {
+public class ParameterizedTester {
 	
 	/* Regular grading involves grading the newest set of diary entries within the current grading period by
 	 * posting a followup post to each students' diary and generating summary and detailed .csv files
@@ -29,8 +28,13 @@ public class TesterBowen {
 		REGULAR_GRADING_WITH_CSV, UPDATE_CSV_FROM_PIAZZA, FULL_REGRADE, READ_FROM_FILE;
 	}
 	
-	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
-		
+	public static void main(String[] args) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
+		if (args.length != 2) {
+			System.out.println("Please input the regular and incomplete posts files as arguments");
+			System.exit(-1);
+		}
+		String aPostsFile = args[0];
+		String anIncompletePostsFile = args[1];
 		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
 		
 		String text = "";
@@ -47,13 +51,15 @@ public class TesterBowen {
 		String classID = config.getString("class_id");
 		
 		
-		String outputFilePath = "/Users/gubow/COMP 691H/524posts.csv";
+//		String outputFilePath = "/Users/gubow/COMP 691H/524posts.csv";
+		String outputFilePath = aPostsFile;
+
 		//String inputFilePath = "/Path/To/Where/File/Is/Saved";
 		String contactName = "one of the TAs";
 		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
 		//APiazzaDiaryPD comp524 = new APiazzaDiaryPD(email, password, classID, contactName, fullRegradeNote);
-		APiazzaClassBowen comp524 = new APiazzaClassBowen(email, password, classID);
+		APiazzaClassRecursivePosts comp524 = new APiazzaClassRecursivePosts(email, password, classID, anIncompletePostsFile);
 		List<Map<String, Object>> allPosts;
 		// comp533.updateAllDiaries(outputFilePath);
 		// Set the method to the desired operation. See the Method enum declaration for details
