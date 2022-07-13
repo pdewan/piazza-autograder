@@ -101,7 +101,73 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //	public Map<String, String> getMap() {
 //		return map;
 //	}
-
+	public static boolean isDiary(Map<String, Object>  aPostInfo) {
+    	List<String> tags = (List<String>) aPostInfo.get("tags");
+    	
+    	boolean isDiary = tags != null && tags.contains("diary");
+    	if (!isDiary) {
+    		return false;
+    	}
+    	
+     	
+    	
+    	String aSubject = ((String) aPostInfo.get("subject")).toLowerCase();
+    	boolean aSubjectIsDiary = aSubject.contains("iary"); 
+    	
+    
+    	String aContent = ((String) aPostInfo.get("content")).toLowerCase();
+    	boolean aContentIsDiary =  
+    			aContent.toLowerCase().contains("q&a");
+    	if (!aContentIsDiary) {
+    		return false;
+    	}
+   
+    	return true; 
+    }
+    public static boolean isOfficeHourRoot(Map<String, Object>  aPostInfo) {
+    	List<String> tags = (List<String>) aPostInfo.get("tags");
+    	boolean isPinned = tags != null && tags.contains("pin");
+    	if (!isPinned) {
+    		return false;
+    	}
+    	boolean isInstructorNote = tags.contains("instructor-note");
+    	if (!isInstructorNote) {
+    		return false;
+    	}
+     	
+    	
+    	String aSubject = ((String) aPostInfo.get("subject")).toLowerCase();
+    	boolean aSubjectIsOfficeHours = aSubject.contains("office hour"); 
+    	if (!aSubjectIsOfficeHours) {
+    		return false;
+    	}
+    
+    	String aContent = ((String) aPostInfo.get("content")).toLowerCase();
+    	boolean aContentIsOfficeHours =  
+    			aContent.toLowerCase().contains("schedule") && 
+    			aContent.contains("office hour");
+    	
+    	if (!aContentIsOfficeHours) {
+    		return false;
+    	}
+   
+    	return true; 
+    }
+    public static String instructorName (String aContents) {
+    	//Respond here for Andrew Wortas' Office Hours (at https://unc.zoom.us/j/99914248661) for assignment problems
+    	String aPrefix = "<strong>";
+    	int aStartIndexOfName = aContents.indexOf(aPrefix) + aPrefix.length();
+    	if (aStartIndexOfName == -1) {
+    		return null;
+    	}
+    	String aSuffix = "</strong>";
+    	int anEndIndexOfName = aContents.indexOf(aSuffix);
+    	if (anEndIndexOfName == -1) {
+    		return null;
+    	}
+    	return aContents.substring(aStartIndexOfName, anEndIndexOfName).trim();
+    	
+    }
 	public Map<String, Object> toPostInfo(Map<String, Object> item, boolean isChild) {
 		HashMap<String, Object> postInfo = new HashMap();
 		try {
@@ -126,6 +192,9 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 				Map<String, Object> uidMap = (Map<String, Object>) uidList.get(0);
 				uid = (String) uidMap.get("uid");
 				children = (List<Map<String, Object>>) post.get("children");
+				postInfo.put("is_office_hour_parent", false);
+				postInfo.put("is_office_hour_request", false);
+				postInfo.put("is_office_hour_root", false); // will change this below
 			} else {
 				content = (String) item.get("subject");
 				children = (List<Map<String, Object>>) item.get("children");
@@ -133,6 +202,12 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 
 			}
 			postInfo.put("content", content);
+			if (!isChild) {
+				boolean isDiary = isDiary(postInfo);
+				postInfo.put("is_diary", isDiary);
+				postInfo.put("root_is_diary", isDiary);
+				postInfo.put("root_subject", postInfo.get("subject"));
+			}
 
 //			postInfo.put("subject", latestElement.get("subject"));
 //			postInfo.put("updated", item.get("updated"));
@@ -147,15 +222,52 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 			}
 			postInfo.put("userName", aUserName);
 			postInfo.put("email", anEmail);
+			
+
 //			postInfo.put("tags", item.get("tags"));
 //			postInfo.put("timeCreated", post.get("modified"));
 //			postInfo.put("no_answer_followup", item.get("no_answer_followup"));
 			if (children != null && !children.isEmpty()) {
+				boolean isOfficeHourRoot = isOfficeHourRoot(postInfo);
+				postInfo.put("is_office_hour_root", isOfficeHourRoot);
+				 
+
+				
+				Boolean  isOfficeHourParent = (Boolean) postInfo.get("is_office_hour_parent");
+				
+
+				
 				List<Map<String, Object>> aChildren = new ArrayList();
 				for (Map<String, Object> child : children) {
-					child.put("parentSubject", item.get("subject"));
+//					String aRootSubject = (String)  postInfo.get("root_subject"); 
+//					if (aRootSubject == null) {
+//						aRootSubject = (String)  item.get("subject");						
+//					}
+					
+					child.put("root_subject", postInfo.get("root_subject"));	
+					child.put("root_is_diary", postInfo.get("root_is_diary"));
+					child.put("is_office_hour_parent", isOfficeHourRoot);
+					child.put("is_office_hour_request", isOfficeHourParent);
+					if (isOfficeHourRoot) {
+						String anInstructorName = 						
+						instructorName(((String) child.get("subject")).toLowerCase());
+						if (anInstructorName != null) {
+							child.put("instructor_name", anInstructorName);
+						}
+					}
+					if (isOfficeHourParent) {
+//						child.put("isOfficeHourParent", false);
+						String aParentInstructorName = (String) postInfo.get("instructor_name");
+						if (aParentInstructorName != null) {
+							child.put("parent_instructor_name", aParentInstructorName);
+						}
+					}				
+						
 					Map<String, Object> aChildPost = toPostInfo(child, true);
+									
 					aChildren.add(aChildPost);
+					
+					
 				}
 				postInfo.put("children", aChildren);
 			}
@@ -234,7 +346,8 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //	}
 	public JSONObject getAllPostsRecursive() throws ClientProtocolException, NotLoggedInException, IOException {
 		List<Map<String, Object>> feed = this.getFeed(999999, 0);
-		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
+//		List<Map<String, Object>> feed2 = this.getFeed(999999, 7);
+//		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
 
 		// The following helps to display a visual of the percentage of completion due
 		// to having to wait with Thread.sleep
