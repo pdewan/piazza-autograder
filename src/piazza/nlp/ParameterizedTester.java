@@ -59,12 +59,12 @@ public class ParameterizedTester {
 		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
 		//APiazzaDiaryPD comp524 = new APiazzaDiaryPD(email, password, classID, contactName, fullRegradeNote);
-		APiazzaClassRecursivePosts comp524 = new APiazzaClassRecursivePosts(email, password, classID, anIncompletePostsFile);
+		APiazzaClassRecursivePosts aClass = new APiazzaClassRecursivePosts(email, password, classID, anIncompletePostsFile);
 		List<Map<String, Object>> allPosts;
 		// comp533.updateAllDiaries(outputFilePath);
 		// Set the method to the desired operation. See the Method enum declaration for details
 		//comp524.setMethod(Method.READ_FROM_FILE);
-		comp524.getAllPosts();
+		aClass.writeAllPosts();
 		System.out.println("DONE!");
 		
 		//System.out.println(onePost);
