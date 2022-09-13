@@ -5,7 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +32,27 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //	protected PiazzaSession mySession = null;
 //	protected String cid;
 //	private Map<String, String> map = new HashMap<>(); // key: cid value: uid
-	private String incompletePostsFile;
+//	private String outDirectory;
+	
+	public static final String ALL_POSTS = "AllPosts";
+	public static final String BY_AUTHOR_POSTS = "ByAuthorPosts";	
+	public static final String AUTHORS = "Authors";
+	Date feedDate;
+	private Map<String, List<Map<String, Object>>> authorToPosts = new HashMap<>();
+	
+	
 
-	public APiazzaClassRecursivePosts(String email, String password, String classID, String anIncompletePostsFile)
+
+	public APiazzaClassRecursivePosts(String email, 
+			String password, 
+			String classID, 
+			String anOutDirectory)
 			throws ClientProtocolException, IOException, LoginFailedException {
 		super(email, password, classID);
 //		this.mySession = new APiazzaSession();
 //		this.mySession.login(email, password);
 //		this.cid = classID;
-		incompletePostsFile = anIncompletePostsFile;
+//		outDirectory = anOutDirectory;
 	}
 
 	public APiazzaClassRecursivePosts(String email, String password, String classID)
@@ -46,11 +60,7 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 		this(email, password, classID, "incompletePostsFile");
 	}
 
-	public void setIncompletePostsFile(String anIncompletePostsFile) {
-		incompletePostsFile = anIncompletePostsFile;
-
-	}
-
+	
 //	// get feed from
 //	public List<Map<String, Object>> getFeed(int limit, int offset)
 //			throws ClientProtocolException, NotLoggedInException, IOException {
@@ -153,6 +163,16 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
    
     	return true; 
     }
+    
+    public void addAuthorPost(String anAuthor, Map<String, Object> aPost) {
+    	List<Map<String, Object>> aPosts = authorToPosts.get(anAuthor);
+    	if (aPosts == null) {
+    		aPosts = new ArrayList();
+    		authorToPosts.put(anAuthor, aPosts);
+    	}
+    	aPosts.add(aPost);
+    }
+    
     public static String instructorName (String aContents) {
     	//Respond here for Andrew Wortas' Office Hours (at https://unc.zoom.us/j/99914248661) for assignment problems
     	String aPrefix = "<strong>";
@@ -168,7 +188,16 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
     	return aContents.substring(aStartIndexOfName, anEndIndexOfName).trim();
     	
     }
-	public Map<String, Object> toPostInfo(Map<String, Object> item, boolean isChild) {
+    public static String getLatestContent(Map<String, Object> item) {	
+		Map<String, Object> latestElement = getLatestElement(item);
+		return (String) latestElement.get("content");
+    }
+    public static Map<String, Object> getLatestElement(Map<String, Object> item) {
+  		List<Map<String, Object>> historyList = (List<Map<String, Object>>) item.get("history");
+  		Map<String, Object> latestElement = historyList.get(0);
+  		return latestElement;
+      }
+	public Map<String, Object> toPostInfo(Map<String, Object> item, boolean isChild, long aStartTime, long anEndTime, String ... aTags ) {
 		HashMap<String, Object> postInfo = new HashMap();
 		try {
 			for (String aKey:item.keySet()) {
@@ -180,13 +209,22 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 			String uid = null;
 			String content = null;
 			List<Map<String, Object>> children = null;
+//			long aTime = 0;
 
 			if (!isChild) {
+//				String aDateString = (String) postInfo.get("modified");
+//				Date aDate = getDate(aDateString);
+//				aTime = aDate.getTime();
+//				
+//				if (aTime > anEndTime) {
+//					return null;
+//				}
 				Map<String, Object> post = getPost(id);
 
-				List<Map<String, Object>> historyList = (List<Map<String, Object>>) post.get("history");
-				Map<String, Object> latestElement = historyList.get(0);
-				content = (String) latestElement.get("content");
+//				List<Map<String, Object>> historyList = (List<Map<String, Object>>) post.get("history");
+//				Map<String, Object> latestElement = historyList.get(0);
+//				content = (String) latestElement.get("content");
+				content = getLatestContent(post);
 //				postInfo.put("subject", item.get("subject"));
 				List<Map<String, Object>> uidList = (List<Map<String, Object>>) post.get("change_log");
 				Map<String, Object> uidMap = (Map<String, Object>) uidList.get(0);
@@ -199,6 +237,18 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 				content = (String) item.get("subject");
 				children = (List<Map<String, Object>>) item.get("children");
 				uid = (String) item.get("uid");
+				String aUTCDate = (String) item.get("created");
+				postInfo.put("modified", aUTCDate);
+				postInfo.remove("created");
+				String aDateString = (String) postInfo.get("modified");
+				Date aDate = getDate(aDateString);
+				long aTime = aDate.getTime();
+				if (aTime > anEndTime) {
+					return null;
+				}
+				postInfo.put("time", aTime);
+				postInfo.put("synthesized_time", aTime);
+
 
 			}
 			postInfo.put("content", content);
@@ -214,14 +264,29 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //			postInfo.put("uid", uid);
 			String anEmail = getUserEmail(uid);
 			String aUserName = getUserName(uid);
+			if (aUserName == null) {
+				System.out.println("Null user name for uid " + uid);
+				aUserName = "Instructor";
+			}
 			if (aUserName.equals("Piazza Team") && anEmail == null) {
 				return null;
 			}
 			if (anEmail == null) {
-				anEmail = "noreply@piazza.com";
+				anEmail = "instructor@piazza.com";
 			}
-			postInfo.put("userName", aUserName);
-			postInfo.put("email", anEmail);
+//			postInfo.put("userName", aUserName);
+//			postInfo.put("email", anEmail);
+			String anAuthor = aUserName + "(" + anEmail + ")";
+			postInfo.put("author",anAuthor);
+			addAuthorPost(anAuthor, postInfo);
+			
+//			String aDateString = (String) postInfo.get("modified");
+//			Date aDate = getDate(aDateString);
+//			long aTime = aDate.getTime();
+//			if (aTime > anEnd)
+//			postInfo.put("time", aTime);
+//			postInfo.put("sythesized_time", aTime);
+
 			
 
 //			postInfo.put("tags", item.get("tags"));
@@ -262,12 +327,26 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 							child.put("parent_instructor_name", aParentInstructorName);
 						}
 					}				
-						
-					Map<String, Object> aChildPost = toPostInfo(child, true);
-									
+					child.put("tags", postInfo.get("tags"))	;
+					Map<String, Object> aChildPost = toPostInfo(child, true, aStartTime, anEndTime);
+						if (aChildPost == null) {
+							continue;
+						}
 					aChildren.add(aChildPost);
+					long aCurrentParentTime = (long) postInfo.get("synthesized_time");
+					long aChildTime = (long) aChildPost.get("synthesized_time");
+					
+					long aMaxTime = Math.max(aCurrentParentTime, aChildTime);
+					
+					if (aMaxTime != aCurrentParentTime) {
+						postInfo.put("synthesized_time", aMaxTime);
+					}
 					
 					
+				}
+				long aFinalParentTime = (long) postInfo.get("synthesized_time");
+				if (aFinalParentTime < aStartTime) {
+					return null;
 				}
 				postInfo.put("children", aChildren);
 			}
@@ -281,21 +360,82 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 		return postInfo;
 
 	}
-	public void writeAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
-		JSONObject allPosts = getAllPostsRecursive();
+	public void writeAuthorPosts(String anOutDirectory, String aDateString) throws IOException {
+		JSONObject aJsonObject = new JSONObject();
+		for (String aKey:authorToPosts.keySet()) {
+			aJsonObject.put(aKey, authorToPosts.get(aKey));
+		}
+		String aString = aJsonObject.toString();
+		String aFileName = anOutDirectory+"/"+cid + "_" + BY_AUTHOR_POSTS+"_" + aDateString + ".json";
+		File aFile = new File(aFileName);
+		aFile.createNewFile();
+		writeToFile(aFile, aString);
+		
+	}
+
+	public void writeAuthors(String anOutDirectory, String aDateString) throws IOException {
+		
+		String aString = allAuthors();
+		String aFileName = anOutDirectory+"/"+cid + "_" +AUTHORS + "_" + aDateString + ".txt";
+		File aFile = new File(aFileName);
+		aFile.createNewFile();
+		writeToFile(aFile, aString);
+		
+	}
+	public void writeToFile(File aFile, String aString)   {
 		try {
+			
+			
 //			FileWriter fileWriter = new FileWriter("C:\\Users\\gubow\\COMP 691H\\Find Incomplete Post\\COMP 301 Summer 2021.json");
-			FileWriter fileWriter = new FileWriter(incompletePostsFile);
+			FileWriter fileWriter = new FileWriter(aFile);
 
 //			fileWriter.write(result.toJSONString());
-			String aString = allPosts.toString();
 			fileWriter.write(aString);
 
 			fileWriter.flush();
+			System.out.println("File " + aFile + " created successfully");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("JSON file created successfully");
+	}
+	public static String dateToFileExtension(Date aDate) {
+		return aDate.toString().replaceAll(":", "_").replaceAll(" ", "-");	
+		
+	}
+	public  String allAuthors() {
+		StringBuilder retVal = new StringBuilder();
+		for (String anAuthor:authorToPosts.keySet()) {
+			retVal.append(anAuthor + "\n");
+		}
+		return retVal.toString();
+	}
+	public void writeAllPosts(String anOutDirectory, int aStartCid, int anEndCid, long aStartTime, long anEndTime, String ... aTags ) throws ClientProtocolException, NotLoggedInException, IOException {
+		JSONObject allPosts = getAllPostsRecursive(aStartCid, anEndCid, aStartTime, anEndTime, aTags);
+		try {
+		String aDateString = dateToFileExtension(feedDate);
+			String aFileName = anOutDirectory+"/"+ cid + "_" + ALL_POSTS+"_" + aDateString + ".json";
+			File aFile = new File(aFileName);
+			aFile.createNewFile();
+			String aString = allPosts.toString();
+			writeToFile(aFile, aString);
+			
+			writeAuthorPosts(anOutDirectory, aDateString);
+			writeAuthors(anOutDirectory, aDateString);
+			
+//			FileWriter fileWriter = new FileWriter("C:\\Users\\gubow\\COMP 691H\\Find Incomplete Post\\COMP 301 Summer 2021.json");
+//			FileWriter fileWriter = new FileWriter(aFile);
+//
+////			fileWriter.write(result.toJSONString());
+//			String aString = allPosts.toString();
+//			fileWriter.write(aString);
+//
+//			fileWriter.flush();
+//			System.out.println("JSON file " + aFileName + " created successfully");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 //	public List<Map<String, Object>> getAllPosts() throws ClientProtocolException, NotLoggedInException, IOException {
@@ -344,7 +484,20 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //
 //		return result;
 //	}
-	public JSONObject getAllPostsRecursive() throws ClientProtocolException, NotLoggedInException, IOException {
+	public static boolean intersectsLC (List<String> aList1, List<String> aList2) {
+		for (String anElement1:aList1) {
+			String anElement1LowerCase = anElement1.toLowerCase();
+			for (String anElement2: aList2) {
+				if (anElement1LowerCase.equals(anElement2.toLowerCase())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	public JSONObject getAllPostsRecursive(int aStartCid, int anEndCid, long aStartTime, long anEndTime, String ...aTags) throws ClientProtocolException, NotLoggedInException, IOException {
+		long startTime = System.currentTimeMillis();
+		feedDate = new Date(startTime);
 		List<Map<String, Object>> feed = this.getFeed(999999, 0);
 //		List<Map<String, Object>> feed2 = this.getFeed(999999, 7);
 //		List<Map<String, Object>> posts = new ArrayList<Map<String, Object>>();
@@ -355,14 +508,35 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 		int numItemsProcessed = 0;
 //		org.json.simple.JSONObject result = new org.json.simple.JSONObject();
 		JSONObject result = new JSONObject();
+		
 
 		// Time how long it takes to access the feed given that we are waiting one
 		// second between each request
-		long startTime = System.currentTimeMillis();
 
 		for (Map<String, Object> item : feed) {
+			int aCid =  (int) item.get("nr");
+			if (aCid < aStartCid || aCid > anEndCid) {
+				continue;
+			}
+			String aDateString = (String) item.get("modified");
+			Date aDate = getDate(aDateString);
+			long aTime = aDate.getTime();
+			
+			if (aTime > anEndTime) {
+				return null;
+			}
+			item.put("time", aTime);
+			item.put("synthesized_time", aTime);
+			if (aTags.length > 0) {
+				
+				List<String> aTagsList = Arrays.asList(aTags);
+				List<String> anActualTags = (List<String>) item.get("tags");
+				if (!intersectsLC(anActualTags, aTagsList)) {
+					continue;
+				}
+			}
 //			String id = (String) item.get("id");
-			Map<String, Object> postInfo = toPostInfo(item, false);
+			Map<String, Object> postInfo = toPostInfo(item, false, aStartTime, anEndTime);
 			if (postInfo == null) {
 				continue;
 			}
