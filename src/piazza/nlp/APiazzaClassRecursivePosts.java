@@ -416,6 +416,7 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 		String aDateString = dateToFileExtension(feedDate);
 			String aFileName = anOutDirectory+"/"+ cid + "_" + ALL_POSTS+"_" + aDateString + ".json";
 			File aFile = new File(aFileName);
+			aFile.getParentFile().mkdirs();
 			aFile.createNewFile();
 			String aString = allPosts.toString();
 			writeToFile(aFile, aString);

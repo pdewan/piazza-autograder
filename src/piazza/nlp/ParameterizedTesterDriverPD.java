@@ -17,7 +17,10 @@ import piazza.NotLoggedInException;
 
 public class ParameterizedTesterDriverPD {
 	static APiazzaClassRecursivePosts loggedInClass;
-	static  String outDir = "C:\\Users\\dewan\\Downloads\\PiazzaOutput\\Comp301ss22";
+//	static  String outDir = "C:\\Users\\dewan\\Downloads\\PiazzaOutput\\Comp401f17";
+//	static  String outDir = "C:\\Users\\dewan\\Downloads\\PiazzaOutput\\Comp524f19";
+
+	static  String outDir = "C:\\Users\\dewan\\Downloads\\PiazzaOutput\\Comp524f22";
 
 //	feed_groups	:	i588uvywlmn3b5,h68jepo6q4z3bk
 	public static void writePosts() throws ClientProtocolException, NotLoggedInException, IOException {

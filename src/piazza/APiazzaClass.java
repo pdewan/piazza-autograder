@@ -287,7 +287,11 @@ public class APiazzaClass implements PiazzaClass {
 //	}
 
 	private Object getResults(Map<String, Object> resp) {
-		if (resp != null && resp.get("error") != null) {
+		if (resp == null) {
+			System.out.println("Null response");
+			return null;
+		}
+		if (resp.get("error") != null) {
 			System.out.println("Error in resp: " + resp.get("error"));
 			return null;
 		}
