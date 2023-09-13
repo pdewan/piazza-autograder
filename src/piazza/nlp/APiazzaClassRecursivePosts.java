@@ -25,6 +25,16 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+/*
+ * Draft
+ * {method: "network.save_draft", params: {nid: "k9zvvl9ubao6xa",…}}
+method
+: 
+"network.save_draft"
+params
+: 
+{nid: "k9zvvl9ubao6xa",…}
+ */
 public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaClass {
 
 //	final String piazzaLogic = "https://piazza.com/logic/api";
