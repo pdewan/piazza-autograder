@@ -28,9 +28,19 @@ public class APiazzaClass implements PiazzaClass {
 
 	public APiazzaClass(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
-		this.mySession = new APiazzaSession();
+//		this.mySession = new APiazzaSession();
+		this.mySession = new ANewPiazzaSession();
+
 		this.mySession.login(email, password);
 		this.cid = classID;
+	}
+//	String csrfToken = "RlRqmyFYK6qrGpjqQkNTTaYB";
+//	String cookie
+	public APiazzaClass ( String aClassId, String anEmail, String aPassword, String aCSRFToken, String aCookie) throws ClientProtocolException, IOException, LoginFailedException {
+		this.mySession = new ANewPiazzaSession();
+
+		this.mySession.login(anEmail, aPassword);
+		this.cid = aClassId;
 	}
 	static DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssz");
 
