@@ -1,4 +1,4 @@
- package piazza;
+package piazza;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -24,7 +24,7 @@ public class APiazzaClass implements PiazzaClass {
 
 	protected PiazzaSession mySession = null;
 	protected String cid;
-	private Map<String, String> map = new HashMap<>();    // key: cid   value: uid
+	protected Map<String, String> map = new HashMap<>();    // key: cid   value: uid
 
 	public APiazzaClass(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
@@ -211,6 +211,7 @@ public class APiazzaClass implements PiazzaClass {
 		String aString = Arrays.toString(anArray);
 		return aString.replace("[","").replace("]", "");
 	}
+	
 	public boolean createPost(String aSubject, String aContent, List<String> aTags, String aRecipients ) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().
 				put("nid", this.cid).
@@ -232,6 +233,23 @@ public class APiazzaClass implements PiazzaClass {
 //		System.out.println(resp.toString());
 		return resp != null? true:false;
 	}
+	
+	public boolean createDraftReply(String aSubject, String aContent, List<String> aTags, String aRecipients ) throws ClientProtocolException, NotLoggedInException, IOException {
+		JSONObject data = new JSONObject().
+				put("network_id", this.cid).
+				put("body", "This is a test from Eclipse.").
+				put("cid", "ln3n9af88yl4h6").
+				put("editor", "rte").
+				put("revision", 0).
+				put("type", "feedback")
+				;
+
+		Map<String, Object> resp = this.mySession.piazzaAPICall("content.auto_save", data, piazzaLogic);
+		return resp != null? true:false;
+	}
+	
+	
+	
 	public boolean markPostAsDuplicate(String newPostID, String duplicatedID) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().
 				put("nid", this.cid)
@@ -296,7 +314,7 @@ public class APiazzaClass implements PiazzaClass {
 //		return true;
 //	}
 
-	private Object getResults(Map<String, Object> resp) {
+	protected Object getResults(Map<String, Object> resp) {
 		if (resp == null) {
 			System.out.println("Null response");
 			return null;

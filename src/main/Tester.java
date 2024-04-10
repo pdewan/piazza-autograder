@@ -47,19 +47,21 @@ public class Tester {
 		JSONObject config = new JSONObject(text);
 		String email = config.getString("email");
 		String password = config.getString("password");
-		String classID = config.getString("class_id");
+		String classID = "lljvl3218jw2r4"; //config.getString("class_id");
+		// 991: k9zvvl9ubao6xa, 524: lljvl3218jw2r4
 		
-		
-		String outputFilePath = "/Path/To/Where/File/Is/Saved";
+		//(for example, this post is @_)
+		String outputFilePath = "C:\\Users\\Mason\\Documents\\COMP524\\diaries";
 		//String inputFilePath = "/Path/To/Where/File/Is/Saved";
-		String contactName = "one of the TAs";
+		String contactName = "Mason Laney";
 		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
 		
-		APiazzaClassWithDiaries_3 comp533 = new APiazzaClassWithDiaries_3(email, password, classID, contactName, fullRegradeNote);
+		APiazzaClassWithDiaries_3 comp991 = new APiazzaClassWithDiaries_3(email, password, classID, contactName, fullRegradeNote);
 		
 		// Set the method to the desired operation. See the Method enum declaration for details
-		comp533.setMethod(Method.REGULAR_GRADING_WITH_CSV);
-		comp533.generateDiaryGrades(outputFilePath);
+		comp991.setMethod(Method.FULL_REGRADE);
+		//comp991.generateDiaryGrades(outputFilePath);
+		comp991.generateDiaryGrades(outputFilePath);
 		
 		
 		System.out.println("DONE!");

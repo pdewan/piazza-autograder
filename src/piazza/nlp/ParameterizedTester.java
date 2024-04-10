@@ -33,7 +33,9 @@ public class ParameterizedTester {
 			int anEndCid, long aStartTime, 
 			long anEndTime, String ... aTags ) throws ClientProtocolException, NotLoggedInException, IOException, LoginFailedException {
 		
-		APiazzaClassRecursivePosts aLoggedInClass = loginToPiazzaClass();
+		//APiazzaClassRecursivePosts aLoggedInClass = loginToPiazzaClass();
+		APiazzaClassRecursivePostsML aLoggedInClass = loginToPiazzaClass();
+
 //		aLoggedInClass.writeAllPosts(anOutDirectory, aStartCid, anEndCid, aStartTime, anEndTime, aTags);
 
 //		String aSubject = "TestSubject";
@@ -44,9 +46,9 @@ public class ParameterizedTester {
 	//	id	:	l5mo3pe7wm84dr
 		
 //		String id = "l5mo3pe7wm84dr";
-		String id = "l5hurqwc7pcce";
+		//String id = "l5hurqwc7pcce";
 //		
-		aLoggedInClass.createFollowup(id, "auto follow up " + System.currentTimeMillis());
+		//aLoggedInClass.createFollowup(id, "auto follow up " + System.currentTimeMillis());
 //		
 //		aLoggedInClass.createPost(aSubject, aContent, Arrays.asList(aPostTags), Arrays.asList(aRecipients));
 
@@ -89,7 +91,9 @@ public class ParameterizedTester {
 //		configReader.close();
 	}
 	static String classID;
-	public static APiazzaClassRecursivePosts loginToPiazzaClass(
+	//public static APiazzaClassRecursivePosts loginToPiazzaClass(
+	public static APiazzaClassRecursivePostsML loginToPiazzaClass(
+
 			) throws ClientProtocolException, NotLoggedInException, IOException, LoginFailedException {
 
 		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
@@ -106,6 +110,11 @@ public class ParameterizedTester {
 		String email = config.getString("email");
 		String password = config.getString("password");
 		classID = config.getString("class_id");
+		
+		// TODO: added by mason, maybe split into a new class?
+		String apiKey = config.getString("openai_api_key");
+		String defaultModel = config.getString("default_gpt_model");
+		
 		configReader.close();
 
 		
@@ -115,7 +124,9 @@ public class ParameterizedTester {
 		
 		
 		//APiazzaDiaryPD comp524 = new APiazzaDiaryPD(email, password, classID, contactName, fullRegradeNote);
-		APiazzaClassRecursivePosts aClass = new APiazzaClassRecursivePosts(email, password, classID);
+		//APiazzaClassRecursivePosts aClass = new APiazzaClassRecursivePosts(email, password, classID);
+		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel);
+
 		return aClass;
 		//	?aClass.writeAllPosts(aStartCid, anEndCid, aStartTime, anEndTime, aTags);
 
@@ -129,6 +140,25 @@ public class ParameterizedTester {
 		//System.out.println(onePost);
 		
 	}
+	
+	
+	public static APiazzaClassRecursivePostsML loginToPiazzaClassFromEnvVar(
+
+			) throws ClientProtocolException, NotLoggedInException, IOException, LoginFailedException {
+
+		String email = System.getenv("PIAZZA_EMAIL");
+		String password = System.getenv("PIAZZA_PASSWORD");
+		classID = System.getenv("PIAZZA_CLASS_ID");
+	
+		String apiKey = System.getenv("OPENAI_API_KEY");;
+		String defaultModel = System.getenv("DEFAULT_GPT_MODEL");
+		
+		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel);
+
+		return aClass;
+		
+	}
+	
 
 	public static void main(String[] args) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		if (args.length < 1) {
