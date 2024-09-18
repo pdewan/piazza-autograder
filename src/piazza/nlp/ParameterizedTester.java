@@ -115,6 +115,8 @@ public class ParameterizedTester {
 		String apiKey = config.getString("openai_api_key");
 		String defaultModel = config.getString("default_gpt_model");
 		
+		String lastRun = config.getString("lastRun");
+		
 		configReader.close();
 
 		
@@ -125,7 +127,7 @@ public class ParameterizedTester {
 		
 		//APiazzaDiaryPD comp524 = new APiazzaDiaryPD(email, password, classID, contactName, fullRegradeNote);
 		//APiazzaClassRecursivePosts aClass = new APiazzaClassRecursivePosts(email, password, classID);
-		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel);
+		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel, lastRun);
 
 		return aClass;
 		//	?aClass.writeAllPosts(aStartCid, anEndCid, aStartTime, anEndTime, aTags);
@@ -149,11 +151,12 @@ public class ParameterizedTester {
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
 		classID = System.getenv("PIAZZA_CLASS_ID");
-	
 		String apiKey = System.getenv("OPENAI_API_KEY");;
 		String defaultModel = System.getenv("DEFAULT_GPT_MODEL");
 		
-		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel);
+		String lastRun = System.getenv("LAST_RUN");
+		
+		APiazzaClassRecursivePostsML aClass = new APiazzaClassRecursivePostsML(email, password, classID, apiKey, defaultModel, lastRun);
 
 		return aClass;
 		

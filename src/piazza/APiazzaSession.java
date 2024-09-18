@@ -29,7 +29,7 @@ public class APiazzaSession implements PiazzaSession {
 	
 	private CookieStore cookieJar = new BasicCookieStore();
 	private HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieJar);
-	private CloseableHttpClient httpClient = builder.build();  //åˆ›å»ºhttpå¯¹è±¡
+	private CloseableHttpClient httpClient = builder.build();
 	
 	HttpContext context = new BasicHttpContext();
 	private boolean loggedIn = false;
