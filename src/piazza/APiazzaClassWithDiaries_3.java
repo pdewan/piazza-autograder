@@ -68,11 +68,24 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 	// populate the diaries variable
 	public void updateAllDiaries() throws ClientProtocolException, NotLoggedInException, IOException { 
 		for (Map<String, Object> post : this.getAllPosts()) {
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			//System.out.println(post);
+			
 			@SuppressWarnings("unchecked")
 			Map<String, String> top = ((List<Map<String, String>>) post.get("history")).get(0);
 			String content = top.get("content").toLowerCase();
 			
 			if (content.contains("diary") || content.contains("Diary")) {
+
+				System.out.println("DIARY:");
+				//System.out.println(post);
+				
 				String cid = (String) post.get("id");
 				String uid = this.getMap().get(cid);
 				//System.out.println("cid: " + cid);
@@ -80,6 +93,14 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 				Map<String, Object> user = this.getUser(uid);
 				if(user == null) continue;
 				String role = (String)user.get("role");
+				
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
+				// TODO: uncomment!!
 				if(!role.equals("student")) continue;
 				String name = this.getUserName(uid);
 				if(!content.contains("Instructor") && !content.contains("instructor")) continue;
@@ -145,7 +166,21 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		Map<String, Object> diary = this.diaries.get(name);
  		String aid = this.getAuthorId(diary);
 		if (aid.equals("")) { return null; }
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		String authorname = this.getUserName(aid);
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 		String email = this.getUserEmail(aid);
 		
 		@SuppressWarnings("unchecked")
@@ -431,13 +466,21 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		Map<String, IndividualGrade> gradesList = new HashMap<String, IndividualGrade>();
 		for (String name : this.diaries.keySet()) {
 			//if (!name.equals("Yifan Xu")) continue;
-			System.out.println(name);
+			//System.out.println(name);
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			
 			IndividualGrade g = this.get_grades(name);
 			grades.add(g);
 			gradesList.put(name, g);
 		}
 		if (method == Method.REGULAR_GRADING_WITH_CSV || method == Method.FULL_REGRADE) {
+			System.out.println("TEST TEST TEST");
+			
 			this.autoPost(gradesList);			
 		}
 		return grades;
@@ -469,6 +512,10 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		
 		// Fetch the diary posts from Piazza
 		this.updateAllDiaries();
+		
+		//ML
+		System.out.println("TEST ALL DIARIES");
+		//System.out.println(this.diaries);
 		
 		// Get a list of individual grades
 		List<IndividualGrade> grades = this.getDiaryGrades();
@@ -540,6 +587,14 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 
 	public void autoPost(Map<String, IndividualGrade> gradesList) throws ClientProtocolException, NotLoggedInException, IOException {
 		for(String name : cids.keySet()) {
+			
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			
 		//String name = "k55k48z93ve740";
 //			System.out.println("name: " + name);
 			String cid = cids.get(name);
@@ -550,13 +605,17 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			String post = "<p>Date: " + date + "<br>"
 					+ "Grading period: " + generateGradingPeriod(grades) + "<br>"
 					+ "My Q&A: " + grades.get(MY_QA_COUNT) + "*5 = " + grades.get(MY_QA_GRADE) + "<br>"
-					+ "Class Q&A: " + grades.get(CLASS_QA_COUNT) + "*5 = " + grades.get(CLASS_QA_GRADE) + "<br>"
+					//+ "Class Q&A: " + grades.get(CLASS_QA_COUNT) + "*5 = " + grades.get(CLASS_QA_GRADE) + "<br>"
 					+ "Total diary grade up to " + date + " is: " + grades.get(TOTAL_GRADE) + "<br>"
 					+ "If you have any questions regarding your grade, please talk to " + contactName;
 			if (method == Method.FULL_REGRADE) {
 				post += "<br>" + fullRegradeNote;
 			}
 			post += "</p>";
+			
+			System.out.println(post);
+			System.out.println();
+			//TODO:
 			this.createFollowup(cid, post);
 		}
 	}

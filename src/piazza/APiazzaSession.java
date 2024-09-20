@@ -29,7 +29,7 @@ public class APiazzaSession implements PiazzaSession {
 	
 	private CookieStore cookieJar = new BasicCookieStore();
 	private HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieJar);
-	private CloseableHttpClient httpClient = builder.build();  //创建http对象
+	private CloseableHttpClient httpClient = builder.build();
 	
 	HttpContext context = new BasicHttpContext();
 	private boolean loggedIn = false;
@@ -55,9 +55,9 @@ public class APiazzaSession implements PiazzaSession {
 		
 		System.out.println(loginData);
 		
-		HttpPost login = new HttpPost(piazzaLogic);    //创建请求方法实例，发送post请求，指定请求url
+		HttpPost login = new HttpPost(piazzaLogic);    //åˆ›å»ºè¯·æ±‚æ–¹æ³•å®žä¾‹ï¼Œå�‘é€�postè¯·æ±‚ï¼ŒæŒ‡å®šè¯·æ±‚url
 		
-		login.setEntity(new StringEntity(loginData));  //发送请求参数(如需要)
+		login.setEntity(new StringEntity(loginData));  //å�‘é€�è¯·æ±‚å�‚æ•°(å¦‚éœ€è¦�)
 		
 		login.setHeader("Accept", "application/json");
 		login.setHeader("Content-type", "application/json");
@@ -65,13 +65,14 @@ public class APiazzaSession implements PiazzaSession {
 		
 		context.setAttribute(ClientContext.COOKIE_STORE, cookieJar);
 		
-		CloseableHttpResponse resp = httpClient.execute(login, context);  //调用HttpClient对象的execute(HttpUriRequest request)发送请求，该方法返回一个HttpResponse
+		CloseableHttpResponse resp = httpClient.execute(login, context);  //è°ƒç”¨HttpClientå¯¹è±¡çš„execute(HttpUriRequest request)å�‘é€�è¯·æ±‚ï¼Œè¯¥æ–¹æ³•è¿”å›žä¸€ä¸ªHttpResponse
 		
 		if (resp.getStatusLine().getStatusCode() != 200) {
 			throw new LoginFailedException("Incorrect login credentials.");
 		}
 		
 		System.out.println(EntityUtils.toString(resp.getEntity()));
+		
 		
 		loggedIn = true;
 	}

@@ -74,7 +74,7 @@ public class ANewPiazzaSession implements PiazzaSession {
 					.put("email", email)
 					.put("pass", password)).toString();
 		
-		System.out.println(loginData);
+		//System.out.println(loginData);
 		
 		HttpPost login = new HttpPost(piazzaLogic);    //创建请求方法实例，�?��?post请求，指定请求url
 		

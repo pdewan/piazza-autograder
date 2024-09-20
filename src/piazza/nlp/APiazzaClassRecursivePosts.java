@@ -525,6 +525,9 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 		// second between each request
 
 		for (Map<String, Object> item : feed) {
+			
+//			System.out.println(item);
+			
 			int aCid =  (int) item.get("nr");
 			if (aCid < aStartCid || aCid > anEndCid) {
 				continue;
@@ -620,4 +623,8 @@ public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaCl
 //		}
 //		return resp.get("result");
 //	}
+	
+	
 }
+
+

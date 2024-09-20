@@ -1,4 +1,4 @@
- package piazza;
+package piazza;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -24,7 +24,7 @@ public class APiazzaClass implements PiazzaClass {
 
 	protected PiazzaSession mySession = null;
 	protected String cid;
-	private Map<String, String> map = new HashMap<>();    // key: cid   value: uid
+	protected Map<String, String> map = new HashMap<>();    // key: cid   value: uid
 
 	public APiazzaClass(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
@@ -56,11 +56,14 @@ public class APiazzaClass implements PiazzaClass {
 		}
 	}
 	// get feed from 
+	// limit: how many posts it returns
+	// offset: how many from the top does it ignore
 	public List<Map<String, Object>> getFeed(int limit, int offset)
 			throws ClientProtocolException, NotLoggedInException, IOException {
-		JSONObject data = new JSONObject().put("limit", limit).put("offset", offset).put("sort", "updated").put("nid",
-				this.cid);
-		System.out.println(data.toString());
+		//JSONObject data = new JSONObject().put("limit", limit).put("offset", offset).put("sort", "updated").put("nid",
+		//		this.cid);
+		JSONObject data = new JSONObject().put("limit", limit).put("offset", offset).put("sort", "updated").put("nid", this.cid);
+//		System.out.println(data.toString());
 		Map<String, Object> resp = this.mySession.piazzaAPICall("network.get_my_feed", data, piazzaLogic);
 		@SuppressWarnings("unchecked")
 		List<Map<String, Object>> feed = (List<Map<String, Object>>) ((Map<String, Object>) this.getResults(resp))
@@ -103,16 +106,39 @@ public class APiazzaClass implements PiazzaClass {
     // get post provided content id
 	public Map<String, Object> getPost(String cid) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().put("cid", cid);
-		Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
-		@SuppressWarnings("unchecked")
-		Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
 		
-		//System.out.println(post);
-		@SuppressWarnings("unchecked")
-		Map<String, String> change_log = ((List<Map<String, String>>) post.get("change_log")).get(0);
-		if(change_log.get("type").equals("create")) map.put(cid, change_log.get("uid"));
+		// TODO: better way to do this, this is hacky
+		int secondsToWait = 5;
+		while (secondsToWait < 100) {
+			
+			Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
+			@SuppressWarnings("unchecked")
+			Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
+			
+			if (post != null) {
+				//System.out.println(post);
+				@SuppressWarnings("unchecked")
+				Map<String, String> change_log = ((List<Map<String, String>>) post.get("change_log")).get(0);
+				if(change_log.get("type").equals("create")) map.put(cid, change_log.get("uid"));
+				
+				return post;
+			}
+			
+			try {
+				System.out.println("Failed, sleeping for " + secondsToWait + " seconds and trying again.");
+				Thread.sleep(1000 * secondsToWait);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			secondsToWait++;
+			
+		}
 		
-		return post;
+		System.out.println("Timed out -- response was null");
+		return null;
+		
+		
 	}
 	
 	public Map<String, String> getMap(){
@@ -211,6 +237,7 @@ public class APiazzaClass implements PiazzaClass {
 		String aString = Arrays.toString(anArray);
 		return aString.replace("[","").replace("]", "");
 	}
+	
 	public boolean createPost(String aSubject, String aContent, List<String> aTags, String aRecipients ) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().
 				put("nid", this.cid).
@@ -232,6 +259,23 @@ public class APiazzaClass implements PiazzaClass {
 //		System.out.println(resp.toString());
 		return resp != null? true:false;
 	}
+	
+	public boolean createDraftReply(String aSubject, String aContent, List<String> aTags, String aRecipients ) throws ClientProtocolException, NotLoggedInException, IOException {
+		JSONObject data = new JSONObject().
+				put("network_id", this.cid).
+				put("body", "This is a test from Eclipse.").
+				put("cid", "ln3n9af88yl4h6").
+				put("editor", "rte").
+				put("revision", 0).
+				put("type", "feedback")
+				;
+
+		Map<String, Object> resp = this.mySession.piazzaAPICall("content.auto_save", data, piazzaLogic);
+		return resp != null? true:false;
+	}
+	
+	
+	
 	public boolean markPostAsDuplicate(String newPostID, String duplicatedID) throws ClientProtocolException, NotLoggedInException, IOException {
 		JSONObject data = new JSONObject().
 				put("nid", this.cid)
@@ -296,7 +340,7 @@ public class APiazzaClass implements PiazzaClass {
 //		return true;
 //	}
 
-	private Object getResults(Map<String, Object> resp) {
+	protected Object getResults(Map<String, Object> resp) {
 		if (resp == null) {
 			System.out.println("Null response");
 			return null;
