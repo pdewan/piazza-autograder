@@ -42,7 +42,7 @@ public class TesterPD {
 		while (line != null) {
 			text = text + line;
 			line = configReader.readLine();
-		}
+		}  
 		
 		JSONObject config = new JSONObject(text);
 		String email = config.getString("email");
