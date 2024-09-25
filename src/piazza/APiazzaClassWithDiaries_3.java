@@ -84,7 +84,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			if (content.contains("diary") || content.contains("Diary")) {
 
 				System.out.println("DIARY:");
-				//System.out.println(post);
+				System.out.println(post);
 				
 				String cid = (String) post.get("id");
 				String uid = this.getMap().get(cid);
@@ -455,7 +455,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		
 		System.out.println("Name: " + authorname);
 		System.out.println("---------");
-		//System.out.println(individualGradeDetailed);
+		System.out.println(individualGradeDetailed);
 		return new AnIndividualGrade(individualGradeSummary, individualGradeDetailed, gradeMap);
 	}
 	
@@ -479,8 +479,8 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			gradesList.put(name, g);
 		}
 		if (method == Method.REGULAR_GRADING_WITH_CSV || method == Method.FULL_REGRADE) {
-			System.out.println("TEST TEST TEST");
-			
+			System.out.println("GRADESLIST TO BE POSTED");
+			System.out.println(gradesList);
 			this.autoPost(gradesList);			
 		}
 		return grades;
@@ -514,11 +514,13 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		this.updateAllDiaries();
 		
 		//ML
-		System.out.println("TEST ALL DIARIES");
-		//System.out.println(this.diaries);
+//		System.out.println("TEST ALL DIARIES");
+//		System.out.println(this.diaries);
 		
 		// Get a list of individual grades
 		List<IndividualGrade> grades = this.getDiaryGrades();
+		System.out.println("INDIVIDUAL GRADES:");
+		System.out.println(grades);
 		
 		// The variable used for generating the summary .csv
 		List<List<String>> summary_string =  new ArrayList<List<String>>();
@@ -589,14 +591,14 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		for(String name : cids.keySet()) {
 			
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(10000); // NOTE: had to increase this from 1000 to 10000 - Mason
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			
 			
 		//String name = "k55k48z93ve740";
-//			System.out.println("name: " + name);
+			
 			String cid = cids.get(name);
 			//System.out.println("cid with name: " + cid);
 //			if (!cid.equals("k5hbqf88zka2ft")) continue;
@@ -613,10 +615,14 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			}
 			post += "</p>";
 			
+			System.out.println("ABOUT TO CREATE FOLLOWUP:");
+			System.out.println("name: " + name);
+			System.out.println(cid);
 			System.out.println(post);
-			System.out.println();
 			//TODO:
 			this.createFollowup(cid, post);
+			System.out.println("FOLLOWUP CREATED FOR " + name);
+			System.out.println();
 		}
 	}
 	
