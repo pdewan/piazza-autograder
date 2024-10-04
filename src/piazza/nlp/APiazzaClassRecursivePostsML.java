@@ -63,11 +63,14 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	final private String[] ASSIGNMENT_TAGS = {"hw0", "hw1", "hw2", "hw3", "hw4", "hw5", "hw6", "hw7", "hw8", "hw9", "hw10"};
 	final private String[] PRIVATE_TAGS = {"includes_code", "grading_error", "personal_situation", "diary"};
 	
+	final private String OH_REQUEST_FEEDBACK_POST_NAME = "Incomplete OH Request Feedback Message";
+	final private String OH_REQUEST_FEEDBACK_MESSAGE = "Hi [STUDENT_NAME],\n\nYou posted the following office hours request on [REQUEST_DATETIME]:\n\n<blockquote>[STUDENT_REQUEST]</blockquote>\n\nOur system marked this request as incomplete, and gave the following suggestion to fix it:\n\n<b>[GPT_SUGGESTION]</b>\n\nIf you feel this suggestion is reasonable, please edit your original request and add the missing information so we can better assist you during office hours. When you make the edit, also remove the incomplete marker (which looks like [INCOMPLETE_MARKER]) so that our system can reprocess the request.\n\nNote that this suggestion was generated using AI, so if you think it's asking for more information than makes sense (or requires more work than is warranted) feel free to ignore it. If you do, please manually mark your request as complete by editing your request and changing the incomplete marker to [COMPLETE_MARKER]. Thanks, and apologies for any inconveniences!\n\n<hr/>\n\nThis post is private, so feel free to reply with any code or further information that will be helpful for the office hours session.";
+
 	final private String SUGGESTED_PUBLIC_POST_NAME = "Suggested Public Visibility Message";
 	final private String SUGGESTED_PUBLIC_MESSAGE = "Based on the folder tags associated with your post, it looks like the post visibility can be changed from private to public. In order to help as many students as possible, all posts should be made public unless they include code you’ve written or personal information. If your post meets these private criteria, please add the appropriate folder tags to your post (<code>includes_code</code>, <code>grading_error</code>, <code>personal_situation</code>, etc.) and keep the visibility as private. Otherwise, please edit your post and change the “Post To” setting from “Individual Student(s) / Instructor(s)” to “Entire Class”. Thanks!";
 	
 	final private String SUGGESTED_PRIVATE_POST_NAME = "Suggested Private Visibility Message";
-	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code you’ve written or involves a personal situation, please edit your post and change the “Post To” setting from “Entire Class” to “Instructors”. Otherwise, remove the incorrect folder tags from your post. Thanks!";
+	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code you’ve written or involves a personal situation, please edit your post and change the “Post To” setting from “Entire Class” to “Instructors”. (Note that stack traces and error messages are fine to include in a public post!) Otherwise, please remove the incorrect folder tags from your post. Thanks!";
 	
 	final private String SUGGESTED_INSTRUCTORS_POST_NAME = "Suggested All Instructors Visibility Message";
 	final private String SUGGESTED_ALL_INSTRUCTORS = "It appears that you’ve posted this to individual instructors. Please edit your post and select “Instructors” under the “Individual Student(s) / Instructor(s)” dropdown so that the entire instructional team can view your post. Thanks!";
@@ -96,6 +99,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	// get all users enrolled in the class (including instructors)
 	public List<Map<String, Object>> getAllUsers(
 		) throws ClientProtocolException, NotLoggedInException, IOException {
@@ -108,6 +112,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	// get all instructors enrolled in the class
 	public List<Map<String, Object>> getInstructors(
 		) throws ClientProtocolException, NotLoggedInException, IOException {
@@ -125,6 +130,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public List<String> getInstructorIDs() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		List<Map<String, Object>> instructors = getInstructors();
@@ -138,6 +144,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 
 	
+	/* COMPONENT: API CLASS */
 	// TODO: make messageType an enum, or just check if recipients is empty?
 	// TODO: feed groups? other config?
 	// TODO: also do "type" -- currently accepts markdown, could expand to plain text or rich text
@@ -189,6 +196,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	public boolean createDraftNote(
 			String aSubject,
 			String aContent,
@@ -251,6 +259,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	public boolean createDraftReply(
 			String postID,
 			String aContent
@@ -288,6 +297,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	public boolean createDraftAnswer(
 			String postID,
 			String aContent
@@ -317,6 +327,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	public boolean createReply(
 			String postID,
 			String aContent
@@ -366,6 +377,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: API CLASS */
 	public boolean createFollowup(
 			String postID,
 			String aContent
@@ -391,245 +403,89 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
-//	
-//	// look into anonymous message
-//	public boolean createTaggedCommentReply(
-//			String commentID,
-//			String aContent
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//	
-//		String authorID = this.getAuthorId(this.getPost(commentID));
-//		String username = this.getUserName(authorID);
-//		String taggedContent = "<strong attention=\"" + authorID + "\">@" + username + "</strong> " + aContent;
-//		
-//		return this.createReply(commentID, taggedContent);
-//		
-//	}
-//	
-//	
-//	// TODO: return the Map<String, Object> instead?
-//	// creates a private thread with a student and the instructors
-//	public String createPrivateInstructorThread(
-//			String userID
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		String username = this.getUserName(userID);
-//		String subject = "Private Instructor thread with " + username;
-//		String threadBody = "This thread can be used as a private channel for communication between you and course instructors.";
-//		// TODO: make specialized tag?
-//		String[] tags = {"other"};
-//		String[] recipients = {userID};
-//		
-//		return this.createPost(subject, threadBody, Arrays.asList(tags), Arrays.asList(recipients), "individual");
-//	}
-//	
-//	
-//	// finds all students in the class and creates a private instructor thread for each
-//	public List<String> createPrivateInstructorThreadsForAllUsers(
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		List<Map<String, Object>> users = this.getAllUsers();
-//		List<String> privateInstructorThreads = new ArrayList<String>();
-//		for (Map<String, Object> user : users) {
-//			// don't create private threads for instructors
-//			if (user.get("admin") == Boolean.FALSE) {
-//				String userID = (String) user.get("id");
-//				privateInstructorThreads.add(this.createPrivateInstructorThread(userID));
-//			}
-//		} 
-//		
-//		// returns the ID of each post
-//		return privateInstructorThreads;
-//	
-//	}
-//	
-//	
-//	// TODO: return the Map<String, Object> instead?
-//	// given a user ID, return the correct private instructor thread
-//	// if no such thread exists, create one and return it
-//	// works even if there are multiple students with the same name
-//	public String getPrivateInstructorThread(
-//			String userID
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//
-//		String username = this.getUserName(userID);
-//		String query = "Private Instructor thread with " + username;
-//		JSONObject data = new JSONObject().
-//				put("nid", this.cid).
-//				put("query", query);
-//		Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
-//		
-//		List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
-//		for (Map<String, Object> post : posts) {
-//			if (post.get("feed_groups") != null && ((String)post.get("feed_groups")).contains(userID)) {
-//				return (String) post.get("id");
-//			}
-//		}
-//		
-//		return this.createPrivateInstructorThread(userID);
-//	}
-//	
-//	
-//	public String getOfficeHoursRootID() throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		JSONObject posts = getAllPostsRecursive(0, Integer.MAX_VALUE, 0, Long.MAX_VALUE);
-//		Iterator keyIter = posts.keys();
-//		
-//		while (keyIter.hasNext()) {
-//			String key = (String) keyIter.next();
-//			JSONObject val = posts.getJSONObject(key);
-//			if (val.getBoolean("is_office_hour_root")) {
-//				
-//				//root = (String) val.get("id");
-//				JSONArray roots = val.getJSONArray("children");
-//				if (roots.getJSONObject(0).getString("content").contains("assignment")) {
-//					return roots.getJSONObject(0).getString("id");
-//				}
-//				return roots.getJSONObject(1).getString("id");
-//			}
-//		}
-//		
-//		return "No root found";
-//	}
-//	
-//	
-//	public Date getOfficeHoursReqests(Date lastChecked) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		//String rootID = getOfficeHoursRootID();
-//		String rootID = "l5j68x15lig3ue";
-//		ArrayList<Map<String, Object>> requests = (ArrayList) getPost(rootID).get("children");
-//		
-//		// TODO: for some reason, getPost returns the parent post even when given the child ID, so this is a workaround
-//		requests = (ArrayList<Map<String, Object>>) requests.get(0).get("children");
-//		Date checkedTime = new Date();
-//		
-//		for (Map<String, Object> request : requests) {
-//			
-//			Date requestDate = getDate((String) request.get("created"));
-//			if (requestDate.after(lastChecked)) {
-//			
-//				//System.out.println(request);
-//				
-//				String requestText = (String) request.get("subject");
-//				String requestUserID = (String) request.get("uid");
-//				
-//				//System.out.println(requestDate);
-//				//System.out.println(requestText);
-//				//System.out.println(requestUserID);
-//				
-//				// TODO
-//				String privateThreadID = getPrivateInstructorThread(requestUserID);
-//				//System.out.println(privateThreadID);
-//				
-//				String message = "<p>Hi!</p>"
-//						+ "<p></p>"
-//						+ "<p>You've submitted an assignment-related office hour request with the following text:</p>"
-//						+ "<p></p><blockquote>"
-//						+ requestText
-//						+ "</blockquote>"
-//						+ gptHints(requestText)
-//						+ "<p>Also, please reply to this followup with a brief description of the issue you are running into, and the relevant code for the part of the assignment you're working on.</p>"
-//						+ "\r\n<p></p>"
-//						+ "<p>Then, after coming to office hours, please create another reply that includes both the fixed code and a brief description of what the issue was.</p>"
-//						+ "\r\n<p></p>"
-//						+ "<p>Thanks!</p>"
-//						+ "<p></p>"
-//						+ "<p><em>This is an automated message, but the instructors will be notified of any replies you make.</em></p>";
-//				
-//				//System.out.println(message);
-//				//createReply(privateThreadID, message);	
-//				
-//			}
-//			
-//		}
-//		
-//		// save last checked time in txt file?
-//		return checkedTime;
-//	}
-//	
-//	
-//	// TODO
-//	public String manualHints(
-//			String requestText
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		// convert html to plaintext
-//		// then try to infer which assignment they're asking about
-//		
-//		return "<p>HINT TEXT WILL GO HERE</p>"
-//			+ "\r\n<p></p>";
-//		
-//	}
-//	
-//	
-//	public String gptHints(
-//			String requestText
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//	
-//		String prompt = "You are a Teaching Assistant for an upper-level Computer Science course. Please explain the possible sources of this error:\n"
-//				+ requestText;
-//		
-//		
-//		// TODO: convert markdown to plaintext (ask chatgpt)
-//		
-//		
-//		//System.out.println(prompt);
-//		return this.gptAPI.makeCall(prompt);
-//	}
-//	
-//	public boolean getNewOfficeHoursReqests(String timeLogPath) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		// save as json, look in built in files
-//		// try to insert instead of append?
-//		
-//		
-//		// if any were found, write to file
-//		
-//		
-//		return true;
-//	}
+	/* COMPONENT: API CLASS */
+	// like createFollowup(), but checks to see if that exact followup has already been made before in order to prevent duplicates
+	public boolean createFollowupIfDoesNotExist(
+			String postID,
+			String aContent
+		) throws ClientProtocolException, NotLoggedInException, IOException {
+	
+		Map<String, Object> post = getPost(postID);
+		List<Map<String, Object>> children = (List<Map<String, Object>>) post.get("children");
+		
+		boolean alreadyReplied = false;
+		for (Map<String, Object> child : children) {
+			String childType = (String) child.get("type");
+			if (childType.equals("i_answer") && getLatestContent(child).contains(aContent)) {
+				alreadyReplied = true;
+			} else if (childType.equals("followup")) {
+				String content = (String) child.get("content");
+				if (content == null && ((String) child.get("subject")).contains(aContent)) {
+					alreadyReplied = true;
+				}
+				else if (content != null && content.contains(aContent)) {
+					alreadyReplied = true;
+				}
+			}				
+		}
+		
+		if (!alreadyReplied) {
+			return createFollowup(postID, aContent);
+		}
+		
+		return false;
+		
+	}
 
 	
 	/* Stuff for IUI tool below: ----------------------------------------------------------- */
-	
-	// TODO: remove support for nested tags; they don't fully work
-	
-	// old version if using config.json file, new version based on environment variables below
-	public AGPTClass getGPTFromFile() throws IOException {
-		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
-		
-		String text = "";
-		String line = configReader.readLine();
-		while (line != null) {
-			text = text + line;
-			line = configReader.readLine();
-		}
-		configReader.close();
-		
-		JSONObject config = new JSONObject(text);
-		String apiKey = config.getString("openai_api_key");
-		String defaultModel = config.getString("default_gpt_model");
-		
-		AGPTClass gptTest = new AGPTClass(apiKey, defaultModel);
-		
-		return gptTest;
-	}
 
 	
+	/* COMPONENT: API CLASS */
 	public AGPTClass getGPT() throws IOException {
-;
-		String apiKey = System.getenv("OPENAI_API_KEY");
-		String defaultModel = System.getenv("DEFAULT_GPT_MODEL");
+
+		String apiKey;
+		String defaultModel;
+		
+		// if the config file exists, read the GPT details from it
+		try {
+			
+			BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
+			
+			String text = "";
+			String line = configReader.readLine();
+			while (line != null) {
+				text = text + line;
+				line = configReader.readLine();
+			}
+			configReader.close();
+			
+			JSONObject config = new JSONObject(text);
+			
+			apiKey = config.getString("openai_api_key");
+			defaultModel = config.getString("default_gpt_model");
+			
+			AGPTClass gptTest = new AGPTClass(apiKey, defaultModel);
+			
+			return gptTest;
+			
+		}
+		
+		// otherwise, read the GPT details from environment variables
+		catch (IOException e) {
+			
+			apiKey = System.getenv("OPENAI_API_KEY");
+			defaultModel = System.getenv("DEFAULT_GPT_MODEL");
+			
+		}
 		
 		AGPTClass gptTest = new AGPTClass(apiKey, defaultModel);
-		
 		return gptTest;
+		
 	}
 	
 	
-	// --------------------------
-	
-	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	// TODO: when revamping, parameterize updatePost to accept editor as a parameter and then use that here
 	// NOTE: you cannot edit any of the posts automatically made by Piazza
 	// if you provide null for newSubject, it will use the existing subject
@@ -656,6 +512,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public JSONObject readJSONPost(String postNumber) throws IOException, NotLoggedInException {
 		
 		Map<String, Object> post = getPostFromNumber(postNumber);
@@ -666,15 +523,9 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		return data;
 		
 	}
-	
-	
-	// TODO: switch things off of JSONFile versions
-	
-	
-	
-	
 
 	
+	/* COMPONENT: DISPATCHER / API CLASS? We're not really using this atm */
 	public void writeJSONFile(String filename, JSONObject obj) throws IOException {
 		
 		FileWriter file = new FileWriter(filename);
@@ -684,6 +535,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS? We're not really using this atm */
 	public JSONObject readJSONFile(String filename) throws IOException {
 		
 		JSONObject data;
@@ -717,6 +569,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public String createLogPost() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		String newContent = "{\"ProcessedPosts\":[]}";
@@ -730,6 +583,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public String searchForLogPostID() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		String query = LOG_POST_NAME;
@@ -755,6 +609,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public String getLogID() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
@@ -777,6 +632,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public JSONArray getReadPosts() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		Map<String, Object> logPost = getPost(getLogID());
@@ -791,107 +647,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
-//	// DEPRECATED - INSTEAD, USE getAutomaticallyCreatedPost("mediatedGPTPromptID", PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, "mediated_gpt")
-//	public String getGptPrompt() throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
-//		String mediatedGPTPromptID;
-//		
-//		// if the key is present in the file, read it from there
-//		try {
-//			mediatedGPTPromptID = dataObj.getString("mediatedGPTPromptID");
-//			return getLatestContent(getPost(mediatedGPTPromptID));
-//		}
-//		
-//		// otherwise, search through piazza for the ID and write it to the log
-//		catch (JSONException e) {
-//			
-//			String query = PROMPT_POST_NAME;
-//			JSONObject data = new JSONObject().
-//					put("nid", this.cid).
-//					put("query", query);
-//			
-//			Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
-//			List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
-//			
-//			for (Map<String, Object> post : posts) {
-//				
-//				String tags = String.join("|", (List<String>) post.get("folders"));
-//				if (post.get("subject").equals(query) && tags.contains("mediated_gpt") && tags.contains("automated_system")) {
-//					mediatedGPTPromptID = (String) post.get("id");
-//					dataObj.put("mediatedGPTPromptID", mediatedGPTPromptID);
-//					writeJSONFile(DATAFILE_PATH, dataObj);
-//					return getLatestContent(getPost(mediatedGPTPromptID));				
-//				}
-//
-//			}
-//			
-//			// if no prompt post exists, create one		
-//			List<String> newTags = new ArrayList();
-//			newTags.add("mediated_gpt");
-//			newTags.add("automated_system");
-//			List<String> newRecipients = new ArrayList(); // createPost will always include instructors as recipients
-//			mediatedGPTPromptID = createPost(PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, newTags, newRecipients, "individual");
-//			dataObj.put("mediatedGPTPromptID", mediatedGPTPromptID);
-//			writeJSONFile(DATAFILE_PATH, dataObj);
-//			return getLatestContent(getPost(mediatedGPTPromptID));	
-//			
-//		}
-//		
-//	}
-//	
-//	
-//	// DEPRECATED - INSTEAD, USE getAutomaticallyCreatedPost("ohCheckerPromptID", OH_PROMPT_POST_NAME, OH_GPT_PROMPT, "office_hours")
-//	public String getOHPrompt() throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
-//		String ohCheckerPromptID;
-//		
-//		// if the key is present in the file, read it from there
-//		try {
-//			ohCheckerPromptID = dataObj.getString("ohCheckerPromptID");
-//			return getLatestContent(getPost(ohCheckerPromptID));
-//		}
-//		
-//		// otherwise, search through piazza for the ID and write it to the log
-//		catch (JSONException e) {
-//			
-//			String query = OH_PROMPT_POST_NAME;
-//			JSONObject data = new JSONObject().
-//					put("nid", this.cid).
-//					put("query", query);
-//			
-//			Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
-//			List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
-//			
-//			for (Map<String, Object> post : posts) {
-//				
-//				String tags = String.join("|", (List<String>) post.get("folders"));
-//				if (post.get("subject").equals(query) && tags.contains("office_hours") && tags.contains("automated_system")) {
-//					ohCheckerPromptID = (String) post.get("id");
-//					dataObj.put("ohCheckerPromptID", ohCheckerPromptID);
-//					writeJSONFile(DATAFILE_PATH, dataObj);
-//					return getLatestContent(getPost(ohCheckerPromptID));				
-//				}
-//
-//			}
-//			
-//			// if no prompt post exists, create one
-//			System.out.println("CREATED NEW OH PROMPT POST");
-//			List<String> newTags = new ArrayList();
-//			newTags.add("office_hours");
-//			newTags.add("automated_system");
-//			List<String> newRecipients = new ArrayList(); // createPost will always include instructors as recipients
-//			ohCheckerPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, newTags, newRecipients, "individual");
-//			dataObj.put("ohCheckerPromptID", ohCheckerPromptID);
-//			writeJSONFile(DATAFILE_PATH, dataObj);
-//			return getLatestContent(getPost(ohCheckerPromptID));	
-//			
-//		}
-//		
-//	}
-	
-	
+	// COMPONENT: DISPATCHER / API CLASS
 	public String getAutomaticallyCreatedPost(String dataObjKey, String postName, String defaultText, String categoryTag) throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
@@ -947,7 +703,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		
 	}
 	
-	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public String fetchAssignmentWriteupFromTag(String assignmentTag) throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
@@ -996,6 +752,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public String getAssignmentWriteup(Map<String, Object> studentPost) throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		// TODO: integrate scraping from google docs?
@@ -1026,6 +783,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS */
 	public boolean resetLog() throws ClientProtocolException, NotLoggedInException, IOException {
 		
 		String logID = getLogID();
@@ -1040,6 +798,80 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		
 	}
 	
+	/* COMPONENT: DISPATCHER */
+	// NOTE: before running, make sure to add the needed folders to Piazza
+	// ONLY USE fullReset=true IF YOU'RE OKAY WITH IT OVERWRITING ALL OF THE LOGS AND TEMPLATE POSTS ON SUBSEQUENT RUNS
+	public void setUpTool(String dataPostNumber, boolean fullReset) throws IOException, NotLoggedInException {
+		
+		Map<String, Object> dataPost = getLatestElement(getPostFromNumber(dataPostNumber));
+		String dataPostID = (String) dataPost.get("id");
+		String dataPostSubject = "Data for MediatedGPT Tool";
+				
+		// if we're not doing a full reset and it appears that the tool has already been set up, don't redo anything
+		if (!fullReset && dataPostSubject.equals(dataPost.get("subject"))) {
+			System.out.println("NOT RUNNING FULL SETUP AGAIN");
+			return;
+		}
+		
+		System.out.println("FULLRESET? " + fullReset);
+		System.out.println(dataPost);
+		System.out.println("RUNNING FULL SETUP AGAIN");
+		
+		// set up tags and recipients for template posts
+//		String[] automatedSystemTagsArr = {"automated_system"};
+		List<String> automatedSystemTags;
+		List<String> privatePostRecipients = new ArrayList();
+		String privatePostType = "individual"; // if type == "individual", then it will add all instructors to the recipients list automatically
+		
+		// create template posts for MediatedGPT
+		String mediatedGPTLogID = createLogPost();
+		automatedSystemTags = Arrays.asList("automated_system", "mediated_gpt");
+		String mediatedGPTPromptID = createPost(PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
+		
+		// create template posts for OHRequestChecker
+		String officeHoursRootID = createOfficeHoursRoot();
+		automatedSystemTags = Arrays.asList("automated_system", "office_hours");
+		String officeHoursGPTPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
+		String ohRequestFeedbackID = createPost(OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+		
+		// create template posts for private/public message checking
+		automatedSystemTags = Arrays.asList("automated_system", "other_tools");
+		String suggestedPublicMessageID = createPost(SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+		String suggestedPrivateMessageID = createPost(SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+		String suggestedAllInstructorsID = createPost(SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, automatedSystemTags, privatePostRecipients, privatePostType);
+		String automatedSuggestionDisclaimerID = createPost(AUTOMATED_DISCLAIMER_POST_NAME, AUTOMATED_SUGGESTION_DISCLAIMER, automatedSystemTags, privatePostRecipients, privatePostType);
+		String screenshottedCodeMessageID = createPost(IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+
+		
+		// TODO: add lastRun
+		
+		
+		// save the post IDs for all of the posts we just created
+		JSONObject data = new JSONObject()
+				.put("mediatedGPTLogID", mediatedGPTLogID)
+				.put("mediatedGPTPromptID", mediatedGPTPromptID)
+				.put("officeHoursRootID", officeHoursRootID)
+				.put("officeHoursGPTPromptID", officeHoursGPTPromptID)
+				.put("ohRequestFeedbackID", ohRequestFeedbackID)
+				.put("assignmentTags", ASSIGNMENT_TAGS)
+				.put("privateTags", PRIVATE_TAGS)
+				.put("suggestedPublicMessageID", suggestedPublicMessageID)
+				.put("suggestedPrivateMessageID", suggestedPrivateMessageID)
+				.put("suggestedAllInstructorsID", suggestedAllInstructorsID)
+				.put("automaticSuggestionDisclaimerID", automatedSuggestionDisclaimerID)
+				.put("screenshottedCodeMessageID", screenshottedCodeMessageID)
+				.put("lastRun", "");
+
+		
+		// set post @dataPostNumber to a JSON file holding all the data for the tool
+		writeJSONPost(dataPostNumber, data, dataPostSubject);
+		return;
+		
+	}
+	
+	
+	/* The main loop of process new posts should occur in the dispatcher, 
+	 	but individual sections should occur in their own classes */
 	
 	// NOTE: currently this returns the number of posts that MediatedGPT was run on this iteration
 	//		 even though this code also now does private/public checking, that is ignored for this return number
@@ -1051,7 +883,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		
 		int numNewPosts = 0;
 		//boolean successFlag = true;
-		AGPTClass gpt = getGPT();
+		AGPTClass gpt = getGPT(); /* this should maybe occur in the constructor for the dispatcher, and then the gpt object gets passed to individual observers */
 
 		// retrieve list of posts that have been processed already
 		JSONArray readPosts = getReadPosts();
@@ -1060,16 +892,19 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		JSONObject allPosts = getAllPostsRecursive(0, Integer.MAX_VALUE, 0, Long.MAX_VALUE);
 		Iterator keyIter = allPosts.keys();
 		
+		/* The dispatcher should get the list of unread posts from the log manager, and then send it to the individual observers */
+		
 		while (keyIter.hasNext()) {
+			
+			
+			/* BEGIN LogManager COMPONENT */
+			/* For now, this is just returning all posts that are not in the log.
+			 * 	However, we may want to make this more flexible, and include info in the log that allows for posts to be re-processed. */
 			
 			String key = (String) keyIter.next();
 			JSONObject val = allPosts.getJSONObject(key);
-
-			//boolean helpNeeded = val.getString("fol").contains("mediated_gpt") && Arrays.stream(ASSIGNMENT_TAGS).anyMatch(val.getString("fol")::contains);
-			boolean helpNeeded = Arrays.stream(ASSIGNMENT_TAGS).anyMatch(val.getString("fol")::contains) && val.getString("type").equals("question");
-			
 //			System.out.println("VAL");
-//			System.out.println(val);		
+//			System.out.println(val);
 			
 			// TODO: make this more efficient
 			boolean unread = true;
@@ -1081,10 +916,16 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				}
 			}
 			
+			/* END LogManager COMPONENT */
+
+			
 			// if we have not processed this post before, do so
 			if (unread) {
 			
 				System.out.println("IF UNREAD");
+				
+				
+				/* BEGIN VisibilityChecker COMPONENT */
 				
 				// perform private/public checking
 				Map<String, Object> studentPost = getPost(val.getString("id"));
@@ -1092,7 +933,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				String studentQuestionTitle = (String) getLatestElement(studentPost).get("subject");
 				String studentPostID = (String) studentPost.get("id");
 				ArrayList changes = (ArrayList) studentPost.get("change_log");
-				//\Map<String, Object> lastChange = (Map<String, Object>) changes.get(changes.size() - 1);
+				// Map<String, Object> lastChange = (Map<String, Object>) changes.get(changes.size() - 1);
 				Map<String, Object> lastChange = (Map<String, Object>) changes.get(0);
 				boolean containsPrivateTags = Arrays.stream(PRIVATE_TAGS).anyMatch(val.getString("fol")::contains);
 				
@@ -1109,7 +950,6 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				System.out.println("studentQuestionTitle and studentQuestion");
 				System.out.println(studentQuestionTitle);
 				System.out.println(studentQuestion);
-				System.out.println("HELP NEEDED? " + helpNeeded);
 //				System.out.println(studentQuestionTitle.contains("Your office hour request made on"));
 				System.out.println();
 //				System.out.println();
@@ -1137,14 +977,14 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 						
 						if (!includesAllInstructors) {
 							String suggestedAllInstructors = getAutomaticallyCreatedPost("suggestedAllInstructorsID", SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, "other_tools");
-							createFollowup(studentPostID, suggestedAllInstructors + automatedSuggestionDisclaimer);
+							createFollowupIfDoesNotExist(studentPostID, suggestedAllInstructors + automatedSuggestionDisclaimer);
 						}
 						
 						// if post is private and should be public, create a response
 						if (!containsPrivateTags) {
 							System.out.println("we're here: " + studentPost.get("nr"));
 							String suggestedPublic = getAutomaticallyCreatedPost("suggestedPublicMessageID", SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, "other_tools");
-							createFollowup(studentPostID, suggestedPublic + automatedSuggestionDisclaimer);
+							createFollowupIfDoesNotExist(studentPostID, suggestedPublic + automatedSuggestionDisclaimer);
 						}
 						
 					}
@@ -1154,10 +994,18 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 						String tagString = "<code>" + val.getString("fol").replace("|", ", ") + "</code>";
 						String suggestedPrivate = getAutomaticallyCreatedPost("suggestedPrivateMessageID", SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, "other_tools");
 						String completePrivateMessage = suggestedPrivate.replace("[FOLDER_TAGS]", tagString);
-						createFollowup(studentPostID, completePrivateMessage + automatedSuggestionDisclaimer);
+						createFollowupIfDoesNotExist(studentPostID, completePrivateMessage + automatedSuggestionDisclaimer);
 					}
 					
 				}
+				
+				/* END VisibilityChecker COMPONENT */
+			
+				
+				/* BEGIN MediatedGPT COMPONENT */
+			
+				//boolean helpNeeded = val.getString("fol").contains("mediated_gpt") && Arrays.stream(ASSIGNMENT_TAGS).anyMatch(val.getString("fol")::contains);
+				boolean helpNeeded = Arrays.stream(ASSIGNMENT_TAGS).anyMatch(val.getString("fol")::contains) && val.getString("type").equals("question");
 				
 				// if post is tagged needing help, run MediatedGPT
 				if (helpNeeded && !tags.contains("instructor-note")) {
@@ -1168,62 +1016,65 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 					
 					numNewPosts++;
 
+					/* BEGIN ImageChecker COMPONENT */
+					/* 	This one's a little weird bc it was originally folded into the MediatedGPT component in such a way that MediatedGPT
+					 *  didn't draft responses for posts with images. This is no longer true, so it can probably be separated?
+					 *  May be good to ask Prof. Dewan first.  */
+					
 					// if student has uploaded a screenshot of their code, tell them to put it in text instead
 					if (studentQuestion.contains("<img src=") || studentQuestion.contains("![")) {
 						
 //						System.out.println("\nstudentPost:");
 //						System.out.println(studentPost);
 						//System.out.println(studentPost.get("children"));
-						List<Map<String, Object>> children = (List<Map<String, Object>>) studentPost.get("children");
+//						List<Map<String, Object>> children = (List<Map<String, Object>>) studentPost.get("children");
 						
 						// TODO: if student responds / marks the followup as resolved, maybe send it to GPT anyways?
 						String imageMessage = getAutomaticallyCreatedPost("screenshottedCodeMessageID", IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, "other_tools");
 						
-						boolean alreadyReplied = false;
-						for (Map<String, Object> child : children) {
-							System.out.println("\nChild:");
-							System.out.println(child);
-							// if content of latest item from studentPost history contains imageMessage
-							//if (((String) child.get("content")).contains(imageMessage)) {
-							String childType = (String) child.get("type");
-							if (childType.equals("i_answer") && getLatestContent(child).contains(imageMessage)) {
-								System.out.println("Contains!");
-								alreadyReplied = true;
-							} else if (childType.equals("followup")) {
-								String content = (String) child.get("content");
-								if (content == null && ((String) child.get("subject")).contains(imageMessage)) {
-									alreadyReplied = true;
-									System.out.println("Contains!");
-								}
-								else if (content != null && content.contains(imageMessage)) {
-									alreadyReplied = true;
-									System.out.println("Contains!");
-								}
-
-							}				
-						}
+						// FOLDED THIS INTO createFollowupIfDoesNotExist()
+//						boolean alreadyReplied = false;
+//						for (Map<String, Object> child : children) {
+//							System.out.println("\nChild:");
+//							System.out.println(child);
+//							// if content of latest item from studentPost history contains imageMessage
+//							//if (((String) child.get("content")).contains(imageMessage)) {
+//							String childType = (String) child.get("type");
+//							if (childType.equals("i_answer") && getLatestContent(child).contains(imageMessage)) {
+//								System.out.println("Contains!");
+//								alreadyReplied = true;
+//							} else if (childType.equals("followup")) {
+//								String content = (String) child.get("content");
+//								if (content == null && ((String) child.get("subject")).contains(imageMessage)) {
+//									alreadyReplied = true;
+//									System.out.println("Contains!");
+//								}
+//								else if (content != null && content.contains(imageMessage)) {
+//									alreadyReplied = true;
+//									System.out.println("Contains!");
+//								}
+//
+//							}				
+//						}
+//						
+//						if (!alreadyReplied) {
+//							createFollowup(studentPostID, imageMessage + automatedSuggestionDisclaimer);
+//						}
 						
-						if (!alreadyReplied) {
-							createFollowup(studentPostID, imageMessage + automatedSuggestionDisclaimer);
-						}
+						createFollowupIfDoesNotExist(studentPostID, imageMessage + automatedSuggestionDisclaimer);
 						
 					}
 					
+					
+					/* END ImageChecker COMPONENT */
+					
+					
 //					else {
-					
-					
-					
 					
 					
 					// CHECK HERE, RESP of 57 instead of 55??
 					// make check inb help_needed that it's a non-instructor question
 					// is hitting "unable to find assignment writeup based on tag" (check line 920)
-					
-					
-					
-					
-					
-					
 					
 					
 					
@@ -1235,7 +1086,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 					String fullPrompt = prompt.replace("[ASSIGNMENT_INSTRUCTIONS]", assignmentInstructions).replace("[STUDENT_QUESTION]", studentQuestion);
 					System.out.println("\nFULL PROMPT:");
 					System.out.println(fullPrompt + "\n");
-					String gptResponse = gpt.makeCall(fullPrompt);
+					String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
 					
 					// TODO: change the way this works?
 					gptResponse = gptResponse.replaceAll("\\\\n", "\n");
@@ -1280,6 +1131,11 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 					
 				}
 				
+				/* END MediatedGPT COMPONENT */
+				
+				
+				// Once restructured, the Dispatcher component will add the (previously) unread posts to the log after sending them to the observers
+				
 				// add to log
 				JSONObject newLog = new JSONObject();
 				newLog.put("post_number", "@" + studentPost.get("nr"));
@@ -1306,6 +1162,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
+	/* COMPONENT: DISPATCHER / API CLASS (if I ever actually implement this) */
 	public String fetchAssignmentInstructionsFromGoogleDoc(String docID) {
 		
 		// TODO
@@ -1315,20 +1172,10 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		
 	
 	
-		
+	
 	/* Stuff for processing office hours: ----------------------------------------------------------- */
 	
-//	public String getIDFromNumber(String nr) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		JSONObject data = new JSONObject()
-//				.put("cid", nr)
-//				.put("nid", this.cid);
-//		Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
-//		@SuppressWarnings("unchecked")
-//		Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
-//
-//		return (String) post.get("id");
-//	}
+	/* This stuff doesn't really fit into our current component diagram, we can add it later on */
 	
 	
 	public Map<String, Object> getPostFromNumber(String nr) throws ClientProtocolException, NotLoggedInException, IOException {
@@ -1532,7 +1379,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 			System.out.println("\nFULL PROMPT:");
 			System.out.println(fullPrompt);
 			
-			String gptResponse = gpt.makeCall(fullPrompt);
+			String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
 			
 			// TODO: change the way this works?
 			gptResponse = gptResponse.replaceAll("\\\\n", "\n");
@@ -1563,7 +1410,13 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				sdf.applyPattern(newDateTimeFormat);
 				String newDateTime = sdf.format(newDateTimeObj);
 				// TODO: when doing phase 2, make sure they keep the linked post number when changing to complete
-				String newContent = "Hi " + getUserName(requestUserID) + ",\n\nYou posted the following office hours request on " + newDateTime + ":\n\n<blockquote>" + fullRequestText + "</blockquote>\n\nOur system marked this request as incomplete, and gave the following suggestion to fix it:\n\n<b>" + gptResponse + "</b>\n\nPlease edit your original request and add the missing information. When you make the edit, also remove the incomplete marker (which looks like " + incompleteMarkerBegin + "XX" + incompleteMarkerEnd + ") so that our system can reprocess the request.\n\nThis post is private, so feel free to reply with any code or further information that will be helpful for the office hours session. Thanks!\n\n<hr/>\n\n<em>This response was generated automatically using AI, and could be wrong. If you believe your request is actually complete and our system made an incorrect inference, please reply to this post with what it got wrong and change the incomplete marker to say " + completeMarker + " to mark your request as complete manually. Apologies for any inconveniences!</em>";
+				String newContent = getAutomaticallyCreatedPost("ohRequestFeedbackID", OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, "office_hours")
+					.replace("[STUDENT_NAME]", getUserName(requestUserID))
+					.replace("[REQUEST_DATETIME]", newDateTime)
+					.replace("[STUDENT_REQUEST]", fullRequestText)
+					.replace("[GPT_SUGGESTION]", gptResponse)
+					.replace("[INCOMPLETE_MARKER]", incompleteMarkerBegin + "XX" + incompleteMarkerEnd)
+					.replace("[COMPLETE_MARKER]", completeMarker);
 
 				// if request references another (private) post, give feedback in a followup
 				if (referencesOtherPost && referencedVisibility.equals("private")) {
@@ -1603,75 +1456,6 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
-	
-	// NOTE: before running, make sure to add the needed folders to Piazza
-	// ONLY USE fullReset=true IF YOU'RE OKAY WITH IT OVERWRITING ALL OF THE LOGS AND TEMPLATE POSTS ON SUBSEQUENT RUNS
-	public void setUpTool(String dataPostNumber, boolean fullReset) throws IOException, NotLoggedInException {
-		
-		Map<String, Object> dataPost = getLatestElement(getPostFromNumber(dataPostNumber));
-		String dataPostID = (String) dataPost.get("id");
-		String dataPostSubject = "Data for MediatedGPT Tool";
-				
-		// if we're not doing a full reset and it appears that the tool has already been set up, don't redo anything
-		if (!fullReset && dataPostSubject.equals(dataPost.get("subject"))) {
-			System.out.println("NOT RUNNING FULL SETUP AGAIN");
-			return;
-		}
-		
-		System.out.println("FULLRESET? " + fullReset);
-		System.out.println(getLatestElement(dataPost));
-		System.out.println(dataPostSubject);
-		System.out.println("RUNNING FULL SETUP AGAIN");
-		
-		// set up tags and recipients for template posts
-//		String[] automatedSystemTagsArr = {"automated_system"};
-		List<String> automatedSystemTags;
-		List<String> privatePostRecipients = new ArrayList();
-		String privatePostType = "individual"; // if type == "individual", then it will add all instructors to the recipients list automatically
-		
-		// create template posts for MediatedGPT
-		String mediatedGPTLogID = createLogPost();
-		automatedSystemTags = Arrays.asList("automated_system", "mediated_gpt");
-		String mediatedGPTPromptID = createPost(PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
-		
-		// create template posts for OHRequestChecker
-		String officeHoursRootID = createOfficeHoursRoot();
-		automatedSystemTags = Arrays.asList("automated_system", "office_hours");
-		String officeHoursGPTPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
-		
-		// create template posts for private/public message checking
-		automatedSystemTags = Arrays.asList("automated_system", "other_tools");
-		String suggestedPublicMessageID = createPost(SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
-		String suggestedPrivateMessageID = createPost(SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
-		String suggestedAllInstructorsID = createPost(SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, automatedSystemTags, privatePostRecipients, privatePostType);
-		String automatedSuggestionDisclaimerID = createPost(AUTOMATED_DISCLAIMER_POST_NAME, AUTOMATED_SUGGESTION_DISCLAIMER, automatedSystemTags, privatePostRecipients, privatePostType);
-		String screenshottedCodeMessageID = createPost(IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
-
-		
-		// TODO: add lastRun
-		
-		
-		// save the post IDs for all of the posts we just created
-		JSONObject data = new JSONObject()
-				.put("mediatedGPTLogID", mediatedGPTLogID)
-				.put("mediatedGPTPromptID", mediatedGPTPromptID)
-				.put("officeHoursRootID", officeHoursRootID)
-				.put("officeHoursGPTPromptID", officeHoursGPTPromptID)
-				.put("assignmentTags", ASSIGNMENT_TAGS)
-				.put("privateTags", PRIVATE_TAGS)
-				.put("suggestedPublicMessageID", suggestedPublicMessageID)
-				.put("suggestedPrivateMessageID", suggestedPrivateMessageID)
-				.put("suggestedAllInstructorsID", suggestedAllInstructorsID)
-				.put("automaticSuggestionDisclaimerID", automatedSuggestionDisclaimerID)
-				.put("screenshottedCodeMessageID", screenshottedCodeMessageID)
-				.put("lastRun", "");
-
-		
-		// set post @dataPostNumber to a JSON file holding all the data for the tool
-		writeJSONPost(dataPostNumber, data, dataPostSubject);
-		return;
-		
-	}
 	
 	
 	
@@ -1770,3 +1554,336 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
  */
 
+//
+//// look into anonymous message
+//public boolean createTaggedCommentReply(
+//		String commentID,
+//		String aContent
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//
+//	String authorID = this.getAuthorId(this.getPost(commentID));
+//	String username = this.getUserName(authorID);
+//	String taggedContent = "<strong attention=\"" + authorID + "\">@" + username + "</strong> " + aContent;
+//	
+//	return this.createReply(commentID, taggedContent);
+//	
+//}
+//
+//
+//// TODO: return the Map<String, Object> instead?
+//// creates a private thread with a student and the instructors
+//public String createPrivateInstructorThread(
+//		String userID
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	String username = this.getUserName(userID);
+//	String subject = "Private Instructor thread with " + username;
+//	String threadBody = "This thread can be used as a private channel for communication between you and course instructors.";
+//	// TODO: make specialized tag?
+//	String[] tags = {"other"};
+//	String[] recipients = {userID};
+//	
+//	return this.createPost(subject, threadBody, Arrays.asList(tags), Arrays.asList(recipients), "individual");
+//}
+//
+//
+//// finds all students in the class and creates a private instructor thread for each
+//public List<String> createPrivateInstructorThreadsForAllUsers(
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	List<Map<String, Object>> users = this.getAllUsers();
+//	List<String> privateInstructorThreads = new ArrayList<String>();
+//	for (Map<String, Object> user : users) {
+//		// don't create private threads for instructors
+//		if (user.get("admin") == Boolean.FALSE) {
+//			String userID = (String) user.get("id");
+//			privateInstructorThreads.add(this.createPrivateInstructorThread(userID));
+//		}
+//	} 
+//	
+//	// returns the ID of each post
+//	return privateInstructorThreads;
+//
+//}
+//
+//
+//// TODO: return the Map<String, Object> instead?
+//// given a user ID, return the correct private instructor thread
+//// if no such thread exists, create one and return it
+//// works even if there are multiple students with the same name
+//public String getPrivateInstructorThread(
+//		String userID
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//
+//	String username = this.getUserName(userID);
+//	String query = "Private Instructor thread with " + username;
+//	JSONObject data = new JSONObject().
+//			put("nid", this.cid).
+//			put("query", query);
+//	Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
+//	
+//	List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
+//	for (Map<String, Object> post : posts) {
+//		if (post.get("feed_groups") != null && ((String)post.get("feed_groups")).contains(userID)) {
+//			return (String) post.get("id");
+//		}
+//	}
+//	
+//	return this.createPrivateInstructorThread(userID);
+//}
+//
+//
+//public String getOfficeHoursRootID() throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	JSONObject posts = getAllPostsRecursive(0, Integer.MAX_VALUE, 0, Long.MAX_VALUE);
+//	Iterator keyIter = posts.keys();
+//	
+//	while (keyIter.hasNext()) {
+//		String key = (String) keyIter.next();
+//		JSONObject val = posts.getJSONObject(key);
+//		if (val.getBoolean("is_office_hour_root")) {
+//			
+//			//root = (String) val.get("id");
+//			JSONArray roots = val.getJSONArray("children");
+//			if (roots.getJSONObject(0).getString("content").contains("assignment")) {
+//				return roots.getJSONObject(0).getString("id");
+//			}
+//			return roots.getJSONObject(1).getString("id");
+//		}
+//	}
+//	
+//	return "No root found";
+//}
+//
+//
+//public Date getOfficeHoursReqests(Date lastChecked) throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	//String rootID = getOfficeHoursRootID();
+//	String rootID = "l5j68x15lig3ue";
+//	ArrayList<Map<String, Object>> requests = (ArrayList) getPost(rootID).get("children");
+//	
+//	// TODO: for some reason, getPost returns the parent post even when given the child ID, so this is a workaround
+//	requests = (ArrayList<Map<String, Object>>) requests.get(0).get("children");
+//	Date checkedTime = new Date();
+//	
+//	for (Map<String, Object> request : requests) {
+//		
+//		Date requestDate = getDate((String) request.get("created"));
+//		if (requestDate.after(lastChecked)) {
+//		
+//			//System.out.println(request);
+//			
+//			String requestText = (String) request.get("subject");
+//			String requestUserID = (String) request.get("uid");
+//			
+//			//System.out.println(requestDate);
+//			//System.out.println(requestText);
+//			//System.out.println(requestUserID);
+//			
+//			// TODO
+//			String privateThreadID = getPrivateInstructorThread(requestUserID);
+//			//System.out.println(privateThreadID);
+//			
+//			String message = "<p>Hi!</p>"
+//					+ "<p></p>"
+//					+ "<p>You've submitted an assignment-related office hour request with the following text:</p>"
+//					+ "<p></p><blockquote>"
+//					+ requestText
+//					+ "</blockquote>"
+//					+ gptHints(requestText)
+//					+ "<p>Also, please reply to this followup with a brief description of the issue you are running into, and the relevant code for the part of the assignment you're working on.</p>"
+//					+ "\r\n<p></p>"
+//					+ "<p>Then, after coming to office hours, please create another reply that includes both the fixed code and a brief description of what the issue was.</p>"
+//					+ "\r\n<p></p>"
+//					+ "<p>Thanks!</p>"
+//					+ "<p></p>"
+//					+ "<p><em>This is an automated message, but the instructors will be notified of any replies you make.</em></p>";
+//			
+//			//System.out.println(message);
+//			//createReply(privateThreadID, message);	
+//			
+//		}
+//		
+//	}
+//	
+//	// save last checked time in txt file?
+//	return checkedTime;
+//}
+//
+//
+//// TODO
+//public String manualHints(
+//		String requestText
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	// convert html to plaintext
+//	// then try to infer which assignment they're asking about
+//	
+//	return "<p>HINT TEXT WILL GO HERE</p>"
+//		+ "\r\n<p></p>";
+//	
+//}
+//
+//
+//public String gptHints(
+//		String requestText
+//	) throws ClientProtocolException, NotLoggedInException, IOException {
+//
+//	String prompt = "You are a Teaching Assistant for an upper-level Computer Science course. Please explain the possible sources of this error:\n"
+//			+ requestText;
+//	
+//	
+//	// TODO: convert markdown to plaintext (ask chatgpt)
+//	
+//	
+//	//System.out.println(prompt);
+//	return this.gptAPI.makeCall(prompt);
+//}
+//
+//public boolean getNewOfficeHoursReqests(String timeLogPath) throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	// save as json, look in built in files
+//	// try to insert instead of append?
+//	
+//	
+//	// if any were found, write to file
+//	
+//	
+//	return true;
+//}
+
+// TODO: remove support for nested tags; they don't fully work
+
+// old version if using config.json file, new version based on environment variables below
+// DEPRECATED: getGPT() should work either way now
+//public AGPTClass getGPTFromFile() throws IOException {
+//	BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
+//	
+//	String text = "";
+//	String line = configReader.readLine();
+//	while (line != null) {
+//		text = text + line;
+//		line = configReader.readLine();
+//	}
+//	configReader.close();
+//	
+//	JSONObject config = new JSONObject(text);
+//	String apiKey = config.getString("openai_api_key");
+//	String defaultModel = config.getString("default_gpt_model");
+//	
+//	AGPTClass gptTest = new AGPTClass(apiKey, defaultModel);
+//	
+//	return gptTest;
+//}
+
+//// DEPRECATED - INSTEAD, USE getAutomaticallyCreatedPost("mediatedGPTPromptID", PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, "mediated_gpt")
+//public String getGptPrompt() throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	JSONObject dataObj = readJSONFile(DATAFILE_PATH);
+//	String mediatedGPTPromptID;
+//	
+//	// if the key is present in the file, read it from there
+//	try {
+//		mediatedGPTPromptID = dataObj.getString("mediatedGPTPromptID");
+//		return getLatestContent(getPost(mediatedGPTPromptID));
+//	}
+//	
+//	// otherwise, search through piazza for the ID and write it to the log
+//	catch (JSONException e) {
+//		
+//		String query = PROMPT_POST_NAME;
+//		JSONObject data = new JSONObject().
+//				put("nid", this.cid).
+//				put("query", query);
+//		
+//		Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
+//		List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
+//		
+//		for (Map<String, Object> post : posts) {
+//			
+//			String tags = String.join("|", (List<String>) post.get("folders"));
+//			if (post.get("subject").equals(query) && tags.contains("mediated_gpt") && tags.contains("automated_system")) {
+//				mediatedGPTPromptID = (String) post.get("id");
+//				dataObj.put("mediatedGPTPromptID", mediatedGPTPromptID);
+//				writeJSONFile(DATAFILE_PATH, dataObj);
+//				return getLatestContent(getPost(mediatedGPTPromptID));				
+//			}
+//
+//		}
+//		
+//		// if no prompt post exists, create one		
+//		List<String> newTags = new ArrayList();
+//		newTags.add("mediated_gpt");
+//		newTags.add("automated_system");
+//		List<String> newRecipients = new ArrayList(); // createPost will always include instructors as recipients
+//		mediatedGPTPromptID = createPost(PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, newTags, newRecipients, "individual");
+//		dataObj.put("mediatedGPTPromptID", mediatedGPTPromptID);
+//		writeJSONFile(DATAFILE_PATH, dataObj);
+//		return getLatestContent(getPost(mediatedGPTPromptID));	
+//		
+//	}
+//	
+//}
+//
+//
+//// DEPRECATED - INSTEAD, USE getAutomaticallyCreatedPost("ohCheckerPromptID", OH_PROMPT_POST_NAME, OH_GPT_PROMPT, "office_hours")
+//public String getOHPrompt() throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//	JSONObject dataObj = readJSONFile(DATAFILE_PATH);
+//	String ohCheckerPromptID;
+//	
+//	// if the key is present in the file, read it from there
+//	try {
+//		ohCheckerPromptID = dataObj.getString("ohCheckerPromptID");
+//		return getLatestContent(getPost(ohCheckerPromptID));
+//	}
+//	
+//	// otherwise, search through piazza for the ID and write it to the log
+//	catch (JSONException e) {
+//		
+//		String query = OH_PROMPT_POST_NAME;
+//		JSONObject data = new JSONObject().
+//				put("nid", this.cid).
+//				put("query", query);
+//		
+//		Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
+//		List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
+//		
+//		for (Map<String, Object> post : posts) {
+//			
+//			String tags = String.join("|", (List<String>) post.get("folders"));
+//			if (post.get("subject").equals(query) && tags.contains("office_hours") && tags.contains("automated_system")) {
+//				ohCheckerPromptID = (String) post.get("id");
+//				dataObj.put("ohCheckerPromptID", ohCheckerPromptID);
+//				writeJSONFile(DATAFILE_PATH, dataObj);
+//				return getLatestContent(getPost(ohCheckerPromptID));				
+//			}
+//
+//		}
+//		
+//		// if no prompt post exists, create one
+//		System.out.println("CREATED NEW OH PROMPT POST");
+//		List<String> newTags = new ArrayList();
+//		newTags.add("office_hours");
+//		newTags.add("automated_system");
+//		List<String> newRecipients = new ArrayList(); // createPost will always include instructors as recipients
+//		ohCheckerPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, newTags, newRecipients, "individual");
+//		dataObj.put("ohCheckerPromptID", ohCheckerPromptID);
+//		writeJSONFile(DATAFILE_PATH, dataObj);
+//		return getLatestContent(getPost(ohCheckerPromptID));	
+//		
+//	}
+//	
+//}
+
+//public String getIDFromNumber(String nr) throws ClientProtocolException, NotLoggedInException, IOException {
+//
+//JSONObject data = new JSONObject()
+//		.put("cid", nr)
+//		.put("nid", this.cid);
+//Map<String, Object> resp = this.mySession.piazzaAPICall("content.get", data, piazzaLogic);
+//@SuppressWarnings("unchecked")
+//Map<String, Object> post = (Map<String, Object>) this.getResults(resp);
+//
+//return (String) post.get("id");
+//}

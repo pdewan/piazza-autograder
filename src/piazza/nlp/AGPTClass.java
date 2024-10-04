@@ -90,7 +90,31 @@ public class AGPTClass {
 		return messageObj.getString("content");
    }
 
-	
-	
+	public String makeCallWithBackoff(String prompt) throws IOException {
+
+		int waitTime = 5;
+		
+		while (waitTime < 100) {
+			try {
+				String result = makeCall(prompt);
+				return result;
+			}
+			catch(IOException e) {
+				
+				e.printStackTrace();
+				System.out.println("Failed, sleeping for " + waitTime + " seconds and trying again.");
+				
+				try {
+					Thread.sleep(1000 * waitTime);
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				
+				waitTime++;
+			}
+		}
+		
+		return "Error: OpenAI API response timed out after backoff.";
+	}
    
 }
