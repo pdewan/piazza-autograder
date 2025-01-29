@@ -146,18 +146,19 @@ public class MediatedGPTRunner {
 		// F24 524 id: lzk5x8ctkej770
 		
 		// user variables
-		int data_post_number = 6;
+		
 		currPollingRate = 1800; // initial polling rate in seconds
 		maxPollingRate = currPollingRate * 10;
 		minPollingRate = 900; // minimum of 15 min
 		resetLog = false; 	// whether to wipe the log of processed posts clean, re-running the tool
 						 	// for all help-needed posts (normally this should be false in actual use)
 		
+		String dataPostNumber = System.getenv("DATA_POST_NUMBER");
 
 		try {
 			
 			loggedInClass = ParameterizedTester.loginToPiazzaClassFromEnvVar();
-			loggedInClass.setUpTool(Integer.toString(data_post_number), false);
+			loggedInClass.setUpTool(dataPostNumber, resetLog);
 		
 		} catch (NotLoggedInException | IOException | LoginFailedException e) {
 		

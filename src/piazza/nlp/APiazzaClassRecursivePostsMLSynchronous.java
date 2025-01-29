@@ -30,7 +30,7 @@ import piazza.APiazzaClass;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 
-public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
+public class APiazzaClassRecursivePostsMLSynchronous extends APiazzaClassRecursivePosts {
 
 	final String piazzaLogic = "https://piazza.com/logic/api";
 	final String piazzaMain = "https://piazza.com/logic/api";
@@ -38,12 +38,49 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	
 	final private String LOG_POST_NAME = "Mediated GPT Log";
 	
-	final private String OH_SIGNUP_NAME = "Signing up for Office Hours";
-	final private String OFFICE_HOURS_INSTRUCTIONS = "<md>\r\nHere are the times and guidelines for office hours. \r\n\r\nPlease let us know **at least one hour** before the start of each office hour period if you will join us during the period, otherwise we may not start the Zoom session or terminate the Zoom session before the end of the period. Also let us know when during the period you plan on joining. \r\n\r\nExample incomplete post:\r\n\r\n**_9/1 at 11:15_**\r\n\r\nDoes not give the reason for the visit.\r\n\r\nExample complete post: \r\n\r\n**_11/17 at 2:20pm_**\r\n\r\n**_Help with setting up IndentifierAtom_**\r\n\r\nGives the time and reason\r\n\r\nSchedule a meeting by publicly commenting on the appropriate instructor discussion in this thread.\r\n\r\nIn your comment reference the related Piazza post if it exists or describes the problem publicly if possible and say private question if not possible. **Give as much detail as possible. Saying you have a problem with homework 1 or with localchecks is not specific; give the exact problem.**\r\n\r\nIf your problem requires a screenshot or your stack trace it should be its own post. Please reference that post as part of your help request but do not include screenshots or stack traces in your help request post. Give a text trace when possible and screenshots only for GUIs.\r\n\r\n**Times:**\r\n\r\n(These times will be subject to change while the semester progresses, but will be updated days in advance)\r\n\r\n[INSERT OFFICE HOURS DAYS/TIMES/LOCATIONS]\r\n\r\n#pin</md>";
+//	final private String OH_SIGNUP_NAME = "Signing up for Office Hours";
+//	final private String OFFICE_HOURS_INSTRUCTIONS = "<md>\r\nHere are the times and guidelines for office hours. \r\n\r\nPlease let us know **at least one hour** before the start of each office hour period if you will join us during the period, otherwise we may not start the Zoom session or terminate the Zoom session before the end of the period. Also let us know when during the period you plan on joining. \r\n\r\nExample incomplete post:\r\n\r\n**_9/1 at 11:15_**\r\n\r\nDoes not give the reason for the visit.\r\n\r\nExample complete post: \r\n\r\n**_11/17 at 2:20pm_**\r\n\r\n**_Help with setting up IndentifierAtom_**\r\n\r\nGives the time and reason\r\n\r\nSchedule a meeting by publicly commenting on the appropriate instructor discussion in this thread.\r\n\r\nIn your comment reference the related Piazza post if it exists or describes the problem publicly if possible and say private question if not possible. **Give as much detail as possible. Saying you have a problem with homework 1 or with localchecks is not specific; give the exact problem.**\r\n\r\nIf your problem requires a screenshot or your stack trace it should be its own post. Please reference that post as part of your help request but do not include screenshots or stack traces in your help request post. Give a text trace when possible and screenshots only for GUIs.\r\n\r\n**Times:**\r\n\r\n(These times will be subject to change while the semester progresses, but will be updated days in advance)\r\n\r\n[INSERT OFFICE HOURS DAYS/TIMES/LOCATIONS]\r\n\r\n#pin</md>";
 	
 	// TODO: remove (comment out) the ones of these that aren't needed
 	final private String PROMPT_POST_NAME = "Mediated GPT Prompt";
-	final private String MEDIATED_GPT_PROMPT = "You are a Teaching Assistant for an upper-level Computer Science course. Imagine a student is working on an assignment according to the ASSIGNMENT INSTRUCTIONS below, and the student comes to you with the following STUDENT QUESTION.<br /><br />----------<br /><br />ASSIGNMENT INSTRUCTIONS:<br />[ASSIGNMENT_INSTRUCTIONS]<br /><br />----------<br /><br />STUDENT QUESTION:<br />[STUDENT_QUESTION]<br /><br />----------<br /><br />What should the student be told? You should not give them code in your response. Instead, guide the student to an answer using a step-by-step natural language explanation. You should not give them the full answer all at once, instead reduce the problem for the student by providing a series of smaller tasks for the student to solve that will help them answer their question.";
+//	final private String MEDIATED_GPT_PROMPT = "You are a Teaching Assistant for an upper-level Computer Science course. Imagine a student is working on an assignment according to the ASSIGNMENT INSTRUCTIONS below, and the student comes to you with the following STUDENT QUESTION.<br /><br />----------<br /><br />ASSIGNMENT INSTRUCTIONS:<br />[ASSIGNMENT_INSTRUCTIONS]<br /><br />----------<br /><br />STUDENT QUESTION:<br />[STUDENT_QUESTION]<br /><br />----------<br /><br />What should the student be told? You should not give them code in your response. Instead, guide the student to an answer using a step-by-step natural language explanation. You should not give them the full answer all at once, instead reduce the problem for the student by providing a series of smaller tasks for the student to solve that will help them answer their question.";
+	final private String MEDIATED_GPT_PROMPT = "<p>You are a Teaching Assistant for an advanced Computer Science course tasked with responding to a <strong>student's post</strong> on a course discussion board. The question will be a request for help on a Java concurrency exercise that involves identifying and fixing three bugs in a given piece of Java code.</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>You will have access to a <strong>hint document</strong> consisting of predefined ordered hints that should help guide students to a solution. Based on these hints, your goal is to identify which issue a student is running into, and provide them with a hint corresponding to that issue. </p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>The <strong>student's post</strong> will be formatted as a filled-in template containing the following sections:</p>\r\n" + 
+			"<ul>\r\n" + 
+			"<li>\r\n" + 
+			"<p>PROBLEM DESCRIPTION</p>\r\n" + 
+			"</li>\r\n" + 
+			"<li>\r\n" + 
+			"<p>PREVIOUS HINT FOR THIS TEST</p>\r\n" + 
+			"</li>\r\n" + 
+			"<li>\r\n" + 
+			"<p>RELEVANT TEST MESSAGE</p>\r\n" + 
+			"</li>\r\n" + 
+			"<li>\r\n" + 
+			"<p>RELEVANT CODE</p>\r\n" + 
+			"</li>\r\n" + 
+			"<li>\r\n" + 
+			"<p>COMPLETE OUTPUT</p>\r\n" + 
+			"</li>\r\n" + 
+			"<li>COMPLETE CODE</li>\r\n" + 
+			"</ul>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>The <strong>hint document</strong> is split into different types of issues. Each issue will have one or more errors that students might run into, and each error is followed by a series of ordered hints.</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>Based on the PROBLEM DESCRIPTION and RELEVANT CODE, you must determine what the student already knows, and provide them with the first hint that is relevant to their problem that they do not already understand. If the student has indicated that they have already gotten a hint for this problem, you should give them the next hint for that issue. You may skip to future hints if the student seems to already understand the next hint. Do not give the student extra help beyond what is mentioned in the hint, and do not provide the student with any code.</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>In your response, please include an <strong>Explanation</strong> section at the end that includes a brief summary of what the student already knows and an explanation for why you chose to give the hint you gave. If a student's code seems correct but they are still failing a unit test, you should make sure that the student has recompiled their code since the last time they edited it. Otherwise, their code may be out of sync with their test results.</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p>Again, your goal is to respond with a hint from the hint document that will help the student solve the problem they are currently facing. Apart from the <strong>Explanation</strong> section, you should respond directly to the student and do not need to include salutations or valedictions in your response. The <strong>hint document</strong> and <strong>student's post</strong> are below.</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p><strong>Hint document:</strong></p>\r\n" + 
+			"<p>[ASSIGNMENT_INSTRUCTIONS]</p>\r\n" + 
+			"<p></p>\r\n" + 
+			"<p><strong>Student's post:</strong><br />[STUDENT_QUESTION]</p>\r\n" + 
+			"<p></p>";
 	//final private String OH_GPT_PROMPT = "You are a Teaching Assistant for an upper-level Computer Science course, and you will be given an office hours request submitted by a student. A complete office hours request should contain a date and time that the student will join office hours (the time does not need to specify AM or PM) and a detailed reason for the visit. However, the actual request you recieve may not contain all of this information, in which case it is not complete. A student saying they have a problem with homework 1 or with localchecks is not specific; the student should give the exact problem. An example of an incomplete request is '9/1 at 11:15' because it does not give the reason for the visit. An example of a complete request is '11/17 at 2:20pm\nHelp with setting up IndentifierAtom', as it gives the time and reason. A student submitted the following office hours request:<br /><br />----------<br /><br />[OFFICE_HOURS_REQUEST]<br /><br />----------<br /><br />Indicate whether the office hours request is complete based on the criteria above. If it is complete, respond with simply the word 'Complete' with no other output. If it is not complete, write a short message to the student indicating why it is not complete and tell them to edit their post with the necessary information.";
 	// what aspect of A5
 	// what issues are you having with curry
@@ -58,25 +95,25 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	
 	// KEEP THE OLD PROMPTS HERE FOR FUTURE DISCUSSION IN A PAPER
 
-	final private String DATAFILE_PATH = "mediatedgpt_data.json";
+	final private String DATAFILE_PATH = "synchronous_mediatedgpt_data.json";
 //	final private String DATAPOST_ID = "2"; // Overwrites post @2, which is "Tips & Tricks for a successful class"
-	final private String[] ASSIGNMENT_TAGS = {"hw0", "hw1", "hw2", "hw3", "hw4", "hw5", "hw6", "hw7", "hw8", "hw9", "hw10"};
-	final private String[] PRIVATE_TAGS = {"includes_code", "grading_error", "personal_situation", "diary"};
+	final private String[] ASSIGNMENT_TAGS = {"hw01"};
+//	final private String[] PRIVATE_TAGS = {"includes_code", "grading_error", "personal_situation", "diary"};
 	
 	final private String OH_REQUEST_FEEDBACK_POST_NAME = "Incomplete OH Request Feedback Message";
 	final private String OH_REQUEST_FEEDBACK_MESSAGE = "Hi [STUDENT_NAME],\n\nYou posted the following office hours request on [REQUEST_DATETIME]:\n\n<blockquote>[STUDENT_REQUEST]</blockquote>\n\nOur system marked this request as incomplete, and gave the following suggestion to fix it:\n\n<b>[GPT_SUGGESTION]</b>\n\nIf you feel this suggestion is reasonable, please edit your original request and add the missing information so we can better assist you during office hours. When you make the edit, also remove the incomplete marker (which looks like [INCOMPLETE_MARKER]) so that our system can reprocess the request.\n\nNote that this suggestion was generated using AI, so if you think it's asking for more information than makes sense (or requires more work than is warranted) feel free to ignore it. If you do, please manually mark your request as complete by editing your request and changing the incomplete marker to [COMPLETE_MARKER]. Thanks, and apologies for any inconveniences!\n\n<hr/>\n\nThis post is private, so feel free to reply with any code or further information that will be helpful for the office hours session.";
 
-	final private String SUGGESTED_PUBLIC_POST_NAME = "Suggested Public Visibility Message";
-	final private String SUGGESTED_PUBLIC_MESSAGE = "Based on the folder tags associated with your post, it looks like the post visibility can be changed from private to public. In order to help as many students as possible, all posts should be made public unless they include code you’ve written or personal information. If your post meets these private criteria, please add the appropriate folder tags to your post (<code>includes_code</code>, <code>grading_error</code>, <code>personal_situation</code>, etc.) and keep the visibility as private. Otherwise, please edit your post and change the “Post To” setting from “Individual Student(s) / Instructor(s)” to “Entire Class”. Thanks!";
-	
-	final private String SUGGESTED_PRIVATE_POST_NAME = "Suggested Private Visibility Message";
-	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code you’ve written or involves a personal situation, please edit your post and change the “Post To” setting from “Entire Class” to “Instructors”. (Note that stack traces and error messages are fine to include in a public post!) Otherwise, please remove the incorrect folder tags from your post. Thanks!";
-	
-	final private String SUGGESTED_INSTRUCTORS_POST_NAME = "Suggested All Instructors Visibility Message";
-	final private String SUGGESTED_ALL_INSTRUCTORS = "It appears that you’ve posted this to individual instructors. Please edit your post and select “Instructors” under the “Individual Student(s) / Instructor(s)” dropdown so that the entire instructional team can view your post. Thanks!";
-	
-	final private String IMAGE_DETECTED_POST_NAME = "Image Detected Message";;
-	final private String IMAGE_MESSAGE = "It looks like you may have included a screenshot in your post. If it is a screenshot of code or a console trace, please replace the image with the actual text itself so we can search for issues easier. If it is a screenshot of a Gradescope score displayed in the right tab, please paste the trace text shown in the tab on the left. If it is another type of image, please include any relevant text contained within the image (errors given in Eclipse pop-up windows, etc.). Thanks!";
+//	final private String SUGGESTED_PUBLIC_POST_NAME = "Suggested Public Visibility Message";
+//	final private String SUGGESTED_PUBLIC_MESSAGE = "Based on the folder tags associated with your post, it looks like the post visibility can be changed from private to public. In order to help as many students as possible, all posts should be made public unless they include code you’ve written or personal information. If your post meets these private criteria, please add the appropriate folder tags to your post (<code>includes_code</code>, <code>grading_error</code>, <code>personal_situation</code>, etc.) and keep the visibility as private. Otherwise, please edit your post and change the “Post To” setting from “Individual Student(s) / Instructor(s)” to “Entire Class”. Thanks!";
+//	
+//	final private String SUGGESTED_PRIVATE_POST_NAME = "Suggested Private Visibility Message";
+//	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code you’ve written or involves a personal situation, please edit your post and change the “Post To” setting from “Entire Class” to “Instructors”. (Note that stack traces and error messages are fine to include in a public post!) Otherwise, please remove the incorrect folder tags from your post. Thanks!";
+//	
+//	final private String SUGGESTED_INSTRUCTORS_POST_NAME = "Suggested All Instructors Visibility Message";
+//	final private String SUGGESTED_ALL_INSTRUCTORS = "It appears that you’ve posted this to individual instructors. Please edit your post and select “Instructors” under the “Individual Student(s) / Instructor(s)” dropdown so that the entire instructional team can view your post. Thanks!";
+//	
+//	final private String IMAGE_DETECTED_POST_NAME = "Image Detected Message";;
+//	final private String IMAGE_MESSAGE = "It looks like you may have included a screenshot in your post. If it is a screenshot of code or a console trace, please replace the image with the actual text itself so we can search for issues easier. If it is a screenshot of a Gradescope score displayed in the right tab, please paste the trace text shown in the tab on the left. If it is another type of image, please include any relevant text contained within the image (errors given in Eclipse pop-up windows, etc.). Thanks!";
 	
 	final private String AUTOMATED_DISCLAIMER_POST_NAME = "Automated Suggestion Disclaimer Message";
 	final private String AUTOMATED_SUGGESTION_DISCLAIMER = "\n\n<hr/>\n\n<em>This message was generated automatically and could be incorrect. If you feel that it does not apply to your post, please disregard the suggestion.</em>";
@@ -86,14 +123,14 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	
 	String lastRun = "";
 	
-	public APiazzaClassRecursivePostsML(String email, String password, String classID)
+	public APiazzaClassRecursivePostsMLSynchronous(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
 		super(email, password, classID);
 		this.gptAPI = null;
 		
 	}
 	
-	public APiazzaClassRecursivePostsML(String email, String password, String classID, String apiKey, String defaultGPTModel, String lastRun)
+	public APiazzaClassRecursivePostsMLSynchronous(String email, String password, String classID, String apiKey, String defaultGPTModel, String lastRun)
 			throws ClientProtocolException, IOException, LoginFailedException {
 		super(email, password, classID);
 		this.gptAPI = new AGPTClass(apiKey, defaultGPTModel);
@@ -833,19 +870,19 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		automatedSystemTags = Arrays.asList("automated_system", "mediated_gpt");
 		String mediatedGPTPromptID = createPost(PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
 		
-		// create template posts for OHRequestChecker
-		String officeHoursRootID = createOfficeHoursRoot();
-		automatedSystemTags = Arrays.asList("automated_system", "office_hours");
-		String officeHoursGPTPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
-		String ohRequestFeedbackID = createPost(OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+//		// create template posts for OHRequestChecker
+//		String officeHoursRootID = createOfficeHoursRoot();
+//		automatedSystemTags = Arrays.asList("automated_system", "office_hours");
+//		String officeHoursGPTPromptID = createPost(OH_PROMPT_POST_NAME, OH_GPT_PROMPT, automatedSystemTags, privatePostRecipients, privatePostType);
+//		String ohRequestFeedbackID = createPost(OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
 		
 		// create template posts for private/public message checking
 		automatedSystemTags = Arrays.asList("automated_system", "other_tools");
-		String suggestedPublicMessageID = createPost(SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
-		String suggestedPrivateMessageID = createPost(SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
-		String suggestedAllInstructorsID = createPost(SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, automatedSystemTags, privatePostRecipients, privatePostType);
+//		String suggestedPublicMessageID = createPost(SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+//		String suggestedPrivateMessageID = createPost(SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+//		String suggestedAllInstructorsID = createPost(SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, automatedSystemTags, privatePostRecipients, privatePostType);
 		String automatedSuggestionDisclaimerID = createPost(AUTOMATED_DISCLAIMER_POST_NAME, AUTOMATED_SUGGESTION_DISCLAIMER, automatedSystemTags, privatePostRecipients, privatePostType);
-		String screenshottedCodeMessageID = createPost(IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
+//		String screenshottedCodeMessageID = createPost(IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, automatedSystemTags, privatePostRecipients, privatePostType);
 
 		
 		// TODO: add lastRun
@@ -855,17 +892,17 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		JSONObject data = new JSONObject()
 				.put("mediatedGPTLogID", mediatedGPTLogID)
 				.put("mediatedGPTPromptID", mediatedGPTPromptID)
-				.put("officeHoursRootID", officeHoursRootID)
-				.put("officeHoursGPTPromptID", officeHoursGPTPromptID)
-				.put("ohRequestFeedbackID", ohRequestFeedbackID)
+//				.put("officeHoursRootID", officeHoursRootID)
+//				.put("officeHoursGPTPromptID", officeHoursGPTPromptID)
+//				.put("ohRequestFeedbackID", ohRequestFeedbackID)
 				.put("assignmentTags", ASSIGNMENT_TAGS)
-				.put("privateTags", PRIVATE_TAGS)
-				.put("suggestedPublicMessageID", suggestedPublicMessageID)
-				.put("suggestedPrivateMessageID", suggestedPrivateMessageID)
-				.put("suggestedAllInstructorsID", suggestedAllInstructorsID)
-				.put("automaticSuggestionDisclaimerID", automatedSuggestionDisclaimerID)
-				.put("screenshottedCodeMessageID", screenshottedCodeMessageID)
-				.put("lastRun", "");
+//				.put("privateTags", PRIVATE_TAGS)
+//				.put("suggestedPublicMessageID", suggestedPublicMessageID)
+//				.put("suggestedPrivateMessageID", suggestedPrivateMessageID)
+//				.put("suggestedAllInstructorsID", suggestedAllInstructorsID)
+				.put("automaticSuggestionDisclaimerID", automatedSuggestionDisclaimerID);
+//				.put("screenshottedCodeMessageID", screenshottedCodeMessageID)
+//				.put("lastRun", "");
 
 		
 		// TODO: writeJSONFile as well
@@ -944,70 +981,70 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				Map<String, Object> lastChange = (Map<String, Object>) changes.get(0);
 				
 				// TODO: get these private tags from data post
-				boolean containsPrivateTags = Arrays.stream(PRIVATE_TAGS).anyMatch(val.getString("fol")::contains);
+//				boolean containsPrivateTags = Arrays.stream(PRIVATE_TAGS).anyMatch(val.getString("fol")::contains);
 				
 				
 				ArrayList tags = (ArrayList) studentPost.get("tags");
-//				System.out.println("TAGS");
-//				System.out.println(tags);
-//				System.out.println(tags.get(1));
-//				System.out.println(tags.contains("instructor-note"));
+////				System.out.println("TAGS");
+////				System.out.println(tags);
+////				System.out.println(tags.get(1));
+////				System.out.println(tags.contains("instructor-note"));
+////				
+////				System.out.println();
+//				System.out.println();
+////				System.out.println("studentPost");
+////				//System.out.println(studentPost);
+//				System.out.println("studentQuestionTitle and studentQuestion");
+//				System.out.println(studentQuestionTitle);
+//				System.out.println(studentQuestion);
+////				System.out.println(studentQuestionTitle.contains("Your office hour request made on"));
+//				System.out.println();
+////				System.out.println();
 //				
-//				System.out.println();
-				System.out.println();
-//				System.out.println("studentPost");
-//				//System.out.println(studentPost);
-				System.out.println("studentQuestionTitle and studentQuestion");
-				System.out.println(studentQuestionTitle);
-				System.out.println(studentQuestion);
-//				System.out.println(studentQuestionTitle.contains("Your office hour request made on"));
-				System.out.println();
-//				System.out.println();
-				
-				System.out.println("BEFORE automatedSuggestionDisclaimer");
+//				System.out.println("BEFORE automatedSuggestionDisclaimer");
 				String automatedSuggestionDisclaimer = getAutomaticallyCreatedPost("automatedSuggestionDisclaimerID", AUTOMATED_DISCLAIMER_POST_NAME, AUTOMATED_SUGGESTION_DISCLAIMER, "other_tools");
-				System.out.println("AFTER automatedSuggestionDisclaimer");
-				
-				// if post was made by a student, run visibility checker
-				// TODO: should MediatedGPT also use this check?
-				if (!tags.contains("instructor-note")) {
-					
-					
-					if (lastChange.get("v").equals("private")) { // && !studentQuestionTitle.contains("Your office hour request made on")) {
-						
-						System.out.println("IF PRIVATE");
-						
-						// if post is only visible to some instructors, create a response
-						List<String> postedTo = Arrays.asList(((String) val.get("feed_groups")).split(","));
-						boolean includesAllInstructors = postedTo.contains("instr_" + this.cid) || postedTo.containsAll(getInstructorIDs());
-						
-						
-						System.out.println(includesAllInstructors);
-						System.out.println(containsPrivateTags);
-						
-						if (!includesAllInstructors) {
-							String suggestedAllInstructors = getAutomaticallyCreatedPost("suggestedAllInstructorsID", SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, "other_tools");
-							createFollowupIfDoesNotExist(studentPostID, suggestedAllInstructors + automatedSuggestionDisclaimer);
-						}
-						
-						// if post is private and should be public, create a response
-						if (!containsPrivateTags) {
-							System.out.println("we're here: " + studentPost.get("nr"));
-							String suggestedPublic = getAutomaticallyCreatedPost("suggestedPublicMessageID", SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, "other_tools");
-							createFollowupIfDoesNotExist(studentPostID, suggestedPublic + automatedSuggestionDisclaimer);
-						}
-						
-					}
-					
-					// if post is public and should be private, create a response
-					else if (lastChange.get("v").equals("all") && containsPrivateTags) {
-						String tagString = "<code>" + val.getString("fol").replace("|", ", ") + "</code>";
-						String suggestedPrivate = getAutomaticallyCreatedPost("suggestedPrivateMessageID", SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, "other_tools");
-						String completePrivateMessage = suggestedPrivate.replace("[FOLDER_TAGS]", tagString);
-						createFollowupIfDoesNotExist(studentPostID, completePrivateMessage + automatedSuggestionDisclaimer);
-					}
-					
-				}
+//				System.out.println("AFTER automatedSuggestionDisclaimer");
+//				
+//				// if post was made by a student, run visibility checker
+//				// TODO: should MediatedGPT also use this check?
+//				if (!tags.contains("instructor-note")) {
+//					
+//					
+//					if (lastChange.get("v").equals("private")) { // && !studentQuestionTitle.contains("Your office hour request made on")) {
+//						
+//						System.out.println("IF PRIVATE");
+//						
+//						// if post is only visible to some instructors, create a response
+//						List<String> postedTo = Arrays.asList(((String) val.get("feed_groups")).split(","));
+//						boolean includesAllInstructors = postedTo.contains("instr_" + this.cid) || postedTo.containsAll(getInstructorIDs());
+//						
+//						
+//						System.out.println(includesAllInstructors);
+//						System.out.println(containsPrivateTags);
+//						
+//						if (!includesAllInstructors) {
+//							String suggestedAllInstructors = getAutomaticallyCreatedPost("suggestedAllInstructorsID", SUGGESTED_INSTRUCTORS_POST_NAME, SUGGESTED_ALL_INSTRUCTORS, "other_tools");
+//							createFollowupIfDoesNotExist(studentPostID, suggestedAllInstructors + automatedSuggestionDisclaimer);
+//						}
+//						
+//						// if post is private and should be public, create a response
+//						if (!containsPrivateTags) {
+//							System.out.println("we're here: " + studentPost.get("nr"));
+//							String suggestedPublic = getAutomaticallyCreatedPost("suggestedPublicMessageID", SUGGESTED_PUBLIC_POST_NAME, SUGGESTED_PUBLIC_MESSAGE, "other_tools");
+//							createFollowupIfDoesNotExist(studentPostID, suggestedPublic + automatedSuggestionDisclaimer);
+//						}
+//						
+//					}
+//					
+//					// if post is public and should be private, create a response
+//					else if (lastChange.get("v").equals("all") && containsPrivateTags) {
+//						String tagString = "<code>" + val.getString("fol").replace("|", ", ") + "</code>";
+//						String suggestedPrivate = getAutomaticallyCreatedPost("suggestedPrivateMessageID", SUGGESTED_PRIVATE_POST_NAME, SUGGESTED_PRIVATE_MESSAGE, "other_tools");
+//						String completePrivateMessage = suggestedPrivate.replace("[FOLDER_TAGS]", tagString);
+//						createFollowupIfDoesNotExist(studentPostID, completePrivateMessage + automatedSuggestionDisclaimer);
+//					}
+//					
+//				}
 				
 				/* END VisibilityChecker COMPONENT */
 			
@@ -1033,49 +1070,49 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 					 *  May be good to ask Prof. Dewan first.  */
 					
 					// if student has uploaded a screenshot of their code, tell them to put it in text instead
-					if (studentQuestion.contains("<img src=") || studentQuestion.contains("![")) {
-						
-//						System.out.println("\nstudentPost:");
-//						System.out.println(studentPost);
-						//System.out.println(studentPost.get("children"));
-//						List<Map<String, Object>> children = (List<Map<String, Object>>) studentPost.get("children");
-						
-						// TODO: if student responds / marks the followup as resolved, maybe send it to GPT anyways?
-						String imageMessage = getAutomaticallyCreatedPost("screenshottedCodeMessageID", IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, "other_tools");
-						
-						// FOLDED THIS INTO createFollowupIfDoesNotExist()
-//						boolean alreadyReplied = false;
-//						for (Map<String, Object> child : children) {
-//							System.out.println("\nChild:");
-//							System.out.println(child);
-//							// if content of latest item from studentPost history contains imageMessage
-//							//if (((String) child.get("content")).contains(imageMessage)) {
-//							String childType = (String) child.get("type");
-//							if (childType.equals("i_answer") && getLatestContent(child).contains(imageMessage)) {
-//								System.out.println("Contains!");
-//								alreadyReplied = true;
-//							} else if (childType.equals("followup")) {
-//								String content = (String) child.get("content");
-//								if (content == null && ((String) child.get("subject")).contains(imageMessage)) {
-//									alreadyReplied = true;
-//									System.out.println("Contains!");
-//								}
-//								else if (content != null && content.contains(imageMessage)) {
-//									alreadyReplied = true;
-//									System.out.println("Contains!");
-//								}
-//
-//							}				
-//						}
+//					if (studentQuestion.contains("<img src=") || studentQuestion.contains("![")) {
 //						
-//						if (!alreadyReplied) {
-//							createFollowup(studentPostID, imageMessage + automatedSuggestionDisclaimer);
-//						}
-						
-						createFollowupIfDoesNotExist(studentPostID, imageMessage + automatedSuggestionDisclaimer);
-						
-					}
-					
+////						System.out.println("\nstudentPost:");
+////						System.out.println(studentPost);
+//						//System.out.println(studentPost.get("children"));
+////						List<Map<String, Object>> children = (List<Map<String, Object>>) studentPost.get("children");
+//						
+//						// TODO: if student responds / marks the followup as resolved, maybe send it to GPT anyways?
+//						String imageMessage = getAutomaticallyCreatedPost("screenshottedCodeMessageID", IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, "other_tools");
+//						
+//						// FOLDED THIS INTO createFollowupIfDoesNotExist()
+////						boolean alreadyReplied = false;
+////						for (Map<String, Object> child : children) {
+////							System.out.println("\nChild:");
+////							System.out.println(child);
+////							// if content of latest item from studentPost history contains imageMessage
+////							//if (((String) child.get("content")).contains(imageMessage)) {
+////							String childType = (String) child.get("type");
+////							if (childType.equals("i_answer") && getLatestContent(child).contains(imageMessage)) {
+////								System.out.println("Contains!");
+////								alreadyReplied = true;
+////							} else if (childType.equals("followup")) {
+////								String content = (String) child.get("content");
+////								if (content == null && ((String) child.get("subject")).contains(imageMessage)) {
+////									alreadyReplied = true;
+////									System.out.println("Contains!");
+////								}
+////								else if (content != null && content.contains(imageMessage)) {
+////									alreadyReplied = true;
+////									System.out.println("Contains!");
+////								}
+////
+////							}				
+////						}
+////						
+////						if (!alreadyReplied) {
+////							createFollowup(studentPostID, imageMessage + automatedSuggestionDisclaimer);
+////						}
+//						
+//						createFollowupIfDoesNotExist(studentPostID, imageMessage + automatedSuggestionDisclaimer);
+//						
+//					}
+//					
 					
 					/* END ImageChecker COMPONENT */
 					
@@ -1208,91 +1245,91 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	}
 	
 	
-	public String createOfficeHoursRoot() throws ClientProtocolException, NotLoggedInException, IOException {
-		
-		String subject = "Signing up for Office Hours";
-		String content = OFFICE_HOURS_INSTRUCTIONS;
-		String[] tagsArr = {"logistics", "office_hours"};
-		List<String> tags = Arrays.asList(tagsArr);
-		
-		return createPost(subject, content, tags, null, "");
-		
-	}
+//	public String createOfficeHoursRoot() throws ClientProtocolException, NotLoggedInException, IOException {
+//		
+//		String subject = "Signing up for Office Hours";
+//		String content = OFFICE_HOURS_INSTRUCTIONS;
+//		String[] tagsArr = {"logistics", "office_hours"};
+//		List<String> tags = Arrays.asList(tagsArr);
+//		
+//		return createPost(subject, content, tags, null, "");
+//		
+//	}
 	
 	
-	public String getOfficeHoursRootID() throws ClientProtocolException, NotLoggedInException, IOException {
-	
-		String OHRoot;
-		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
-		
-		// if the key is present in the file, read it from there
-		try {
-			OHRoot = dataObj.getString("OHRoot");
-			return OHRoot;
-		}
-		
-		// TODO: read from data post instead
-		
-		// otherwise, search through piazza for the ID and wTrite it to the log
-		catch (JSONException e) {
-			
-//			// TODO: change from getAllPosts to a search
-//			// maybe can't do bc of is_office_hour_root
-//			String query = OH_SIGNUP_NAME;
-//			JSONObject data = new JSONObject().
-//					put("nid", this.cid).
-//					put("query", query);
+//	public String getOfficeHoursRootID() throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//		String OHRoot;
+//		JSONObject dataObj = readJSONFile(DATAFILE_PATH);
+//		
+//		// if the key is present in the file, read it from there
+//		try {
+//			OHRoot = dataObj.getString("OHRoot");
+//			return OHRoot;
+//		}
+//		
+//		// TODO: read from data post instead
+//		
+//		// otherwise, search through piazza for the ID and wTrite it to the log
+//		catch (JSONException e) {
 //			
-//			Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
-//			List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
+////			// TODO: change from getAllPosts to a search
+////			// maybe can't do bc of is_office_hour_root
+////			String query = OH_SIGNUP_NAME;
+////			JSONObject data = new JSONObject().
+////					put("nid", this.cid).
+////					put("query", query);
+////			
+////			Map<String, Object> resp = this.mySession.piazzaAPICall("network.search", data, piazzaLogic);
+////			List<Map<String, Object>> posts = (List<Map<String, Object>>) resp.get("result");
+////			
+////			for (Map<String, Object> post : posts) {
+////				
+////			}
 //			
-//			for (Map<String, Object> post : posts) {
-//				
+//			
+//			JSONObject posts = getAllPostsRecursive(0, Integer.MAX_VALUE, 0, Long.MAX_VALUE);
+//			Iterator keyIter = posts.keys();
+//			
+//			while (keyIter.hasNext()) {
+//				String key = (String) keyIter.next();
+//				JSONObject val = posts.getJSONObject(key);
+//				if (val.getBoolean("is_office_hour_root")) {
+//					
+//					JSONArray roots = val.getJSONArray("children");
+//					if (roots.getJSONObject(1).getString("content").contains("assignment")) {
+//						OHRoot = roots.getJSONObject(1).getString("id");
+//						dataObj.put("OHRoot", OHRoot);
+//						writeJSONFile(DATAFILE_PATH, dataObj);
+//						return OHRoot;
+//					}
+//					OHRoot = roots.getJSONObject(0).getString("id");
+//					dataObj.put("OHRoot", OHRoot);
+//					writeJSONFile(DATAFILE_PATH, dataObj);
+//					return OHRoot;
+//				}
 //			}
-			
-			
-			JSONObject posts = getAllPostsRecursive(0, Integer.MAX_VALUE, 0, Long.MAX_VALUE);
-			Iterator keyIter = posts.keys();
-			
-			while (keyIter.hasNext()) {
-				String key = (String) keyIter.next();
-				JSONObject val = posts.getJSONObject(key);
-				if (val.getBoolean("is_office_hour_root")) {
-					
-					JSONArray roots = val.getJSONArray("children");
-					if (roots.getJSONObject(1).getString("content").contains("assignment")) {
-						OHRoot = roots.getJSONObject(1).getString("id");
-						dataObj.put("OHRoot", OHRoot);
-						writeJSONFile(DATAFILE_PATH, dataObj);
-						return OHRoot;
-					}
-					OHRoot = roots.getJSONObject(0).getString("id");
-					dataObj.put("OHRoot", OHRoot);
-					writeJSONFile(DATAFILE_PATH, dataObj);
-					return OHRoot;
-				}
-			}
-			
-			System.out.println("\nError: No office hours root found.");
-			return null;
-			
-		}
-	
-	}
-	
-	
-	// TODO: have a date that you're checking new ones since? or other criteria
-	public ArrayList<Map<String, Object>> getOfficeHoursReqests() throws ClientProtocolException, NotLoggedInException, IOException {
-	
-		String rootID = getOfficeHoursRootID();
-		ArrayList<Map<String, Object>> requests = (ArrayList) getPost(rootID).get("children");
-		
-		// TODO: for some reason, getPost returns the parent post even when given the child ID, so this is a workaround
-		requests = (ArrayList<Map<String, Object>>) requests.get(0).get("children");
-		
-		return requests;
-	
-	}
+//			
+//			System.out.println("\nError: No office hours root found.");
+//			return null;
+//			
+//		}
+//	
+//	}
+//	
+//	
+//	// TODO: have a date that you're checking new ones since? or other criteria
+//	public ArrayList<Map<String, Object>> getOfficeHoursReqests() throws ClientProtocolException, NotLoggedInException, IOException {
+//	
+//		String rootID = getOfficeHoursRootID();
+//		ArrayList<Map<String, Object>> requests = (ArrayList) getPost(rootID).get("children");
+//		
+//		// TODO: for some reason, getPost returns the parent post even when given the child ID, so this is a workaround
+//		requests = (ArrayList<Map<String, Object>>) requests.get(0).get("children");
+//		
+//		return requests;
+//	
+//	}
 
 	
 //	public static void displayDirectory(File dir)
@@ -1329,147 +1366,147 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 //        }
 //    }
 	
-	
-	public int checkOfficeHourRequests() throws IOException, NotLoggedInException, ParseException {
-		
-//		File currentDir = new File(".");
-//		displayDirectory(currentDir);
-		
-		
-		ArrayList<Map<String, Object>> requests = getOfficeHoursReqests();
-		int numNewRequests = 0;
-		
-		for (Map<String, Object> request : requests) {
-			
-			String requestText = (String) request.get("subject");
-			String fullRequestText = requestText;
-			String requestUserID = (String) request.get("uid");
-			
-//			System.out.println(fullRequestText);
-			
-			String incompleteMarkerBegin = "<sub>[incomplete, see @";
-			String incompleteMarkerEnd = "]</sub>";
-			String completeMarker = "<sub>[complete]</sub>";
-			if (requestText.contains(incompleteMarkerBegin) || requestText.contains(completeMarker)) {
-				continue;
-			}
-			numNewRequests++;
-			
-			// if the OH request references another post, use that post's text instead
-			Pattern referencePattern = Pattern.compile("@\\d+");
-			Matcher referenceMatcher = referencePattern.matcher(requestText);
-			boolean referencesOtherPost = referenceMatcher.find();
-			String feedbackNumber = null;
-			String referencedID = null;
-			String referencedVisibility = null;
-			
-			if (referencesOtherPost) {
-				
-				String referencedPostNumber = requestText.substring(referenceMatcher.start()+1, referenceMatcher.end());
-				feedbackNumber = referencedPostNumber;
-				Map<String, Object> referencedPost = getPostFromNumber(referencedPostNumber);
-				Map<String, Object> referencedPostElement = getLatestElement(referencedPost);
-				
-				String referencedTitle = (String) referencedPostElement.get("subject");
-				String referencedBody = (String) referencedPostElement.get("content");
-				referencedID = (String) referencedPost.get("id");
-				referencedVisibility = (String) referencedPost.get("status");
-
-				System.out.println("\n\nREFERENCED POST\n\n");
-				System.out.println(referencedPost);
-				System.out.println("\n\nREFERENCED ELEMENT\n\n");
-				System.out.println(referencedPostElement);
-				System.out.println("\n\nEND REFERENCED POST\n\n");
-
-				fullRequestText = requestText + "\n\n<em>The above office hours request references the following post:</em>\n\n<b>" + referencedTitle + "</b>\n" + referencedBody;
-				
-			}
-
-			AGPTClass gpt = getGPT();
-			String prompt = getAutomaticallyCreatedPost("ohCheckerPromptID", OH_PROMPT_POST_NAME, OH_GPT_PROMPT, "office_hours");
-			String fullPrompt = prompt.replace("[OFFICE_HOURS_REQUEST]", fullRequestText);
-			
-			System.out.println("\nFULL PROMPT:");
-			System.out.println(fullPrompt);
-			
-			String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
-			
-			// TODO: change the way this works?
-			gptResponse = gptResponse.replaceAll("\\\\n", "\n");
-			
-			//System.out.println("\nOH Request:");
-			//System.out.println(fullRequestText);
-			//System.out.println("\nGPT Response:");
-			//System.out.println(gptResponse);
-			
-			// if the OH request is marked as sufficient by GPT, mark it as such
-			if (gptResponse.equals("Complete")) {
-
-				String requestID = (String) request.get("id");
-				String markedText = "<p>" + requestText + "\n\n" + completeMarker + "<p>";
-				updateFollowup(requestID, markedText);
-
-			}
-			
-			// if the OH request is not marked as sufficient by GPT, mark it as such and create a private post with the student to give feedback
-			else {
-				
-				String oldDateTimeFormat = "yyyy-MM-dd H:m";
-				SimpleDateFormat sdf = new SimpleDateFormat(oldDateTimeFormat);
-				String oldDateTime = ((String) request.get("created")).substring(0, 10) + " " + ((String) request.get("created")).substring(11, 16);
-				
-				String newDateTimeFormat = "MMMM d 'at' K:ma";
-				Date newDateTimeObj = sdf.parse(oldDateTime);
-				sdf.applyPattern(newDateTimeFormat);
-				String newDateTime = sdf.format(newDateTimeObj);
-				// TODO: when doing phase 2, make sure they keep the linked post number when changing to complete
-				String newContent = getAutomaticallyCreatedPost("ohRequestFeedbackID", OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, "office_hours")
-					.replace("[STUDENT_NAME]", getUserName(requestUserID))
-					.replace("[REQUEST_DATETIME]", newDateTime)
-					.replace("[STUDENT_REQUEST]", fullRequestText)
-					.replace("[GPT_SUGGESTION]", gptResponse)
-					.replace("[INCOMPLETE_MARKER]", incompleteMarkerBegin + "XX" + incompleteMarkerEnd)
-					.replace("[COMPLETE_MARKER]", completeMarker);
-
-				// if request references another (private) post, give feedback in a followup
-				if (referencesOtherPost && referencedVisibility.equals("private")) {
-					
-					System.out.println(referencedID);
-					createReply(referencedID, newContent);
-					// TODO: append feedbackNumber to point specifically to the followup (e.g. @X_f1 instead of @X)
-					
-				}
-				
-				// otherwise, create a new private post to give feedback
-				else {
-
-					String newSubject = "Your office hour request made on " + newDateTime;
-					List<String> newTags = new ArrayList();
-					newTags.add("office_hours");
-					List<String> newRecipients = new ArrayList();
-					newRecipients.add(requestUserID);
-					
-					String newPostID = createPost(newSubject, newContent, newTags, newRecipients, "individual");
-					feedbackNumber = String.valueOf(getPost(newPostID).get("nr")); // NOTE: if ever changes what createPost returns, don't need to make another call here					
-					
-				}
-				
-				// mark the OH request as incomplete
-				String requestID = (String) request.get("id");
-				String markedText = "<p>" + requestText + "\n\n" + incompleteMarkerBegin + feedbackNumber + incompleteMarkerEnd + "<p>";
-				updateFollowup(requestID, markedText);
-				
-			}
-			
-		}
-		
-		System.out.println(numNewRequests);
-		
-		return numNewRequests;
-	
-	}
-	
-	
+//	
+//	public int checkOfficeHourRequests() throws IOException, NotLoggedInException, ParseException {
+//		
+////		File currentDir = new File(".");
+////		displayDirectory(currentDir);
+//		
+//		
+//		ArrayList<Map<String, Object>> requests = getOfficeHoursReqests();
+//		int numNewRequests = 0;
+//		
+//		for (Map<String, Object> request : requests) {
+//			
+//			String requestText = (String) request.get("subject");
+//			String fullRequestText = requestText;
+//			String requestUserID = (String) request.get("uid");
+//			
+////			System.out.println(fullRequestText);
+//			
+//			String incompleteMarkerBegin = "<sub>[incomplete, see @";
+//			String incompleteMarkerEnd = "]</sub>";
+//			String completeMarker = "<sub>[complete]</sub>";
+//			if (requestText.contains(incompleteMarkerBegin) || requestText.contains(completeMarker)) {
+//				continue;
+//			}
+//			numNewRequests++;
+//			
+//			// if the OH request references another post, use that post's text instead
+//			Pattern referencePattern = Pattern.compile("@\\d+");
+//			Matcher referenceMatcher = referencePattern.matcher(requestText);
+//			boolean referencesOtherPost = referenceMatcher.find();
+//			String feedbackNumber = null;
+//			String referencedID = null;
+//			String referencedVisibility = null;
+//			
+//			if (referencesOtherPost) {
+//				
+//				String referencedPostNumber = requestText.substring(referenceMatcher.start()+1, referenceMatcher.end());
+//				feedbackNumber = referencedPostNumber;
+//				Map<String, Object> referencedPost = getPostFromNumber(referencedPostNumber);
+//				Map<String, Object> referencedPostElement = getLatestElement(referencedPost);
+//				
+//				String referencedTitle = (String) referencedPostElement.get("subject");
+//				String referencedBody = (String) referencedPostElement.get("content");
+//				referencedID = (String) referencedPost.get("id");
+//				referencedVisibility = (String) referencedPost.get("status");
+//
+//				System.out.println("\n\nREFERENCED POST\n\n");
+//				System.out.println(referencedPost);
+//				System.out.println("\n\nREFERENCED ELEMENT\n\n");
+//				System.out.println(referencedPostElement);
+//				System.out.println("\n\nEND REFERENCED POST\n\n");
+//
+//				fullRequestText = requestText + "\n\n<em>The above office hours request references the following post:</em>\n\n<b>" + referencedTitle + "</b>\n" + referencedBody;
+//				
+//			}
+//
+//			AGPTClass gpt = getGPT();
+//			String prompt = getAutomaticallyCreatedPost("ohCheckerPromptID", OH_PROMPT_POST_NAME, OH_GPT_PROMPT, "office_hours");
+//			String fullPrompt = prompt.replace("[OFFICE_HOURS_REQUEST]", fullRequestText);
+//			
+//			System.out.println("\nFULL PROMPT:");
+//			System.out.println(fullPrompt);
+//			
+//			String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
+//			
+//			// TODO: change the way this works?
+//			gptResponse = gptResponse.replaceAll("\\\\n", "\n");
+//			
+//			//System.out.println("\nOH Request:");
+//			//System.out.println(fullRequestText);
+//			//System.out.println("\nGPT Response:");
+//			//System.out.println(gptResponse);
+//			
+//			// if the OH request is marked as sufficient by GPT, mark it as such
+//			if (gptResponse.equals("Complete")) {
+//
+//				String requestID = (String) request.get("id");
+//				String markedText = "<p>" + requestText + "\n\n" + completeMarker + "<p>";
+//				updateFollowup(requestID, markedText);
+//
+//			}
+//			
+//			// if the OH request is not marked as sufficient by GPT, mark it as such and create a private post with the student to give feedback
+//			else {
+//				
+//				String oldDateTimeFormat = "yyyy-MM-dd H:m";
+//				SimpleDateFormat sdf = new SimpleDateFormat(oldDateTimeFormat);
+//				String oldDateTime = ((String) request.get("created")).substring(0, 10) + " " + ((String) request.get("created")).substring(11, 16);
+//				
+//				String newDateTimeFormat = "MMMM d 'at' K:ma";
+//				Date newDateTimeObj = sdf.parse(oldDateTime);
+//				sdf.applyPattern(newDateTimeFormat);
+//				String newDateTime = sdf.format(newDateTimeObj);
+//				// TODO: when doing phase 2, make sure they keep the linked post number when changing to complete
+//				String newContent = getAutomaticallyCreatedPost("ohRequestFeedbackID", OH_REQUEST_FEEDBACK_POST_NAME, OH_REQUEST_FEEDBACK_MESSAGE, "office_hours")
+//					.replace("[STUDENT_NAME]", getUserName(requestUserID))
+//					.replace("[REQUEST_DATETIME]", newDateTime)
+//					.replace("[STUDENT_REQUEST]", fullRequestText)
+//					.replace("[GPT_SUGGESTION]", gptResponse)
+//					.replace("[INCOMPLETE_MARKER]", incompleteMarkerBegin + "XX" + incompleteMarkerEnd)
+//					.replace("[COMPLETE_MARKER]", completeMarker);
+//
+//				// if request references another (private) post, give feedback in a followup
+//				if (referencesOtherPost && referencedVisibility.equals("private")) {
+//					
+//					System.out.println(referencedID);
+//					createReply(referencedID, newContent);
+//					// TODO: append feedbackNumber to point specifically to the followup (e.g. @X_f1 instead of @X)
+//					
+//				}
+//				
+//				// otherwise, create a new private post to give feedback
+//				else {
+//
+//					String newSubject = "Your office hour request made on " + newDateTime;
+//					List<String> newTags = new ArrayList();
+//					newTags.add("office_hours");
+//					List<String> newRecipients = new ArrayList();
+//					newRecipients.add(requestUserID);
+//					
+//					String newPostID = createPost(newSubject, newContent, newTags, newRecipients, "individual");
+//					feedbackNumber = String.valueOf(getPost(newPostID).get("nr")); // NOTE: if ever changes what createPost returns, don't need to make another call here					
+//					
+//				}
+//				
+//				// mark the OH request as incomplete
+//				String requestID = (String) request.get("id");
+//				String markedText = "<p>" + requestText + "\n\n" + incompleteMarkerBegin + feedbackNumber + incompleteMarkerEnd + "<p>";
+//				updateFollowup(requestID, markedText);
+//				
+//			}
+//			
+//		}
+//		
+//		System.out.println(numNewRequests);
+//		
+//		return numNewRequests;
+//	
+//	}
+//	
+//	
 	
 	
 	

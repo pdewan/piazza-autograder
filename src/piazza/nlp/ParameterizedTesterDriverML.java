@@ -185,7 +185,8 @@ public class ParameterizedTesterDriverML {
 			loggedInClass = ParameterizedTester.loginToPiazzaClassFromEnvVar();
 
 			//System.out.println(loggedInClass.getIDFromNumber("6"));
-			loggedInClass.setUpTool("6", true);
+			String dataPostNumber = System.getenv("DATA_POST_NUMBER");
+			loggedInClass.setUpTool(dataPostNumber, false);
 			
 			//System.out.println(loggedInClass.getInstructorIDs());
 			//System.out.println(loggedInClass.processNewPosts(false));

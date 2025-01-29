@@ -70,7 +70,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 		for (Map<String, Object> post : this.getAllPosts()) {
 			
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -620,7 +620,7 @@ public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 			System.out.println(cid);
 			System.out.println(post);
 			//TODO:
-			this.createFollowup(cid, post);
+//			this.createFollowup(cid, post);
 			System.out.println("FOLLOWUP CREATED FOR " + name);
 			System.out.println();
 		}
