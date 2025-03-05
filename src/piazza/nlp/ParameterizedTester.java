@@ -162,6 +162,24 @@ public class ParameterizedTester {
 		
 	}
 	
+	public static APiazzaClassRecursivePostsMLSynchronous loginToPiazzaClassFromEnvVarSynchronous(
+
+			) throws ClientProtocolException, NotLoggedInException, IOException, LoginFailedException {
+
+		String email = System.getenv("PIAZZA_EMAIL");
+		String password = System.getenv("PIAZZA_PASSWORD");
+		classID = System.getenv("PIAZZA_CLASS_ID");
+		String apiKey = System.getenv("OPENAI_API_KEY");;
+		String defaultModel = System.getenv("DEFAULT_GPT_MODEL");
+		
+		String lastRun = System.getenv("LAST_RUN");
+		
+		APiazzaClassRecursivePostsMLSynchronous aClass = new APiazzaClassRecursivePostsMLSynchronous(email, password, classID, apiKey, defaultModel, lastRun);
+
+		return aClass;
+		
+	}
+	
 
 	public static void main(String[] args) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		if (args.length < 1) {

@@ -775,6 +775,9 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 			if (tags.contains(assignmentTag)) {
 				
 				String postID = fetchAssignmentWriteupFromTag(assignmentTag);
+				if (postID == null) {
+					break;
+				}
 				Map<String, Object> assignmentPost = getPost(postID);
 				return getLatestContent(assignmentPost);
 				
@@ -850,7 +853,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 		
 		// TODO: add lastRun
 		
-		
+		// TODO: add post numbers in addition to post IDs
 		// save the post IDs for all of the posts we just created
 		JSONObject data = new JSONObject()
 				.put("mediatedGPTLogID", mediatedGPTLogID)
@@ -956,7 +959,8 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 //				System.out.println();
 				System.out.println();
 //				System.out.println("studentPost");
-//				//System.out.println(studentPost);
+//				System.out.println(studentPost);
+//				System.out.println("revision number: " + studentPost.get("history_size"));
 				System.out.println("studentQuestionTitle and studentQuestion");
 				System.out.println(studentQuestionTitle);
 				System.out.println(studentQuestion);
@@ -1093,14 +1097,25 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 					String prompt = getAutomaticallyCreatedPost("mediatedGPTPromptID", PROMPT_POST_NAME, MEDIATED_GPT_PROMPT, "mediated_gpt");
 					String assignmentInstructions = getAssignmentWriteup(studentPost);
 				
+					// if the tool could not find the assignment instructions (likely because the instructor has not made the post yet), hold off on processing the post for now
+					// we also create a draft response indicating that we've skipped, so the instructor is aware
+					if (assignmentInstructions == null) {
+						String skippingDraft = "NOTE: The Mediated GPT tool skipped this post because it could not find an assignment writeup for the included tag.";
+						createDraftAnswer(studentPostID, skippingDraft);
+						break;
+					}
+					
 					// send prompt to GPT
 					String fullPrompt = prompt.replace("[ASSIGNMENT_INSTRUCTIONS]", assignmentInstructions).replace("[STUDENT_QUESTION]", studentQuestion);
 					System.out.println("\nFULL PROMPT:");
 					System.out.println(fullPrompt + "\n");
-					String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
+//					String gptResponse = gpt.makeCallWithBackoff(fullPrompt);
+//					
+//					// TODO: change the way this works?
+//					gptResponse = gptResponse.replaceAll("\\\\n", "\n");
 					
-					// TODO: change the way this works?
-					gptResponse = gptResponse.replaceAll("\\\\n", "\n");
+					// TODO: temp testing
+					String gptResponse = "THIS IS A DUMMY GPT RESPONSE";
 					
 					// make private post
 					String newSubject = "Instructor Thread: " + val.getString("subject");				
@@ -1149,8 +1164,9 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 				
 				// add to log
 				JSONObject newLog = new JSONObject();
-				newLog.put("post_number", "@" + studentPost.get("nr"));
 				newLog.put("post_id", studentPostID);
+				newLog.put("post_number", "@" + studentPost.get("nr"));
+				newLog.put("revision_number", studentPost.get("history_size"));
 				readPosts.put(newLog);
 				JSONObject logObj = new JSONObject();
 				logObj.put("ProcessedPosts", readPosts);
