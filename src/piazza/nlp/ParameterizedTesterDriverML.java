@@ -1,5 +1,7 @@
 package piazza.nlp;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -14,6 +16,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import piazza.ANewPiazzaSession;
+import piazza.APiazzaClass;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 
@@ -181,12 +185,24 @@ public class ParameterizedTesterDriverML {
 		try {
 			
 			// 2 hours in seconds: 7200
-			
-			loggedInClass = ParameterizedTester.loginToPiazzaClassFromEnvVar();
 
+			String email = System.getenv("PIAZZA_EMAIL");
+			String password = System.getenv("PIAZZA_PASSWORD");
+			String classID = System.getenv("PIAZZA_CLASS_ID");
+			String apiKey = System.getenv("OPENAI_API_KEY");;
+			String defaultModel = System.getenv("DEFAULT_GPT_MODEL");
+			String lastRun = System.getenv("LAST_RUN");
+
+			APiazzaClass aClass =  new APiazzaClass(email, password, classID);
+			System.out.println(aClass.getPost("m6ie32r77ki5y0"));
+			
+			
+//			loggedInClass = ParameterizedTester.loginToPiazzaClassFromEnvVar();
+//			System.out.println(loggedInClass.getAllUsers());
+			
 			//System.out.println(loggedInClass.getIDFromNumber("6"));
-			String dataPostNumber = System.getenv("DATA_POST_NUMBER");
-			loggedInClass.setUpTool(dataPostNumber, false);
+//			String dataPostNumber = System.getenv("DATA_POST_NUMBER");
+//			loggedInClass.setUpTool(dataPostNumber, false);
 			
 			//System.out.println(loggedInClass.getInstructorIDs());
 			//System.out.println(loggedInClass.processNewPosts(false));

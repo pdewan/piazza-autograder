@@ -29,8 +29,8 @@ public class APiazzaClass implements PiazzaClass {
 	public APiazzaClass(String email, String password, String classID)
 			throws ClientProtocolException, IOException, LoginFailedException {
 //		this.mySession = new APiazzaSession();
+		
 		this.mySession = new ANewPiazzaSession();
-
 		this.mySession.login(email, password);
 		this.cid = classID;
 	}

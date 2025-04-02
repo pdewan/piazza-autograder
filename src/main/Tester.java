@@ -34,27 +34,29 @@ public class Tester {
 	
 	public static void main(String[] argv) throws ClientProtocolException, IOException, LoginFailedException, NotLoggedInException {
 		
-		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
-		
-		String text = "";
-		String line = configReader.readLine();
-		
-		while (line != null) {
-			text = text + line;
-			line = configReader.readLine();
-		}
-		
-		JSONObject config = new JSONObject(text);
-		String email = config.getString("email");
-		String password = config.getString("password");
-		String classID = "lljvl3218jw2r4"; //config.getString("class_id");
-		// 991: k9zvvl9ubao6xa, 524: lljvl3218jw2r4
+//		BufferedReader configReader = new BufferedReader(new FileReader("config.json"));
+//		
+//		String text = "";
+//		String line = configReader.readLine();
+//		
+//		while (line != null) {
+//			text = text + line;
+//			line = configReader.readLine();
+//		}
+//		
+//		JSONObject config = new JSONObject(text);
+//		String email = config.getString("email");
+//		String password = config.getString("password");
+		String email = "mlaney@cs.unc.edu";
+		String password = "1000Suns_";
+		String classID = "lzk5x8ctkej770"; //config.getString("class_id");
+		// 991: k9zvvl9ubao6xa, F23 524: lljvl3218jw2r4, F24 524: lzk5x8ctkej770, 992: m0mymncloco2ty
 		
 		//(for example, this post is @_)
 		String outputFilePath = "C:\\Users\\Mason\\Documents\\COMP524\\diaries";
 		//String inputFilePath = "/Path/To/Where/File/Is/Saved";
-		String contactName = "Mason Laney";
-		String fullRegradeNote = "Note that this is a full regrade of all diary entries that currently exist";
+		String contactName = "Mason Laney.";
+		String fullRegradeNote = "See @412 for more details. This is a full regrade of all diary entries that currently exist.";
 		
 		APiazzaClassWithDiaries_3 comp991 = new APiazzaClassWithDiaries_3(email, password, classID, contactName, fullRegradeNote);
 		
@@ -66,7 +68,7 @@ public class Tester {
 		
 		System.out.println("DONE!");
 		
-		configReader.close();
+//		configReader.close();
 	}
 
 }

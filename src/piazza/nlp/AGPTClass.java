@@ -25,57 +25,59 @@ public class AGPTClass {
 	
 	// https://platform.openai.com/docs/api-reference/chat/create
 	public String makeCall(String prompt, String model, String endpoint) throws IOException {
+
+		return "GPT calls currently disabled, this would be the response";
 		
-		// set up connection
-		URL obj = new URL(endpoint);
-        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Authorization", "Bearer " + apiKey);
-        connection.setRequestProperty("Content-Type", "application/json");
-
-//        // The request body
-//        String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + prompt + "\"}]}";
+//		// set up connection
+//		URL obj = new URL(endpoint);
+//        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
+//        connection.setRequestMethod("POST");
+//        connection.setRequestProperty("Authorization", "Bearer " + apiKey);
+//        connection.setRequestProperty("Content-Type", "application/json");
+//
+////        // The request body
+////        String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + prompt + "\"}]}";
+////        
+////        
+////        // TODO: find a way to strip markdown (instead of just avoiding it)
+////        body = body.replaceAll("\n", "\\\\n").replace("&#34;", "\\\"").replaceAll("&#43;", "+").replaceAll("/", "\\\\/");
+//        JSONObject test = new JSONObject();
+//        test.put("model", model);
+//        JSONArray test2 = new JSONArray();
+//        JSONObject test3 = new JSONObject();
+//        test3.put("role", "user");
+//        test3.put("content", prompt);
+//        test2.put(test3);
+//        test.put("messages", test2);
 //        
+//        String body = test.toString();
+////        System.out.println(body);
 //        
-//        // TODO: find a way to strip markdown (instead of just avoiding it)
-//        body = body.replaceAll("\n", "\\\\n").replace("&#34;", "\\\"").replaceAll("&#43;", "+").replaceAll("/", "\\\\/");
-        JSONObject test = new JSONObject();
-        test.put("model", model);
-        JSONArray test2 = new JSONArray();
-        JSONObject test3 = new JSONObject();
-        test3.put("role", "user");
-        test3.put("content", prompt);
-        test2.put(test3);
-        test.put("messages", test2);
-        
-        String body = test.toString();
-//        System.out.println(body);
-        
-        connection.setDoOutput(true);
-        OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
-        writer.write(body);
-        writer.flush();
-        writer.close();
-
-        // Response from ChatGPT
-        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
-        String line;
-
-        StringBuffer response = new StringBuffer();
-
-        while ((line = br.readLine()) != null) {
-            response.append(line);
-        }
-        br.close();
-        
-//        System.out.println("Full GPT response:\n");
-//        System.out.println(response);
-
-        // calls the method to extract the message.
-//        System.out.println("Extracted version:\n");
-        String message = extractMessageFromJSONResponse(response.toString());
-//        System.out.println(message);
-        return message;
+//        connection.setDoOutput(true);
+//        OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream(), StandardCharsets.UTF_8);
+//        writer.write(body);
+//        writer.flush();
+//        writer.close();
+//
+//        // Response from ChatGPT
+//        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
+//        String line;
+//
+//        StringBuffer response = new StringBuffer();
+//
+//        while ((line = br.readLine()) != null) {
+//            response.append(line);
+//        }
+//        br.close();
+//        
+////        System.out.println("Full GPT response:\n");
+////        System.out.println(response);
+//
+//        // calls the method to extract the message.
+////        System.out.println("Extracted version:\n");
+//        String message = extractMessageFromJSONResponse(response.toString());
+////        System.out.println(message);
+//        return message;
 		
 	}
 	

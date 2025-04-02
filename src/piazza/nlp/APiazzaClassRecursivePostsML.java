@@ -981,10 +981,12 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 						
 						System.out.println("IF PRIVATE");
 						
+						// TODO: tool repeatedly freezes after here in 533?
+						// maybe getInstructorIDs() crashes somehow?
+						
 						// if post is only visible to some instructors, create a response
 						List<String> postedTo = Arrays.asList(((String) val.get("feed_groups")).split(","));
 						boolean includesAllInstructors = postedTo.contains("instr_" + this.cid) || postedTo.containsAll(getInstructorIDs());
-						
 						
 						System.out.println(includesAllInstructors);
 						System.out.println(containsPrivateTags);
