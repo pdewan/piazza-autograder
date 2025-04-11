@@ -27,12 +27,14 @@ public class ReduxTestRunner {
 		String lastRun = System.getenv("LAST_RUN");
 	
 		APiazzaForum pf = new APiazzaForum(classID, email, password);
-//		pf.getPost(53);
+		//pf.getPost(53);
 //		pf.getPost("m0mypf6bnkm4fc");
 //		pf.getPost("m0qadc69kex6fj"); // to=m0qadc69kex6fj
 //		pf.getFeed();
-//		System.out.println(pf.getPost("m72prlqjhxgj5"));
-		pf.searchPosts("null pointer");
+//		System.out.println(pf.getPost("m72prlqjhxgj5").getTags());
+		System.out.println(pf.getPost(291).getAllData());
+
+//		pf.searchPosts("null pointer");
 		
 		//System.out.println(aClass.getPost("m6ie32r77ki5y0"));
 		

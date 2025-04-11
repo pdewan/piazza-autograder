@@ -2,6 +2,7 @@ package piazza.nlp.redux;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,22 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	}
 	
 	
+	
 	/* DiscussionForum METHODS */
+	
+	// get the forum "session" that API calls are delegated to
+	@Override
+	public PiazzaSession getForumSession() {
+		return this.currentSession;
+	}
+	
+	// swap the current forum session with a new session, returning the session that was just swapped out
+	@Override
+	public PiazzaSession swapForumSession(PiazzaSession newSession) {
+		PiazzaSession oldSession = this.getForumSession();
+		this.currentSession = newSession;
+		return oldSession;
+	}
 	
 	// get post from ID (e.g. m6ie32r77ki5y0)
 	@Override
@@ -69,45 +85,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		
 		List<Post> posts = new ArrayList<Post>();
 		for (APiazzaPostPreview p : feed) {
-			posts.add(getPost((String) p.getFullData().get("id")));
+			posts.add(getPost((String) p.getID()));
 		}
 		
 		return posts;
 		
 	}
 	
-	
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	// get a list of all users in the class
 	@Override
 	public List<ForumUser> getAllUsers() {
 		
@@ -125,6 +110,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		
 	}
 	
+	// get a list of all administrators in the class
 	@Override
 	public List<ForumUser> getAdministrators() {
 		
@@ -140,13 +126,6 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return admins;
 	
 	}
-
-	
-	
-	
-	
-	
-	
 	
 	// get posts corresponding to a search query. use queryPosts() instead if post previews are sufficient, as it makes less API calls
 	@Override
@@ -156,22 +135,157 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		
 		List<Post> posts = new ArrayList<Post>();
 		for (APiazzaPostPreview p : queryResults) {
-			posts.add(getPost((String) p.getFullData().get("id")));
+			posts.add(getPost((String) p.getAllData().get("id")));
 		}
 		
 		return posts;
 		
 	}
-	
-	
+
+	// 
+	// TODO: make messageType and editorType enums
+	@Override
+	public String createPost(JSONObject content) {
+//	public String createPost(String subject, String content, List<String> tags, List<String> recipients, String messageType, String editorType) {
+		
+		
+		
+		
+		
+		
+		
+		return null;
+		
+//		JSONObject data = new JSONObject()
+//				.put("cid", postID);
+//		
+//		
+//		
+//		
+//		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.get", data);	
+//		
+		
+	}
 
 	
 	
 	
 	
 	
+//	/* COMPONENT: API CLASS */
+//	// TODO: make messageType an enum, or just check if recipients is empty?
+//	// TODO: feed groups? other config?
+//	// TODO: also do "type" -- currently accepts markdown, could expand to plain text or rich text
+//	public String createPost(
+//			String aSubject,
+//			String aContent,
+//			List<String> aTags,
+//			List<String> aRecipients,
+//			String messageType
+//		) throws ClientProtocolException, NotLoggedInException, IOException {
+//		
+//		String recipients = "";
+//		if (messageType.equals("individual")) {
+//			
+//			for (String r : aRecipients) {
+//				recipients += r + ",";
+//			}
+//			// NOTE: remove this if you don't want to post to all instructors
+//			recipients += "instr_" + this.cid;
+//		}
+//		
+//		JSONObject data = new JSONObject().
+//			put("nid", this.cid).
+//			put("type", "note").
+//			put("subject", aSubject).
+//			put("content", aContent).
+//			put("folders", aTags).
+//			put("editor", "md").
+//			put("anonymous", "no").
+//			put("status", "active");
+//		
+//		if (aRecipients != null) {
+//			Map<String, String> config = new HashMap();
+//			config.put("feed_groups", recipients);
+//			data.put("config", config);
+//		}
+//		
+//		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
+//		Map<String, Object> res = (Map<String, Object>) resp.get("result");
+//		System.out.println("RESP");
+//		System.out.println(resp);
+//		System.out.println("RES");
+//		System.out.println(res);
+//		
+//		return (String) (res.get("id"));
+//		//return (String) resp.get("aid");
+//		//return resp != null? true:false;
+//		
+//	}
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// 
+	@Override
+	public String createInstructorAnswer(String postID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String createFollowup(String postID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String createDraftPost(JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String createDraftInstructorAnswer(String postID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String createDraftFollowup(String postID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String updatePost(String postID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 
+	@Override
+	public String updateResponse(String responseID, JSONObject content) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 	
 	/* ADDITIONAL METHODS */
@@ -257,27 +371,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return previews;
 		
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 	
 	/* HELPER METHODS */
@@ -346,81 +440,5 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		}
 		
 	}
-
-		
-		
-		
-		
-		
-
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-
-
-	
-	
-	
-
-
-	@Override
-	public String createPost(JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String createInstructorAnswer(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String createFollowup(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String createDraftPost(JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String createDraftInstructorAnswer(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String createDraftFollowup(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String updatePost(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String updateResponse(String responseID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
 
 }
