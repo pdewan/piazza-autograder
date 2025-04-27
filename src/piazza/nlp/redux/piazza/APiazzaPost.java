@@ -1,5 +1,6 @@
-package piazza.nlp.redux;
+package piazza.nlp.redux.piazza;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -11,23 +12,139 @@ public class APiazzaPost implements PiazzaPost {
 		this.postData = postData;
 	}
 	
+	
+	/
+	/* ForumPost METHODS */
+	
 	@Override
 	public Map<String, Object> getAllData() {
 		return this.postData;
 	}
 	
 	@Override
-	public String getID() {
+	public String getPostID() {
 		return (String) this.getAllData().get("id");
 	}
 	
+	@Override
+	public String getCourseID() {
+				
+		// TODO
+		return null;
 	
+	}
 	
+	@Override
+	public String getSubject() {
+		
+		// TODO
+		//return this.postData.get("");
+		return null;
+		
+	}
+	
+	@Override
+	public String getBody() {
+		
+		// TODO
+		return null;
+		
+	}
+	
+	@Override
+	public String getType() {
+		
+		// TODO
+		return null;
+		
+	}
+	
+	@Override
+	public Date getDateCreated() {
+		
+		// TODO
+		return null;
+		
+	}
+	
+	@Override
+	public Date getDateUpdated() {
+		
+		// TODO
+		return null;
+		
+	}
 	
 	// TODO: "folders" will give just poster-assigned tags without tags like "instructor-note" and "pin"
+	@Override
 	public List<String> getTags() {
-		return (List<String>) this.getAllData().get("tags");
+	
+		return (List<String>) this.postData.get("tags");
+	
 	}
+	
+	@Override
+	public String getURL() {
+		return "https://piazza.com/class/" + this.getCourseID() + "/post/" + this.getPostNumber();
+	}
+	
+	@Override
+	public String getAuthorID() {
+	
+		// TODO
+		return null;
+		
+	}
+
+
+	@Override
+	public String getVisibility() {
+
+		// TODO
+		return null;
+		
+	}
+	
+	
+	
+	/* PiazzaPost METHODS */
+	
+	@Override
+	public int getPostNumber() {
+		
+		// TODO
+		return null;
+		
+	}
+	
+	@Override
+	public int getRevisionNumber() {
+		
+		// TODO: is this the same as history size? or does that factor in replies and such
+		return null;
+		
+	}
+
+
+
+	
+	
+	
+	/*
+    protected String getLatestContent(Map<String, Object> item) {
+    	
+    	Map<String, Object> latestElement = getLatestElement(item);
+    	return (String) latestElement.get("content");
+	
+    }
+    
+    protected Map<String, Object> getLatestElement(Map<String, Object> item) {
+    	
+    	List<Map<String, Object>> historyList = (List<Map<String, Object>>) item.get("history");
+    	Map<String, Object> latestElement = historyList.get(0);
+    	return latestElement;
+
+    } */
 	
 }
 

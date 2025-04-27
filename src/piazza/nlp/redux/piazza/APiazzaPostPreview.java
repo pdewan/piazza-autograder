@@ -1,4 +1,4 @@
-package piazza.nlp.redux;
+package piazza.nlp.redux.piazza;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,8 @@ public class APiazzaPostPreview implements PiazzaPost {
 		return null;
 	}
 	
-	// TODO: get full post? but this needs access to a PiazzaForum object
-	// public APiazzaPost getFullPost() {}
+	
+	// TODO: rest of interface methods
+
 	
 }

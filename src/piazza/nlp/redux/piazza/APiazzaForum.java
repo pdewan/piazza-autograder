@@ -1,4 +1,4 @@
-package piazza.nlp.redux;
+package piazza.nlp.redux.piazza;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,15 +14,19 @@ import piazza.InvalidCallException;
 import piazza.LoginFailedException;
 import piazza.NotLoggedInException;
 import piazza.PiazzaSession;
+import piazza.nlp.redux.general.ForumPost;
+import piazza.nlp.redux.general.ForumUser;
 
 public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionForum
 
+	protected String courseName;
 	protected String classID;
 	protected PiazzaSession currentSession;
 	
 	// create forum object using a new Piazza API session for the given email/password
-	public APiazzaForum(String classID, String email, String password) {
+	public APiazzaForum(String courseName, String classID, String email, String password) {
 		
+		this.courseName = courseName;
 		this.classID = classID;
 		this.currentSession = new ANewPiazzaSession();
 		
@@ -36,8 +40,9 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// create forum object using an existing Piazza API session
 	// assumes the session has already been logged into, otherwise other methods will throw an error
-	public APiazzaForum(String classID, PiazzaSession initialSession) {
+	public APiazzaForum(String courseName, String classID, PiazzaSession initialSession) {
 	
+		this.courseName = courseName;
 		this.classID = classID;
 		this.currentSession = initialSession; 
 				
@@ -46,6 +51,16 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	
 	/* DiscussionForum METHODS */
+	
+	@Override
+	public String getPlatformName() {
+		return "Piazza";
+	}
+
+	@Override
+	public String getCourseName() {
+		return this.courseName;
+	}
 	
 	// get the forum "session" that API calls are delegated to
 	@Override
@@ -63,7 +78,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// get post from ID (e.g. m6ie32r77ki5y0)
 	@Override
-	public Post getPost(String postID) {
+	public ForumPost getPost(String postID) {
 		
 		JSONObject data = new JSONObject()
 				.put("cid", postID);
@@ -76,14 +91,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	// get list of all posts in the class
 	// NOTE: makes a call to getPost() for each one; use getFeed() instead if post previews are sufficient
 	@Override
-	public List<Post> getAllPosts() {
+	public List<ForumPost> getAllPosts() {
 		
 		// TODO: add filtering on number, date, and tag like in getAllPostsRecursive()
 		// TODO: add progress bar printing
 		
 		List<APiazzaPostPreview> feed = getFeed();
 		
-		List<Post> posts = new ArrayList<Post>();
+		List<ForumPost> posts = new ArrayList<ForumPost>();
 		for (APiazzaPostPreview p : feed) {
 			posts.add(getPost((String) p.getID()));
 		}
@@ -91,6 +106,43 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return posts;
 		
 	}
+	
+	// get user info for the provided user ID
+	@Override
+	public ForumUser getUser(String userID) {
+			
+		return this.getUsers(new String[] {userID}).get(0);
+			
+	}
+	
+	
+
+	
+	
+	/* 
+	 * //		System.out.println("uid" + uid);
+		if (uid == null) {
+			System.out.println("null uid");
+			return emptyMap;
+		}
+		JSONObject data = new JSONObject().put("ids", new String[] { uid }).put("nid", this.cid);
+		Map<String, Object> resp = this.mySession.piazzaAPICall("network.get_users", data, piazzaLogic);
+		if (resp == null) {
+			System.out.println("null get_users for uid " + uid);
+			return emptyMap;
+		}
+//		System.out.println("UserId: " + resp.toString());
+		if (((List<Map<String, Object>>) this.getResults(resp)).size() == 0) return null;
+		@SuppressWarnings("unchecked")
+		Map<String, Object> user = ((List<Map<String, Object>>) this.getResults(resp)).get(0);
+//		System.out.println("user" + user);
+
+		return user;
+	 */
+	
+	
+	
+	
 	
 	// get a list of all users in the class
 	@Override
@@ -129,11 +181,11 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// get posts corresponding to a search query. use queryPosts() instead if post previews are sufficient, as it makes less API calls
 	@Override
-	public List<Post> searchPosts(String query) {
+	public List<ForumPost> searchPosts(String query) {
 		
 		List<APiazzaPostPreview> queryResults = queryPosts(query);
 		
-		List<Post> posts = new ArrayList<Post>();
+		List<ForumPost> posts = new ArrayList<ForumPost>();
 		for (APiazzaPostPreview p : queryResults) {
 			posts.add(getPost((String) p.getAllData().get("id")));
 		}
@@ -288,10 +340,29 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 
 	
 	
-	/* ADDITIONAL METHODS */
+	/* PiazzaForum METHODS */
+	
+	// get user info for the provided user IDs
+	@Override
+	public List<ForumUser> getUsers(String[] userIDs) {
+		
+		JSONObject data = new JSONObject()
+				.put("ids", userIDs)
+				.put("nid", this.classID);
+		
+		List<Map<String, Object>> resp = (List<Map<String, Object>>) makeCallWithBackoff("network.get_users", data);
+		
+		List<ForumUser> users = new ArrayList<ForumUser>();
+		for (Map<String, Object> userInfo : resp) {
+			users.add(new APiazzaUser(userInfo));
+		}
+		
+		return users;
+		
+	}
 	
 	// get post from number (e.g. @6)
-	public Post getPost(int postNumber) {
+	public ForumPost getPost(int postNumber) {
 		
 		JSONObject data = new JSONObject()
 				.put("cid", postNumber)
