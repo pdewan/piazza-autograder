@@ -13,8 +13,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 	final protected static String DESCRIPTION = "Determines whether a post contains an image. If so, creates a followup instructing the post author to replace the image with the relevant text it contains.";
 	
 	public ImageCheckerAgent(String agentName) {
-		this.name = agentName;
-		this.description = DESCRIPTION;
+		super(agentName, DESCRIPTION);		
 	}
 	
 	public ImageCheckerAgent() {
@@ -41,7 +40,10 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 				
 				// TODO: createFollowupIfDoesNotExist? where should that method be added?
 				// TODO: change this depending on the parameter types of createFollowup()
-				dataStoreForum.getForum().createFollowup(postID, containsImageMessage + automatedSuggestionDisclaimer);
+				//dataStoreForum.getForum().createFollowup(postID, containsImageMessage + automatedSuggestionDisclaimer);
+				
+				// TODO: finish
+				
 				break;
 			}			
 		}

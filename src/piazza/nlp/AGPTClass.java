@@ -10,8 +10,8 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class AGPTClass {
 

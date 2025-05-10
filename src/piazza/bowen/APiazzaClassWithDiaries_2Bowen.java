@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class APiazzaClassWithDiaries_2Bowen extends APiazzaClassBowen {
 

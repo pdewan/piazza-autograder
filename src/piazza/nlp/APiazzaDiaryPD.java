@@ -22,9 +22,9 @@ import piazza.ADate;
 import piazza.APiazzaClass;
 import piazza.AnIndividualGrade;
 import piazza.IndividualGrade;
-import piazza.LoginFailedException;
 import piazza.MyDate;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class APiazzaDiaryPD extends APiazzaClass {
 

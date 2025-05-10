@@ -16,6 +16,9 @@ import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
+
 public class APiazzaClass implements PiazzaClass {
 
 	final String piazzaLogic = "https://piazza.com/logic/api";

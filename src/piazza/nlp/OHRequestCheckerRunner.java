@@ -9,8 +9,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class OHRequestCheckerRunner {
 

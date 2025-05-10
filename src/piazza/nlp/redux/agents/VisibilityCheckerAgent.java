@@ -19,8 +19,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 	final protected static String DESCRIPTION = "Determines whether the visibility of a post is appropriate, given its tags. If not, creates a followup instructing the post author to change either the visibility of their post or the post tags.";	
 	
 	public VisibilityCheckerAgent(String agentName) {
-		this.name = agentName;
-		this.description = DESCRIPTION;
+		super(agentName, DESCRIPTION);
 	}
 	
 	public VisibilityCheckerAgent() {

@@ -10,8 +10,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 	final protected static String DESCRIPTION = ""; // TODO
 	
 	public MediatedLLMAgent(String agentName) {
-		this.name = agentName;
-		this.description = DESCRIPTION;
+		super(agentName, DESCRIPTION);
 	}
 	
 	public MediatedLLMAgent() {
@@ -23,8 +22,9 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 
 		// TODO
 		
-		
-		
+		// TODO: logic updates from version in APiazzaClassRecursivePostsML:
+		// - update instructor reference to include datetime (reference OH request code)
+	    // - also include tags of original post
 		
 		
 		return null;

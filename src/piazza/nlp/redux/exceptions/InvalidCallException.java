@@ -1,4 +1,4 @@
-package piazza;
+package piazza.nlp.redux.exceptions;
 
 public class InvalidCallException extends Exception {
 

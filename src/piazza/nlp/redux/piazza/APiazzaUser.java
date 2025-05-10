@@ -12,6 +12,11 @@ public class APiazzaUser implements PiazzaUser {
 		this.userData = userData;
 	}
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "{@" + this.getName() + "}";
+	}
+	
 	/* ForumUser METHODS */
 	
 	@Override
@@ -67,13 +72,12 @@ public class APiazzaUser implements PiazzaUser {
 	
 }
 
-/*
 
-	Examples of userData:
 
-	{role=student, name=Example Student, endorser={}, admin=false, photo=null, id=jzk5vujhfp6pa, photo_url=null, published=true, email=mlaney@live.unc.edu, mlaney@email.unc.edu, masonmlaney@gmail.com, us=false, facebook_id=null}
-	{role=ta, name=Mason Boyles, endorser={}, admin=true, photo=null, id=ky4w3gvue3fbc, photo_url=null, published=true, email=mboyles@unc.edu, masonwboyles@gmail.com, us=false, admin_permission=5, facebook_id=null}
-	{role=ta, name=Mason Laney, endorser={}, admin=true, photo=null, id=lljvnbpqdze3xm, photo_url=null, email=mlaney@cs.unc.edu, us=false, admin_permission=5, facebook_id=null}
-	{role=instructor, name=Yuvraj, endorser={}, admin=true, photo=null, id=kstfi2k46j36cl, photo_url=null, published=true, email=yjain@unc.edu, 4309chris@gmail.com, us=false, admin_permission=10, facebook_id=null}
+/* EXAMPLES OF this.userData */
 
- */
+	// {role=student, name=Example Student, endorser={}, admin=false, photo=null, id=jzk5vujhfp6pa, photo_url=null, published=true, email=mlaney@live.unc.edu, mlaney@email.unc.edu, masonmlaney@gmail.com, us=false, facebook_id=null}
+	// {role=ta, name=Mason Boyles, endorser={}, admin=true, photo=null, id=ky4w3gvue3fbc, photo_url=null, published=true, email=mboyles@unc.edu, masonwboyles@gmail.com, us=false, admin_permission=5, facebook_id=null}
+	// {role=ta, name=Mason Laney, endorser={}, admin=true, photo=null, id=lljvnbpqdze3xm, photo_url=null, email=mlaney@cs.unc.edu, us=false, admin_permission=5, facebook_id=null}
+	// {role=instructor, name=Yuvraj, endorser={}, admin=true, photo=null, id=kstfi2k46j36cl, photo_url=null, published=true, email=yjain@unc.edu, 4309chris@gmail.com, us=false, admin_permission=10, facebook_id=null}
+

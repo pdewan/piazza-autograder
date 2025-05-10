@@ -10,6 +10,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.json.JSONObject;
 
+import piazza.nlp.redux.exceptions.AnonymousDataAccessException;
 import piazza.nlp.redux.general.AgentAction;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.ForumPost;
@@ -23,8 +24,7 @@ public class PostLoggerAgent extends AnAbstractForumAgent implements ForumAgent 
 	private String mongoDBPassword;
 	
 	public PostLoggerAgent(String agentName, String mongoDBEndpoint, String mongoDBPassword) {
-		this.name = agentName;
-		this.description = DESCRIPTION;
+		super(agentName, DESCRIPTION);
 		this.mongoDBEndpoint = mongoDBEndpoint;
 		this.mongoDBPassword = mongoDBPassword;
 	}
@@ -44,7 +44,13 @@ public class PostLoggerAgent extends AnAbstractForumAgent implements ForumAgent 
 		String postID = post.getPostID();
 		String postURL = post.getURL();
 		String logType = dataStoreForum.getForum().getPlatformName();
-		String authorName = dataStoreForum.getForum().getUser(post.getAuthorID()).getName();
+		String authorName;
+		try {
+			authorName = dataStoreForum.getForum().getUser(post.getAuthorID()).getName();
+		} catch (AnonymousDataAccessException e1) {
+			e1.printStackTrace();
+			authorName = "Anonymous";
+		}
 		JSONObject postData = new JSONObject(post.getAllData());
 		
 		try {

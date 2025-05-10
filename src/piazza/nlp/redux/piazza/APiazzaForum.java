@@ -10,12 +10,15 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
 import piazza.ANewPiazzaSession;
-import piazza.InvalidCallException;
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
 import piazza.PiazzaSession;
+import piazza.nlp.redux.exceptions.AnonymousDataAccessException;
+import piazza.nlp.redux.exceptions.InvalidCallException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 import piazza.nlp.redux.general.ForumPost;
 import piazza.nlp.redux.general.ForumUser;
+import piazza.nlp.redux.general.ForumPost.PostType;
+import piazza.nlp.redux.general.ForumPost.PostVisibility;
 
 public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionForum
 
@@ -25,27 +28,27 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// create forum object using a new Piazza API session for the given email/password
 	public APiazzaForum(String courseName, String classID, String email, String password) {
-		
 		this.courseName = courseName;
 		this.classID = classID;
 		this.currentSession = new ANewPiazzaSession();
-		
 		try {
 			this.currentSession.login(email, password);
 		} catch (IOException | LoginFailedException e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	// create forum object using an existing Piazza API session
 	// assumes the session has already been logged into, otherwise other methods will throw an error
 	public APiazzaForum(String courseName, String classID, PiazzaSession initialSession) {
-	
 		this.courseName = courseName;
 		this.classID = classID;
 		this.currentSession = initialSession; 
-				
+	}
+	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + "{" + this.getCourseName() + "}";
 	}
 	
 	
@@ -84,7 +87,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				.put("cid", postID);
 		
 		Map<String, Object> postData = (Map<String, Object>) makeCallWithBackoff("content.get", data);
-		return new APiazzaPost(postData);
+		return new APiazzaPost(postData, this.classID);
 		
 	}
 	
@@ -100,7 +103,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		
 		List<ForumPost> posts = new ArrayList<ForumPost>();
 		for (APiazzaPostPreview p : feed) {
-			posts.add(getPost((String) p.getID()));
+			posts.add(getPost((String) p.getPostID()));
 		}
 		
 		return posts;
@@ -110,39 +113,8 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	// get user info for the provided user ID
 	@Override
 	public ForumUser getUser(String userID) {
-			
 		return this.getUsers(new String[] {userID}).get(0);
-			
 	}
-	
-	
-
-	
-	
-	/* 
-	 * //		System.out.println("uid" + uid);
-		if (uid == null) {
-			System.out.println("null uid");
-			return emptyMap;
-		}
-		JSONObject data = new JSONObject().put("ids", new String[] { uid }).put("nid", this.cid);
-		Map<String, Object> resp = this.mySession.piazzaAPICall("network.get_users", data, piazzaLogic);
-		if (resp == null) {
-			System.out.println("null get_users for uid " + uid);
-			return emptyMap;
-		}
-//		System.out.println("UserId: " + resp.toString());
-		if (((List<Map<String, Object>>) this.getResults(resp)).size() == 0) return null;
-		@SuppressWarnings("unchecked")
-		Map<String, Object> user = ((List<Map<String, Object>>) this.getResults(resp)).get(0);
-//		System.out.println("user" + user);
-
-		return user;
-	 */
-	
-	
-	
-	
 	
 	// get a list of all users in the class
 	@Override
@@ -193,152 +165,300 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return posts;
 		
 	}
-
-	// 
-	// TODO: make messageType and editorType enums
+	
+	// create a new Piazza post with the given parameters
+	// TODO: make Piazza-specific version with stuff like recipients (string of user IDs) and editorType and anonymity (which could be enums)
+	// 	original implementation header: public String createPost(String subject, String content, List<String> tags, List<String> recipients, String messageType, String editorType) {
 	@Override
-	public String createPost(JSONObject content) {
-//	public String createPost(String subject, String content, List<String> tags, List<String> recipients, String messageType, String editorType) {
+	public String createPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags) {
+	
+		String typeString;
+		if (type == PostType.QUESTION)
+			typeString = "question";
+		else if (type == PostType.POLL)
+			typeString = "poll";
+		else
+			typeString = "note";
 		
+		JSONObject data = new JSONObject()
+			.put("nid", this.classID)
+			.put("type", typeString)
+			.put("subject", subject)
+			.put("content", body)
+			.put("folders", tags)
+			.put("editor", "md") // TODO: allow other editor types
+			.put("anonymous", "no"); // TODO: allow other anonymities
 		
+		if (visibility == PostVisibility.PRIVATE) {
+			String recipients = "instr_" + this.classID; // TODO: allow other individual recipients (should be separated by ',')
+			Map<String, String> config = new HashMap();
+			config.put("feed_groups", recipients);
+			data.put("config", config);
+			data.put("status", "private");
+		} else {
+			data.put("status", "active");
+		}
 		
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.create", data);	
 		
+		return (String) resp.get("id");
 		
+		// TODO: could change the interface to return the post object, if that makes sense with other platforms:
+		// APiazzaPost createdPost = new APiazzaPost(resp, this.classID);
+		// return createdPost.getPostID(); 
 		
+	}
+
+	// create an instructor answer for a given question
+	@Override
+	public String createInstructorAnswer(String postID, String body) {
+	
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", postID)
+				.put("content", body)
+				.put("type", "i_answer")
+				.put("editor", "md")
+				.put("revision", 0) // Note: if an instructor answer already exists (and the revision number is not incremented to match), the API call will do nothing
+				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.answer", data);	
 		
-		return null;
+		return (String) resp.get("id");
+		
+		// TODO: create answer object? this is the format of the HashMap:
+		// {history_size=1, folders=[], data={embed_links=[]}, created=2025-05-09T01:22:32Z, bucket_order=3, tag_endorse=[], bucket_name=Today, history=[{anon=no, uid=lljvnbpqdze3xm, subject=, created=2025-05-09T01:22:32Z, content=Test redux instructor answer}], type=i_answer, tag_endorse_arr=[], children=[], id=mag431foymr41s, config={editor=md}}
+		
+	}
+	
+	// create a followup to a given post
+	@Override
+	public String createFollowup(String postID, String body) {
+	
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", postID)
+				.put("subject", body)
+				.put("type", "followup")
+				.put("content", "")
+				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.create", data);	
+		
+		return (String) resp.get("id");
+		
+		// TODO: create followup object? this is the format of the HashMap:
+		// {anon=no, folders=[], data=null, no_upvotes=0, subject=Test redux followup, created=2025-05-08T08:58:10Z, bucket_order=3, bucket_name=Today, type=followup, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], no_answer=1, id=maf4x51yp792d3, updated=2025-05-08T08:58:10Z, config={}}
+		
+	}
+	
+	// draft a new Piazza post with the given parameters
+	// unlike responses, you can have multiple posts drafted at once
+	@Override
+	public String createDraftPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags) {
+	
+		Map<String, Integer> recipientsMap = new HashMap();
+		boolean individual_members = false;
+		boolean entire_group = true;
+		
+		if (visibility == PostVisibility.PRIVATE) {
+			recipientsMap.put("instr_" + this.classID, 1); // TODO: allow other individual recipients, should also have 1 as second param
+			individual_members = true;
+			entire_group = false;
+		}
+
+		JSONObject data = new JSONObject()
+				.put("nid", this.classID);		
+		
+		JSONObject btn = new JSONObject()
+				.put("class_live", false)
+				.put("entire_group", entire_group)
+				.put("class_subgroup", false)
+				.put("individual_members", individual_members)
+				.put("publish_later", false)
+				.put("publish_now", true)
+				.put("posting_options_bypass_email", false)
+				.put("notify_mobile_update_input", false)
+				.put("must_read", 0)
+				.put("must_read_manual", true)
+				.put("must_read_to_post", false)
+				.put("must_read_expire", "null");
+				
+		if (type == PostType.QUESTION) {
+			btn
+			 	.put("post_type_note", false)
+			 	.put("post_type_poll", false)
+			 	.put("post_type_question", true);
+		} else if (type == PostType.POLL) {
+			btn
+			 	.put("post_type_note", false)
+			 	.put("post_type_poll", true)
+			 	.put("post_type_question", false);
+		} else {
+			btn
+			 	.put("post_type_note", true)
+			 	.put("post_type_poll", false)
+			 	.put("post_type_question", false);
+		}
+
+		JSONObject draft = new JSONObject()
+			.put("content", body)
+			.put("editorType", "md")
+			.put("selectedPrivateUsers", recipientsMap)
+			.put("folders", tags)
+			.put("btn", btn)
+			.put("txt", new JSONObject()
+				.put("subgroup_dropdown", "instr_" + this.classID)
+				.put("post_summary", subject)
+				.put("new_post_anonymity", "no")
+			);
+		
+		data.put("draft", draft);
+		
+		String resp = (String) makeCallWithBackoff("network.save_draft", data);	
+
+		return resp; // NOTE: this returns a String which looks like a post ID, but will error out if you attempt to retrieve a post with that ID, even after posting the draft using the UI
+		
+	}
+	
+	// draft an instructor answer for a given question
+	@Override
+	public String createDraftInstructorAnswer(String postID, String body) {
+		
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", postID)
+				.put("body", body)
+				.put("type", "i_answer")
+				.put("editor", "md")
+				.put("revision", 0) // Note: if an instructor answer already exists (and the revision number is not incremented to match), the API call will do nothing
+				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+
+		String resp = (String) makeCallWithBackoff("content.auto_save", data); // should return "OK"
+		
+		return postID; // TODO: not sure what to return here, currently just returning the ID of the question
+		
+	}
+	
+	// draft a followup to a given post
+	@Override
+	public String createDraftFollowup(String postID, String body) {
+		
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", postID)
+				.put("body", body)
+				.put("type", "followup")
+				.put("editor", "md")
+				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+
+		String resp = (String) makeCallWithBackoff("content.auto_save", data); // should return "OK"
+		
+		return postID; // TODO: not sure what to return here, currently just returning the ID of the question
+		
+	}
+	
+	// updates a given Piazza post with the given parameters
+	@Override
+	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags) {
+		
+		PiazzaPost oldPost = (PiazzaPost) this.getPost(postID);
+		
+		int newRevisionNumber = oldPost.getRevisionNumber() + 1;
+		String authorID = "";
+		
+		try {
+			authorID = "," + oldPost.getAuthorID();
+		} catch (AnonymousDataAccessException e) {
+			e.printStackTrace();
+		}
+
+		String typeString;
+		if (newType == PostType.QUESTION)
+			typeString = "question";
+		else if (newType == PostType.POLL)
+			typeString = "poll";
+		else
+			typeString = "note";
+		
+		// TODO: support individual students
+		String visibilityString;
+		if (newVisibility == PostVisibility.PRIVATE)
+			visibilityString = "instr_" + this.classID + authorID;
+		else
+			visibilityString = "all";
+		
+		JSONObject data = new JSONObject()
+			.put("cid", postID)
+			.put("type", typeString)
+			.put("subject", newSubject)
+			.put("content", newBody)
+			.put("folders", newTags)
+			.put("editor", "md") // TODO: allow other editor types
+			.put("visibility", visibilityString)
+			.put("revision", newRevisionNumber)
+			.put("config", new HashMap());
+			
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.update", data);	
+		
+		return (String) resp.get("id");
+		
+		// TODO: could change the interface to return the post object, if that makes sense with other platforms:
+		// APiazzaPost createdPost = new APiazzaPost(resp, this.classID);
+		// return createdPost.getPostID(); 
+		
+	}
+
+	// TODO: need to finish
+	@Override
+	public String updateInstructorAnswer(String postID, String newBody) {
+		
+		//PiazzaPost parentPost = (PiazzaPost) this.getPost(postID);
+	
+		// TODO: need to get the proper revision number somehow
 		
 //		JSONObject data = new JSONObject()
-//				.put("cid", postID);
+//				.put("cid", postID)
+//				.put("content", newBody)
+//				.put("type", "i_answer")
+//				.put("editor", "md");
+//				//.put("revision", 0); // Note: if an instructor answer already exists (and the revision number is not incremented to match), the API call will do nothing
+//				//.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+//
+//		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.answer", data);	
 //		
-//		
-//		
-//		
-//		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.get", data);	
-//		
+//		return (String) resp.get("id");
+		
+		
+		/* {
+		  "anonymous": "no",
+		  "cid": "maf3s5j94gzyr",
+		  "content": "Editing instructor answer!",
+		  "revision": 2,
+		  "type": "i_answer",
+		  "editor": "rte"
+		} */
+
+		return null;
+		
+	}
+	
+	// TODO: need to finish
+	@Override
+	public String updateFollowup(String responseID, String newBody) {
+		
+		// TODO: need to test getPost() on a followup first (which may error out), since we need to be able to get the response ID at some point
+		/* {
+  			"cid": "maf4x51yp792d3", // this is the followup ID
+			"subject": "Editing followup!",
+			"editor": "rte"
+		} */
+		
+		return null;
 		
 	}
 
-	
-	
-	
-	
-	
-//	/* COMPONENT: API CLASS */
-//	// TODO: make messageType an enum, or just check if recipients is empty?
-//	// TODO: feed groups? other config?
-//	// TODO: also do "type" -- currently accepts markdown, could expand to plain text or rich text
-//	public String createPost(
-//			String aSubject,
-//			String aContent,
-//			List<String> aTags,
-//			List<String> aRecipients,
-//			String messageType
-//		) throws ClientProtocolException, NotLoggedInException, IOException {
-//		
-//		String recipients = "";
-//		if (messageType.equals("individual")) {
-//			
-//			for (String r : aRecipients) {
-//				recipients += r + ",";
-//			}
-//			// NOTE: remove this if you don't want to post to all instructors
-//			recipients += "instr_" + this.cid;
-//		}
-//		
-//		JSONObject data = new JSONObject().
-//			put("nid", this.cid).
-//			put("type", "note").
-//			put("subject", aSubject).
-//			put("content", aContent).
-//			put("folders", aTags).
-//			put("editor", "md").
-//			put("anonymous", "no").
-//			put("status", "active");
-//		
-//		if (aRecipients != null) {
-//			Map<String, String> config = new HashMap();
-//			config.put("feed_groups", recipients);
-//			data.put("config", config);
-//		}
-//		
-//		Map<String, Object> resp = this.mySession.piazzaAPICall("content.create", data, piazzaLogic);
-//		Map<String, Object> res = (Map<String, Object>) resp.get("result");
-//		System.out.println("RESP");
-//		System.out.println(resp);
-//		System.out.println("RES");
-//		System.out.println(res);
-//		
-//		return (String) (res.get("id"));
-//		//return (String) resp.get("aid");
-//		//return resp != null? true:false;
-//		
-//	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// 
-	@Override
-	public String createInstructorAnswer(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	// 
-	@Override
-	public String createFollowup(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// 
-	@Override
-	public String createDraftPost(JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// 
-	@Override
-	public String createDraftInstructorAnswer(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// 
-	@Override
-	public String createDraftFollowup(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// 
-	@Override
-	public String updatePost(String postID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	// 
-	@Override
-	public String updateResponse(String responseID, JSONObject content) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
 	
 	/* PiazzaForum METHODS */
 	
@@ -369,7 +489,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				.put("nid", this.classID);
 		
 		Map<String, Object> postData = (Map<String, Object>) makeCallWithBackoff("content.get", data);
-		return new APiazzaPost(postData);
+		return new APiazzaPost(postData, this.classID);
 		
 	}
 	
@@ -385,26 +505,40 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("network.get_my_feed", data);
 		List<Map<String, Object>> feed = (List<Map<String, Object>>) resp.get("feed");
 		
-		System.out.println(feed);
-		
-		/* stuff for log
-		 * nr=281,
-		 * id=m72prlqjhxgj5,
-		 * version=1
-		 * */
-		
 		List<APiazzaPostPreview> previews = new ArrayList<APiazzaPostPreview>();
 		for (Map<String, Object> p : feed) {
-			previews.add(new APiazzaPostPreview(p));
+			previews.add(new APiazzaPostPreview(p)); // TODO
 		}
 		
 		return previews;
 		
 	}
 	
+	// get all post headers from the feed
 	public List<APiazzaPostPreview> getFeed() {
 		
 		return getFeed(999999, 0);
+		
+	}
+	
+	// create a reply to a given followup on a post
+	@Override
+	public String createFollowupReply(String followupID, String body) {
+	
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", followupID)
+				.put("subject", body)
+				.put("type", "feedback")
+				.put("content", "")
+				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
+
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.create", data);	
+
+		return (String) resp.get("id");
+		
+		// TODO: create reply object? this is the format of the HashMap:
+		// {anon=no, folders=[], data=null, subject=Test redux followup reply, created=2025-05-08T09:07:24Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=maf5909e7aw5uc, updated=2025-05-08T09:07:24Z, config={}}
 		
 	}
 	
@@ -499,17 +633,41 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		double increaseRate = 2.0;
 		
 		try {
-			
 			return makeCallWithBackoff(method, params, waitTime, maxTime, increaseRate);
-			
 		} catch (InterruptedException | NotLoggedInException | IOException | InvalidCallException e) {
-			
 			e.printStackTrace();
 			System.out.println("Piazza API call failed (see above exception), returning null response");
 			return null;
-			
 		}
-		
 	}
 
 }
+
+
+
+/* NOTES */
+
+/* can filter feed based on various properties using the gear in the ui:
+{
+	"method": "network.filter_feed",
+	"params": {
+			"nid": "m522b50mg435bd",
+			"instructors": 1 // filtering based on instructor posts
+		}
+} */
+
+/* separate from network.search, there's a network.find_similar:
+{
+	"query": "Hint for interpolated methods <p>I am trying to refactor my interpolation methods so that I don&#39;t get the nestedIfDepth complaints from the checkstyle, any tips? Everything I have tried/can think of still involves too many if statements. Thanks!</p>\n<p></p>\n<p>THIS HAS BEEN UPDATED</p>",
+	"old_query": null,
+	"nid": "m0mymncloco2ty",
+	"to_nr": 69
+} */
+
+/* other known functionalities (some in comments in APiazzaClass):
+ 	get online users
+ 	mark followup as resolved
+ 	mark post as duplicate
+ 	create a student answer (see how this works, not sure if we can do so from an instructor account)
+ 	draft a followup reply (should be straightforward)
+ */

@@ -14,5 +14,7 @@ public interface DataStoreDiscussionForum {
 	public int overwriteWithDataPost(int postNumber); // maybe in the main code, check if the environment var it set and use this if so
 	public ForumPost getDataPost();
 	
+	// createFollowupIfDoesNotExist? or should that go in DiscussionForum?
+	
 	// NOT DOING NOW: too complicated bc how do agents get these numbers? changes from EICS model: allows for separate data posts -- read entry now takes the data post number
 }

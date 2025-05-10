@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 import org.apache.http.client.ClientProtocolException;
 
 import main.Tester.Method;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class APiazzaClassWithDiaries_3 extends APiazzaClass {
 

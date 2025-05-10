@@ -24,6 +24,9 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
+
 public class ANewPiazzaSession implements PiazzaSession {
 	//String csrfToken = "RlRqmyFYK6qrGpjqQkNTTaYB";
 	String csrfToken = "tvKMFb4arP2CVKup";

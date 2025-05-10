@@ -18,8 +18,8 @@ import org.json.JSONObject;
 
 import piazza.ANewPiazzaSession;
 import piazza.APiazzaClass;
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class ParameterizedTesterDriverML {
 	

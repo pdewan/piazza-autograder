@@ -22,6 +22,9 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
+
 public class APiazzaSession implements PiazzaSession {
 	
 	final String piazzaLogic = "https://piazza.com/logic/api";

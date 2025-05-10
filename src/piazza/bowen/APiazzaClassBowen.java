@@ -13,10 +13,10 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
 import piazza.APiazzaSession;
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
 import piazza.PiazzaSession;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 import java.io.File;
 import org.apache.commons.io.FileUtils;

@@ -6,6 +6,8 @@ import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 
+import piazza.nlp.redux.exceptions.NotLoggedInException;
+
 public interface PiazzaClass {
 	public List<Map<String, Object>> getFeed(int limit, int offset) throws ClientProtocolException, NotLoggedInException, IOException;
 	public Map<String, Object> getUser(String uid) throws ClientProtocolException, NotLoggedInException, IOException;

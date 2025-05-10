@@ -20,10 +20,10 @@ import org.apache.http.client.ClientProtocolException;
 import piazza.ADate;
 import piazza.AnIndividualGrade;
 import piazza.IndividualGrade;
-import piazza.LoginFailedException;
 import piazza.MyDate;
-import piazza.NotLoggedInException;
 import piazza.bowen.TesterBowen.Method;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class APiazzaClassWithDiaries_3Bowen extends APiazzaClassBowen {
 

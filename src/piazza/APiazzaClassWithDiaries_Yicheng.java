@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.ClientProtocolException;
 
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
+
 public class APiazzaClassWithDiaries_Yicheng extends APiazzaClass {
 	
 	private Pattern DATE_WITH_YEAR_PTRN = Pattern.compile("(.*)([0-9]+/[0-9]+/[0-9]+)(.*)");

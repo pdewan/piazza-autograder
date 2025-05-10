@@ -13,9 +13,9 @@ import piazza.APiazzaClassWithDiaries_2;
 import piazza.APiazzaClassWithDiaries_3;
 import piazza.APiazzaClassWithDiaries_TA;
 import piazza.APiazzaClassWithDiaries_Yicheng;
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 import main.Tester;
 
 public class DiaryTesterML {

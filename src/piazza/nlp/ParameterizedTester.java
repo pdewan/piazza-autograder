@@ -10,9 +10,9 @@ import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
 import piazza.PiazzaClass;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class ParameterizedTester {
 	

@@ -1,10 +1,15 @@
 package piazza.nlp.redux;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import piazza.APiazzaClass;
+import piazza.nlp.redux.general.ForumPost.PostType;
+import piazza.nlp.redux.general.ForumPost.PostVisibility;
 import piazza.nlp.redux.piazza.APiazzaForum;
+import piazza.nlp.redux.piazza.APiazzaPostPreview;
 
 public class ReduxTestRunner {
 
@@ -31,16 +36,35 @@ public class ReduxTestRunner {
 		//pf.getPost(53);
 //		pf.getPost("m0mypf6bnkm4fc");
 //		pf.getPost("m0qadc69kex6fj"); // to=m0qadc69kex6fj
-//		pf.getFeed();
+		List<APiazzaPostPreview> feed = pf.getFeed();
+	//	System.out.println(feed);
+//		for (APiazzaPostPreview f : feed) {
+//			System.out.println(f.getAllData());
+//		}
+		
 //		System.out.println(pf.getPost("m72prlqjhxgj5").getTags());
 
 //		pf.searchPosts("null pointer");
 		
 		//System.out.println(aClass.getPost("m6ie32r77ki5y0"));
 
-		//System.out.println(pf.getPost(175).getAllData());
-		System.out.println(pf.getAllUsers().get(1).getID());
-		System.out.println(pf.getUsers(new String[] {"jzk5vujhfp6pa", "ky4w3gvue3fbc"}));
+		//System.out.println(pf.getPost(290).getAllData());
+		//System.out.println(pf.getAllUsers().get(1).getID());
+		//System.out.println(pf.getUsers(new String[] {"jzk5vujhfp6pa", "ky4w3gvue3fbc"}));
+		
+		//System.out.println(pf.createPost("createPost redux test 2", "This is also to test the new createPost().", PostType.QUESTION, PostVisibility.PUBLIC, new ArrayList(Arrays.asList("hw1", "other")))) ;
+		//String testPostID = pf.getPost(306).getPostID();
+		//System.out.println(pf.createFollowup(testPostID, "Test redux followup 2"));
+		//System.out.println(pf.createFollowupReply("maf57yyypwn4rt", "Test redux followup reply"));
+		//System.out.println(pf.createDraftFollowup(testPostID, "Test redux followup draft 333"));
+		//System.out.println(pf.createDraftPost("createPost redux draft post", "This is to test the new createDraftPost().", PostType.NOTE, PostVisibility.PRIVATE, new ArrayList(Arrays.asList("hw1", "other"))));
+		//String temp = pf.createDraftPost("createPost redux draft post 4!!", "This is also to test the new createDraftPost().", PostType.QUESTION, PostVisibility.PUBLIC, new ArrayList(Arrays.asList("hw1", "other")));
+		//System.out.println(pf.getPost("magcpbmk9pt1ia").getAllData());
+			//magcgexm2ym11o
+		//System.out.println(pf.updatePost(pf.getPost(310).getPostID(), "updatePost redux test", "Testing the update functionality again NEW!.", PostType.NOTE, PostVisibility.PRIVATE, new ArrayList(Arrays.asList("hw1", "other")))) ;
+		
+		System.out.println(pf.getPost(309).getAllData());
+		//System.out.println(pf.updateInstructorAnswer(pf.getPost(309).getPostID(), "TEST IA"));
 		
 	}
 

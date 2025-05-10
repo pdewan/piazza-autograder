@@ -11,6 +11,10 @@ public interface DiscussionForum {
 	// 	in these cases, you can make platform-specific overloaded versions of these methods in addition to the ones specified here.
 	// 	for example, a Piazza-specific version of createPost() that takes a list of individual recipients instead of a boolean PostVisibility enum.
 	
+	// TODO: createInstructorAnswer() and createFollowup() are very similar in the Piazza API, if the same is true with Ed, then maybe they should be collapsed into createResponse()
+	// 	in that case, the response type can be another enum parameter similar to PostType
+	
+	// TODO: getClassID()?
 	public String getPlatformName();
 	public String getCourseName();
 	public ForumPost getPost(String postID);
@@ -22,7 +26,8 @@ public interface DiscussionForum {
 	public String createDraftInstructorAnswer(String postID, String body);
 	public String createDraftFollowup(String postID, String body);
 	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags);
-	public String updateResponse(String responseID, String newBody); // TODO: I think this can be used to update both Instructor Answers and Followups? Need to double-check
+	public String updateInstructorAnswer(String responseID, String newBody); // NOTE: split updateResponse into two separate methods
+	public String updateFollowup(String responseID, String newBody);
 	public ForumUser getUser(String userID);
 	public List<ForumUser> getAllUsers(); // figure out what format this should return
 	public List<ForumUser> getAdministrators(); // figure out what format this should return

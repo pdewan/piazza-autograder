@@ -27,8 +27,8 @@ import org.json.JSONObject;
 import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO;
 
 import piazza.APiazzaClass;
-import piazza.LoginFailedException;
-import piazza.NotLoggedInException;
+import piazza.nlp.redux.exceptions.LoginFailedException;
+import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 
