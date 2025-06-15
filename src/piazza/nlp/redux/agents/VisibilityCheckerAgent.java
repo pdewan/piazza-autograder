@@ -1,5 +1,6 @@
 package piazza.nlp.redux.agents;
 
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -27,7 +28,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 	}
 
 	@Override
-	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post) {
+	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<AgentAction> pastActions) {
 
 		// TODO: check if not made by instructors
 			// method for this? or get the author and then their admin?

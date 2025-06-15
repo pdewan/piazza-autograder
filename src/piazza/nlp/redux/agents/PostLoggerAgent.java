@@ -1,6 +1,7 @@
 package piazza.nlp.redux.agents;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
@@ -34,7 +35,7 @@ public class PostLoggerAgent extends AnAbstractForumAgent implements ForumAgent 
 	}
 
 	@Override
-	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post) {
+	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<AgentAction> pastActions) {
 
 		// TODO: test values
 		String courseID = "Mediated-Agent-Test"; // TODO: we have the Piazza course ID, but want to be able to unify it with things like "Fall2025-Comp533"

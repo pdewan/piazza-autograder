@@ -1,5 +1,7 @@
 package piazza.nlp.redux.agents;
 
+import java.util.List;
+
 import piazza.nlp.redux.general.AgentAction;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.ForumPost;
@@ -18,7 +20,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 	}
 
 	@Override
-	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post) {
+	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<AgentAction> pastActions) {
 
 		// TODO
 		

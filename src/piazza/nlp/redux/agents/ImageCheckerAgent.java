@@ -1,5 +1,7 @@
 package piazza.nlp.redux.agents;
 
+import java.util.List;
+
 import piazza.nlp.redux.general.AgentAction;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.ForumPost;
@@ -21,7 +23,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 	}
 	
 	@Override
-	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post) {
+	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<AgentAction> pastActions) {
 
 		// TODO: this may depend on the forum platform?
 		String[] imageMarkers = {"<img src=", "!["};
@@ -40,6 +42,9 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 				
 				// TODO: createFollowupIfDoesNotExist? where should that method be added?
 				// TODO: change this depending on the parameter types of createFollowup()
+				
+				// maybe we don't need createFollowupIfDoesNotExist now, because either we can check pastActions, or the dispatcher won't even call processPost() here
+				
 				//dataStoreForum.getForum().createFollowup(postID, containsImageMessage + automatedSuggestionDisclaimer);
 				
 				// TODO: finish
