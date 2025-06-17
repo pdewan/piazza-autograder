@@ -16,9 +16,10 @@ import piazza.nlp.redux.exceptions.InvalidCallException;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 import piazza.nlp.redux.general.ForumPost;
-import piazza.nlp.redux.general.ForumUser;
 import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
+import piazza.nlp.redux.general.ForumUser;
+import piazza.nlp.redux.general.DiscussionForum.EditorType;
 
 public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionForum
 
@@ -167,10 +168,10 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	}
 	
 	// create a new Piazza post with the given parameters
-	// TODO: make Piazza-specific version with stuff like recipients (string of user IDs) and editorType and anonymity (which could be enums)
+	// TODO: make Piazza-specific version with stuff like recipients (string of user IDs) and anonymity (which could be enums)
 	// 	original implementation header: public String createPost(String subject, String content, List<String> tags, List<String> recipients, String messageType, String editorType) {
 	@Override
-	public String createPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags) {
+	public String createPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags, EditorType editor) {
 	
 		String typeString;
 		if (type == PostType.QUESTION)
@@ -186,7 +187,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			.put("subject", subject)
 			.put("content", body)
 			.put("folders", tags)
-			.put("editor", "md") // TODO: allow other editor types
+			.put("editor", this.convertEditorType(editor))
 			.put("anonymous", "no"); // TODO: allow other anonymities
 		
 		if (visibility == PostVisibility.PRIVATE) {
@@ -211,14 +212,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 
 	// create an instructor answer for a given question
 	@Override
-	public String createInstructorAnswer(String postID, String body) {
-	
+	public String createInstructorAnswer(String postID, String body, EditorType editor) {
+		
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
 				.put("cid", postID)
 				.put("content", body)
 				.put("type", "i_answer")
-				.put("editor", "md")
+				.put("editor", this.convertEditorType(editor))
 				.put("revision", 0) // Note: if an instructor answer already exists (and the revision number is not incremented to match), the API call will do nothing
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
@@ -233,13 +234,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// create a followup to a given post
 	@Override
-	public String createFollowup(String postID, String body) {
+	public String createFollowup(String postID, String body, EditorType editor) {
 	
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
 				.put("cid", postID)
 				.put("subject", body)
 				.put("type", "followup")
+				.put("editor", this.convertEditorType(editor))
 				.put("content", "")
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
@@ -255,7 +257,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	// draft a new Piazza post with the given parameters
 	// unlike responses, you can have multiple posts drafted at once
 	@Override
-	public String createDraftPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags) {
+	public String createDraftPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags, EditorType editor) {
 	
 		Map<String, Integer> recipientsMap = new HashMap();
 		boolean individual_members = false;
@@ -303,7 +305,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 
 		JSONObject draft = new JSONObject()
 			.put("content", body)
-			.put("editorType", "md")
+			.put("editorType", this.convertEditorType(editor))
 			.put("selectedPrivateUsers", recipientsMap)
 			.put("folders", tags)
 			.put("btn", btn)
@@ -323,14 +325,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// draft an instructor answer for a given question
 	@Override
-	public String createDraftInstructorAnswer(String postID, String body) {
+	public String createDraftInstructorAnswer(String postID, String body, EditorType editor) {
 		
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
 				.put("cid", postID)
 				.put("body", body)
 				.put("type", "i_answer")
-				.put("editor", "md")
+				.put("editor", this.convertEditorType(editor))
 				.put("revision", 0) // Note: if an instructor answer already exists (and the revision number is not incremented to match), the API call will do nothing
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
@@ -342,14 +344,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// draft a followup to a given post
 	@Override
-	public String createDraftFollowup(String postID, String body) {
+	public String createDraftFollowup(String postID, String body, EditorType editor) {
 		
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
 				.put("cid", postID)
 				.put("body", body)
 				.put("type", "followup")
-				.put("editor", "md")
+				.put("editor", this.convertEditorType(editor))
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
 		String resp = (String) makeCallWithBackoff("content.auto_save", data); // should return "OK"
@@ -359,8 +361,9 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	}
 	
 	// updates a given Piazza post with the given parameters
+	// null for new subject = use existing subject
 	@Override
-	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags) {
+	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags, EditorType editor) {
 		
 		PiazzaPost oldPost = (PiazzaPost) this.getPost(postID);
 		
@@ -394,7 +397,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			.put("subject", newSubject)
 			.put("content", newBody)
 			.put("folders", newTags)
-			.put("editor", "md") // TODO: allow other editor types
+			.put("editor", this.convertEditorType(editor))
 			.put("visibility", visibilityString)
 			.put("revision", newRevisionNumber)
 			.put("config", new HashMap());
@@ -411,7 +414,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 
 	// TODO: need to finish
 	@Override
-	public String updateInstructorAnswer(String postID, String newBody) {
+	public String updateInstructorAnswer(String postID, String newBody, EditorType editor) {
 		
 		//PiazzaPost parentPost = (PiazzaPost) this.getPost(postID);
 	
@@ -445,7 +448,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// TODO: need to finish
 	@Override
-	public String updateFollowup(String responseID, String newBody) {
+	public String updateFollowup(String responseID, String newBody, EditorType editor) {
 		
 		// TODO: need to test getPost() on a followup first (which may error out), since we need to be able to get the response ID at some point
 		/* {
@@ -496,8 +499,8 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	// get post headers from the feed. limit = # posts to return, offset = # of posts from the top to ignore
 	public List<APiazzaPostPreview> getFeed(int limit, int offset) {
 		
-		JSONObject data = new JSONObject().
-				put("limit", limit)
+		JSONObject data = new JSONObject()
+				.put("limit", limit)
 				.put("offset", offset)
 				.put("sort", "updated")
 				.put("nid", this.classID);
@@ -581,6 +584,8 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	/* HELPER METHODS */
 	
+	// TODO: should these be in PiazzaForum interface? or no because they should only be used internally
+	
 	// attempt the API call with exponential backoff
 	protected Object makeCallWithBackoff(String method, JSONObject params, int waitTime, int maxTime, double increaseRate) throws InterruptedException, ClientProtocolException, NotLoggedInException, IOException, InvalidCallException {
 		
@@ -639,6 +644,21 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			System.out.println("Piazza API call failed (see above exception), returning null response");
 			return null;
 		}
+	}
+	
+	// convert DiscussionForum.EditorType enum into Piazza-compatible string
+	protected String convertEditorType(EditorType editor) {
+		
+		String editorString;
+		if (editor == EditorType.PLAIN_TEXT)
+			editorString = "plain";
+		else if (editor == EditorType.RICH_TEXT)
+			editorString = "rte";
+		else
+			editorString = "md";
+		
+		return editorString;
+		
 	}
 
 }
