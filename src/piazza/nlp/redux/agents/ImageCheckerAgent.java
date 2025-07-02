@@ -1,18 +1,29 @@
 package piazza.nlp.redux.agents;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import piazza.nlp.redux.general.AgentAction;
+import piazza.nlp.redux.actions.AgentAction;
+import piazza.nlp.redux.actions.AnEnumAgentAction;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
+import piazza.nlp.redux.general.DiscussionForum;
+import piazza.nlp.redux.general.DiscussionForum.EditorType;
 import piazza.nlp.redux.general.ForumPost;
+import piazza.nlp.redux.general.ForumPost.PostType;
+import piazza.nlp.redux.general.ForumPost.PostVisibility;
+import piazza.nlp.redux.piazza.APiazzaPostPreview;
 
 public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgent {
 
-	//final private String IMAGE_MESSAGE = "It looks like you may have included a screenshot in your post. If it is a screenshot of code or a console trace, please replace the image with the actual text itself so we can search for issues easier. If it is a screenshot of a Gradescope score displayed in the right tab, please paste the trace text shown in the tab on the left. If it is another type of image, please include any relevant text contained within the image (errors given in Eclipse pop-up windows, etc.). Thanks!";
-	//final private String AUTOMATED_SUGGESTION_DISCLAIMER = "\n\n<hr/>\n\n<em>This message was generated automatically and could be incorrect. If you feel that it does not apply to your post, please disregard the suggestion.</em>";
-
+	public enum ImageCheckerAction {
+		NO_IMAGE, NEW_FOLLOWUP, FOLLOWUP_EXISTS;
+	}
+	
 	final protected static String DEFAULT_NAME = "Image Checker Agent";
 	final protected static String DESCRIPTION = "Determines whether a post contains an image. If so, creates a followup instructing the post author to replace the image with the relevant text it contains.";
+
+	final private static String DEFAULT_CONTAINS_IMAGE_MESSAGE = "It looks like you may have included a screenshot in your post. If it is a screenshot of code or a console trace, please replace the image with the actual text itself so we can search for issues easier. If it is a screenshot of a Gradescope score displayed in the right tab, please paste the trace text shown in the tab on the left. If it is another type of image, please include any relevant text contained within the image (errors given in Eclipse pop-up windows, etc.). Thanks!";
 	
 	public ImageCheckerAgent(String agentName) {
 		super(agentName, DESCRIPTION);		
@@ -21,40 +32,66 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 	public ImageCheckerAgent() {
 		this(DEFAULT_NAME);
 	}
+
+	
+	
+	/* ForumAgent METHODS */	
 	
 	@Override
-	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<AgentAction> pastActions) {
+	public void setUp(DataStoreDiscussionForum dataStoreForum) {
 
-		// TODO: this may depend on the forum platform?
+		DiscussionForum forum = dataStoreForum.getForum();
+		
+		List<String> containsImageTags = new ArrayList<String>();
+		containsImageTags.add("automated");
+		String containsImageMessageID = forum.createPost("Contains Image Message", DEFAULT_CONTAINS_IMAGE_MESSAGE, PostType.NOTE, PostVisibility.PRIVATE, containsImageTags, EditorType.MARKDOWN);
+		
+		dataStoreForum.registerData("containsImageMessageID", String.class, containsImageMessageID);	
+		
+	}
+	
+	@Override
+	public AgentAction processPost(DataStoreDiscussionForum dataStoreForum, ForumPost post, List<? extends AgentAction> pastActions) {
+
+		// TODO: In future, check to see if the post still violates the guidelines, and if not, delete the previously-created followups
+		
+		for (AgentAction a : pastActions) {
+			
+			System.out.println("This agent name: " + this.getAgentName());
+			System.out.println("Other agent name: " + a.getAgentName());
+			
+			if (a.getAgentName().equals(this.getAgentName())) {
+				return null;
+			}
+		}
+		
+		if (post instanceof APiazzaPostPreview) {
+			post = dataStoreForum.getForum().getPost(post.getPostID());
+		}
+		
+		// TODO: these markers may depend on the forum platform?
 		String[] imageMarkers = {"<img src=", "!["};
 		
 		String postBody = post.getBody();
 		String postID = post.getPostID();
+		ImageCheckerAction actionTaken = ImageCheckerAction.NO_IMAGE;
 		
 		for (String marker : imageMarkers) {
 			if (postBody.contains(marker)) {
+							
+				String containsImageMessageID = (String) dataStoreForum.getDataValue("containsImageMessageID");
+				String containsImageMessage = dataStoreForum.getForum().getPost(containsImageMessageID).getBody();
 			
-				String automatedSuggestionDisclaimer;
-				String containsImageMessage;
+				String automatedSuggestionDisclaimerID = (String) dataStoreForum.getDataValue("automatedSuggestionDisclaimerID");
+				String automatedSuggestionDisclaimer = dataStoreForum.getForum().getPost(automatedSuggestionDisclaimerID).getBody();
 				
-				//String automatedSuggestionDisclaimer = getAutomaticallyCreatedPost("automatedSuggestionDisclaimerID", AUTOMATED_DISCLAIMER_POST_NAME, AUTOMATED_SUGGESTION_DISCLAIMER, "other_tools");
-				//String imageMessage = getAutomaticallyCreatedPost("screenshottedCodeMessageID", IMAGE_DETECTED_POST_NAME, IMAGE_MESSAGE, "other_tools");
+				boolean createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, containsImageMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN);
+				actionTaken = createdFollowup ? ImageCheckerAction.NEW_FOLLOWUP : ImageCheckerAction.FOLLOWUP_EXISTS;
 				
-				// TODO: createFollowupIfDoesNotExist? where should that method be added?
-				// TODO: change this depending on the parameter types of createFollowup()
-				
-				// maybe we don't need createFollowupIfDoesNotExist now, because either we can check pastActions, or the dispatcher won't even call processPost() here
-				
-				//dataStoreForum.getForum().createFollowup(postID, containsImageMessage + automatedSuggestionDisclaimer);
-				
-				// TODO: finish
-				
-				break;
 			}			
 		}
-
-		// TODO: how to log this? include the agent name and whether an image was present?
-		return null;
+		
+		return new AnEnumAgentAction(this, post, new Date(), actionTaken);
 		
 	}
 	

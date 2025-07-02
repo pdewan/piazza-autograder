@@ -32,6 +32,7 @@ public interface DiscussionForum {
 	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags, EditorType editor);
 	public String updateInstructorAnswer(String responseID, String newBody, EditorType editor); // NOTE: split updateResponse into two separate methods
 	public String updateFollowup(String responseID, String newBody, EditorType editor);
+	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor); // returns true if followup is created and false if a followup with the same body already exists
 	public ForumUser getUser(String userID);
 	public List<ForumUser> getAllUsers(); // figure out what format this should return
 	public List<ForumUser> getAdministrators(); // figure out what format this should return

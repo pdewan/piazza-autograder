@@ -29,6 +29,10 @@ public interface ForumPost {
 	public List<String> getTags();
 	public String getURL();
 	
+	// NOTE: added these, if a forum doesn't have then info can just return -1
+	public int getPostNumber();
+	public int getRevisionNumber();
+	
 	// TODO: getResponses? or are they too platform-specific for that to be useful?
 
 }

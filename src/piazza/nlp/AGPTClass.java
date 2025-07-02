@@ -1,17 +1,9 @@
 package piazza.nlp;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
+import java.io.IOException;
 
-import org.apache.http.client.ClientProtocolException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import piazza.nlp.redux.exceptions.LoginFailedException;
-import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class AGPTClass {
 

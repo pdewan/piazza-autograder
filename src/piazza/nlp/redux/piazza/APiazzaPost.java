@@ -70,6 +70,8 @@ public class APiazzaPost extends AnAbstractPiazzaPost implements PiazzaPost {
 	
 	protected List<Map<String, Object>> getVersionHistory() {
 		// NOTE: this is in REVERSE chronological order, with the latest version of the post at index 0
+		//System.out.println(this.postData);
+		
 		return (List<Map<String, Object>>) this.postData.get("history");
 	}
 		

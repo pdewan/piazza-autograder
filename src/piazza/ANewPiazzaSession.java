@@ -1,13 +1,11 @@
 package piazza;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.net.CookieStore;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -18,7 +16,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -40,7 +37,7 @@ public class ANewPiazzaSession implements PiazzaSession {
 	final String piazzaMain = "https://piazza.com/main/api";
 	RequestConfig requestConfig = RequestConfig.custom().
 			setCookieSpec(CookieSpecs.STANDARD).build();	 
-	private CookieStore cookieJar = new BasicCookieStore();
+	private BasicCookieStore cookieJar = new BasicCookieStore(); // TODO: had to change this from CookieStore to BasicCookieStore on 6/30/2025 for some reason
 	private HttpClientBuilder builder = HttpClientBuilder.create().
 			setDefaultRequestConfig(requestConfig).
 			setDefaultCookieStore(cookieJar);
@@ -79,9 +76,9 @@ public class ANewPiazzaSession implements PiazzaSession {
 		
 		//System.out.println(loginData);
 		
-		HttpPost login = new HttpPost(piazzaLogic);    //创建请求方法实例，�?��?post请求，指定请求url
+		HttpPost login = new HttpPost(piazzaLogic);    //创建请求方法实例，�?��?post请求，指定请求url
 		
-		login.setEntity(new StringEntity(loginData));  //�?��?请求�?�数(如需�?)
+		login.setEntity(new StringEntity(loginData));  //�?��?请求�?�数(如需�?)
 		
 		login.setHeader("Accept", "application/json");
 		login.setHeader("Content-type", "application/json");		
@@ -93,7 +90,7 @@ public class ANewPiazzaSession implements PiazzaSession {
 		
 		context.setAttribute(ClientContext.COOKIE_STORE, cookieJar);
 		
-		CloseableHttpResponse resp = httpClient.execute(login, context);  //调用HttpClient对象的execute(HttpUriRequest request)�?��?请求，该方法返回一个HttpResponse
+		CloseableHttpResponse resp = httpClient.execute(login, context);  //调用HttpClient对象的execute(HttpUriRequest request)�?��?请求，该方法返回一个HttpResponse
 		
 		if (resp.getStatusLine().getStatusCode() != 200) {
 			throw new LoginFailedException("Incorrect login credentials.");

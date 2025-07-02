@@ -84,6 +84,8 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	@Override
 	public ForumPost getPost(String postID) {
 		
+		//System.out.println("Post ID to be gotten: " + postID);
+		
 		JSONObject data = new JSONObject()
 				.put("cid", postID);
 		
@@ -460,6 +462,30 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return null;
 		
 	}
+	
+	// returns true if followup is created and false if a followup with the same body already exists
+	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor) {
+		
+		PiazzaPost parentPost = (PiazzaPost) this.getPost(postID);
+		List<Map<String, Object>> children = (List<Map<String, Object>>) parentPost.getAllData().get("children");
+		
+		for (Map<String, Object> c : children) {
+			String type = (String) c.get("type");
+			if (type.equals("followup")) {
+				String followupContent = (String) c.get("subject");
+				if (followupContent.equals(body)) {
+					return false;
+				}
+			}
+		}
+		
+		this.createFollowup(postID, body, editor);
+		return true;
+		
+		// TODO: need to test
+		
+	}
+
 
 
 	
@@ -526,7 +552,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// create a reply to a given followup on a post
 	@Override
-	public String createFollowupReply(String followupID, String body) {
+	public String createFollowupReply(String followupID, String body, EditorType editor) {
 	
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
@@ -608,14 +634,15 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				String errorMessage = (String) resp.get("error");
 				
 				// if error is not caused by rate limit, raise an exception and don't try again
-				if (!errorMessage.equals("test error")) { // TODO:
-					errorString = "Error in response for call to " + method + " with parameters " + params.toString() + ". Error message: " + resp.get("error");
+				if (!errorMessage.equals("Sorry, too fast -- please wait a second and try again.")) { // TODO:
+					errorString = "Error in response for call to " + method + " with parameters " + params.toString() + ". Error message: " + errorMessage;
 					throw new InvalidCallException(errorString);
 				}
 				
 				// otherwise, wait for the allotted time and try again
 				Thread.sleep(waitTime);
 				waitTime = (int) (waitTime * increaseRate);
+				break;
 				
 			}
 
