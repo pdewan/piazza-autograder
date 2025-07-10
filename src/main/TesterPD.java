@@ -7,13 +7,7 @@ import java.io.IOException;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
-import piazza.APiazzaClass;
-import piazza.APiazzaClassWithDiaries;
-import piazza.APiazzaClassWithDiaries_2;
 import piazza.APiazzaClassWithDiaries_3;
-import piazza.APiazzaClassWithDiaries_TA;
-import piazza.APiazzaClassWithDiaries_Yicheng;
-import piazza.PiazzaClass;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 

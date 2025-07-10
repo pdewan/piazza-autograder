@@ -1,39 +1,32 @@
 package piazza.nlp;
 
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
 import piazza.APiazzaClass;
-import piazza.APiazzaSession;
 import piazza.PiazzaClass;
-import piazza.PiazzaSession;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 
-import java.io.File;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
-
 /*
  * Draft
- * {method: "network.save_draft", params: {nid: "k9zvvl9ubao6xa",…}}
+ * {method: "network.save_draft", params: {nid: "k9zvvl9ubao6xa",ï¿½}}
 method
 : 
 "network.save_draft"
 params
 : 
-{nid: "k9zvvl9ubao6xa",…}
+{nid: "k9zvvl9ubao6xa",ï¿½}
  */
 public class APiazzaClassRecursivePosts extends APiazzaClass implements PiazzaClass {
 

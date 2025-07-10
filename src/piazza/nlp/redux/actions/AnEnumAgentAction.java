@@ -4,46 +4,33 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 import piazza.nlp.redux.agents.ForumAgent;
 import piazza.nlp.redux.general.ForumPost;
 
-public class AnEnumAgentAction implements AgentAction {
+public class AnEnumAgentAction extends AnAbstractAgentAction implements AgentAction {
 
-	protected ForumAgent agent;
-	protected ForumPost post;
-	protected Date time;
 	protected Enum actionTaken;
-
-	// action info should include the post number, revision number, timestamp, and what it did
-
-	public AnEnumAgentAction(ForumAgent agent, ForumPost post, Date time, Enum actionTaken) {
-		this.agent = agent;
-		this.post = post;
-		this.time = time;
+	
+	public AnEnumAgentAction(String agentName, int postNumber, int revNumber, Date timestamp, Enum actionTaken) {
+		super(agentName, postNumber, revNumber, timestamp);
 		this.actionTaken = actionTaken;
 	}
 	
-	
-	
-	/* AgentAction METHODS */
-	
-	@Override
-	public String getAgentName() {
-		return this.agent.getAgentName();
+	public Enum getActionTaken() {
+		return this.actionTaken;
 	}
 
-	@Override
-	public Map<String, Object> getActionInfo() {
-		
-		HashMap<String, Object> actionInfo = new HashMap<String, Object>();
-		
-		actionInfo.put("agent", this.getAgentName());
-		actionInfo.put("rev", String.valueOf(this.post.getRevisionNumber()));
-		actionInfo.put("time", this.time.toString());
-		actionInfo.put("action", actionTaken.toString());
-		
-		return actionInfo;
-	
+	public JSONObject toJSONObject() {
+		JSONObject out = new JSONObject()
+			.put("agentName", this.agentName)
+			.put("actionType", this.getClass().getSimpleName())
+			.put("postNumber", this.postNumber)
+			.put("revNumber", this.revNumber)
+			.put("timestamp", this.timestamp)
+			.put("actionTaken", this.actionTaken);
+		return out;
 	}
-
+	
 }

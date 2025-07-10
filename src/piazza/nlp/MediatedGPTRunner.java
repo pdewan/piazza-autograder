@@ -8,9 +8,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.ClientProtocolException;
-import org.json.JSONObject;
-
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 

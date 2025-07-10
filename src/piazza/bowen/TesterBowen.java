@@ -9,8 +9,6 @@ import java.util.Map;
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
-import piazza.PiazzaClass;
-import piazza.bowen.TesterBowen.Method;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 

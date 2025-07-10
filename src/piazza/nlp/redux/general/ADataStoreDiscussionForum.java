@@ -45,7 +45,7 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 	public String createNewDataPost() {
 		String dataPostSubject = "Mixed-Initiative Agent Data";
 		String dataPostInitialBody = "{}";
-		String[] dataPostTags = {"automated"};
+		String[] dataPostTags = {"automated", "agent_data"};
 		List<String> dataPostTagList = new ArrayList<>(Arrays.asList(dataPostTags)); // TODO: what tags?
 		String postID = this.forum.createPost(dataPostSubject, dataPostInitialBody, PostType.NOTE, PostVisibility.PRIVATE, dataPostTagList, EditorType.PLAIN_TEXT);
 		this.dataPostID = postID;
@@ -56,7 +56,7 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 	public String overwriteWithDataPost(String postID) {		
 		String dataPostSubject = "Mixed-Initiative Agent Data";
 		String dataPostInitialBody = "{}";
-		String[] dataPostTags = {"automated"};
+		String[] dataPostTags = {"automated", "agent_data"};
 		List<String> dataPostTagList = new ArrayList<>(Arrays.asList(dataPostTags)); // TODO: what tags?
 		this.forum.updatePost(postID, dataPostSubject, dataPostInitialBody, PostType.NOTE, PostVisibility.PRIVATE, dataPostTagList, EditorType.PLAIN_TEXT);
 		this.dataPostID = postID;
@@ -120,7 +120,7 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 	@Override
 	public Object getDataValue(String dataName) {
 
-		System.out.println("Name: " + dataName + "\tRegistered: " + this.isRegistered(dataName));
+//		System.out.println("Name: " + dataName + "\tRegistered: " + this.isRegistered(dataName));
 		
 		if (this.isRegistered(dataName)) {
 			
@@ -130,7 +130,7 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 			Class classType;
 			
 			try {
-				System.out.println("Name: " + dataName + "\tType: " + classString + "\tValue: " + value);
+//				System.out.println("Name: " + dataName + "\tType: " + classString + "\tValue: " + value);
 				
 				classType = Class.forName(classString);
 				if (classType.isArray()) {
@@ -187,26 +187,15 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 	
 	
 	/* HELPER METHODS */
-	protected JSONObject getJSONData() {
-		String jsonBody = this.getDataPost().getBody();
-		
-		//System.out.println(jsonBody);
-		String formattedJSON = StringEscapeUtils.unescapeHtml4(jsonBody);
-		//System.out.println(formattedJSON);
-		
-		JSONObject data = new JSONObject(formattedJSON);
-		
-		System.out.println(data.keySet());
-		System.out.println(data.has("automatedSuggestionDisclaimerID"));
-		
-		return data;
+	private JSONObject getJSONData() {
+		return DataStoreDiscussionForum.formatJSONData(this.getDataPost().getBody());
 	}
 	
 	protected void updateJSONData(JSONObject data) {
 
 		// TODO: simplify this if we develop update methods with less parameters
 		ForumPost dataPost = this.getDataPost();
-		this.forum.updatePost(this.dataPostID, dataPost.getSubject(), data.toString(), dataPost.getType(), dataPost.getVisibility(), dataPost.getTags(), EditorType.PLAIN_TEXT);
+		this.forum.updatePost(this.dataPostID, dataPost.getSubject(), data.toString(4), dataPost.getType(), dataPost.getVisibility(), dataPost.getTags(), EditorType.PLAIN_TEXT);
 		
 	}
 

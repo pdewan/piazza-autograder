@@ -22,7 +22,7 @@ import piazza.nlp.redux.general.ForumUser;
 import piazza.nlp.redux.general.DiscussionForum.EditorType;
 
 public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionForum
-
+	
 	protected String courseName;
 	protected String classID;
 	protected PiazzaSession currentSession;
@@ -87,9 +87,12 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		//System.out.println("Post ID to be gotten: " + postID);
 		
 		JSONObject data = new JSONObject()
-				.put("cid", postID);
+				.put("cid", postID)
+				.put("nid", this.classID)
+				.put("student_view", JSONObject.NULL);
 		
 		Map<String, Object> postData = (Map<String, Object>) makeCallWithBackoff("content.get", data);
+				
 		return new APiazzaPost(postData, this.classID);
 		
 	}
@@ -366,7 +369,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	// null for new subject = use existing subject
 	@Override
 	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags, EditorType editor) {
-		
+				
 		PiazzaPost oldPost = (PiazzaPost) this.getPost(postID);
 		
 		int newRevisionNumber = oldPost.getRevisionNumber() + 1;
@@ -403,10 +406,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			.put("visibility", visibilityString)
 			.put("revision", newRevisionNumber)
 			.put("config", new HashMap());
-			
+					
 		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.update", data);	
 		
-		return (String) resp.get("id");
+		String response = (String) resp.get("id");
+		
+//		System.out.println("RESP: " + resp); // if the action could not be completed, resp has a key with "bad"
+		
+		return response;
 		
 		// TODO: could change the interface to return the post object, if that makes sense with other platforms:
 		// APiazzaPost createdPost = new APiazzaPost(resp, this.classID);
@@ -618,7 +625,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		String piazzaAPIEndpoint = "https://piazza.com/logic/api";
 		String errorString;
 		
-		while (waitTime < maxTime) {
+		while (waitTime <= maxTime) {
 			
 			// get the response from the Piazza API
 			Map<String, Object> resp = this.currentSession.piazzaAPICall(method, params, piazzaAPIEndpoint);
@@ -640,15 +647,18 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				}
 				
 				// otherwise, wait for the allotted time and try again
+//				System.out.println("Waiting for" + waitTime + "ms");
 				Thread.sleep(waitTime);
 				waitTime = (int) (waitTime * increaseRate);
-				break;
 				
 			}
 
-			// if no errors in the response, return the result
-			return resp.get("result");
-			
+			else {
+				// if no errors in the response, return the result
+//				System.out.println("RESULT: " + resp.get("result"));
+				
+				return resp.get("result");
+			}
 		}
 		
 		// if no valid response is returned before the maxTime backoff has been reached, raise an exception
@@ -661,7 +671,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	protected Object makeCallWithBackoff(String method, JSONObject params) {
 		
 		int waitTime = 500;
-		int maxTime = 60000;
+		int maxTime = 128000;
 		double increaseRate = 2.0;
 		
 		try {

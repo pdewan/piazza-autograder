@@ -10,6 +10,8 @@ import piazza.nlp.redux.general.DiscussionForum.EditorType;
 
 public interface PiazzaForum extends DiscussionForum {
 	
+	public static int MAX_POST_SIZE = 16793600;
+	
 	public List<ForumUser> getUsers(String[] userIDs); // get user info for a batch of users at once
 	public ForumPost getPost(int postNumber); // get post from number, instead of ID
 	public List<APiazzaPostPreview> getFeed(); // get post headers from the feed

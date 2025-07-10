@@ -1,20 +1,17 @@
 package piazza.nlp;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.Boolean;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,9 +21,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.sun.jna.platform.win32.WinBase.SYSTEM_INFO;
-
-import piazza.APiazzaClass;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 
@@ -54,7 +48,7 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	//final private String OH_GPT_PROMPT = "<p>You are a Teaching Assistant for an upper-level Computer Science course, and you will be given an office hours request submitted by a student. The request must contain two components, <strong>time </strong>and <strong>reason</strong>, which are explained below.</p>\r\n<p></p>\r\n<p><strong>Time</strong></p>\r\n<p>This component contains the time and date of the visit.</p>\r\n<p></p>\r\n<p><strong>Reason</strong></p>\r\n<p>This component has two sub-components:</p>\r\n<ul>\r\n<li><strong>Problem:</strong> the specific problem they are having with the concept</li>\r\n<li><strong>Solution attempt:</strong> what they have done to overcome this problem</li>\r\n</ul>\r\n<p>An office hours request is complete if it covers all aspects of the reason component.</p>\r\n<p></p>\r\n<p></p>\r\n<p>Please check if the following request is complete. If the post is complete, please respond with the word 'Complete' with no other output. If it is not complete, please write a reply to the student that indicates which expected aspects are missing and provides a suggestion for an improved response. Address the student directly in your response. You do not need to be formal or include a salutation.</p>\r\n<p></p>\r\n<p>Student's office hour request:</p>\r\n<p></p>\r\n[OFFICE_HOURS_REQUEST]";
 
 	final private String OH_PROMPT_POST_NAME = "OH Request Checker Prompt";
-	final private String OH_GPT_PROMPT = "You are a Teaching Assistant for an upper-level Computer Science course, and you will be given an office hours request submitted by a student. The request must contain two components, **time** and **reason**, which are explained below.\r\n\r\n**Time:** This component contains the time and date of the visit.\r\n\r\n**Reason:** This component contains the specific problem they are having with the concept or assignment.\r\n\r\nAn office hours request is complete if it contains both the time and reason components. These components do not have to be explicitly labeled or demarcated, and they do not need to occur in the same sentence or paragraph. The time and date do not have to be in a particular format, and the reason does not have to be formatted as a complete sentence. Simply listing a time and stating an issue the student is having is enough.\r\n\r\nPlease check if the following request is complete. If the post is complete, or if the post indicates that the issue has already been resolved, please respond with the word ‘Complete’ with no other output. If it is not complete, please write a reply to the student that indicates which expected aspects are missing and provides a suggestion for an improved response. Address the student directly in your response. You do not need to be formal or include a salutation.\r\n\r\n**Student’s office hour request:**\r\n[OFFICE_HOURS_REQUEST]";
+	final private String OH_GPT_PROMPT = "You are a Teaching Assistant for an upper-level Computer Science course, and you will be given an office hours request submitted by a student. The request must contain two components, **time** and **reason**, which are explained below.\r\n\r\n**Time:** This component contains the time and date of the visit.\r\n\r\n**Reason:** This component contains the specific problem they are having with the concept or assignment.\r\n\r\nAn office hours request is complete if it contains both the time and reason components. These components do not have to be explicitly labeled or demarcated, and they do not need to occur in the same sentence or paragraph. The time and date do not have to be in a particular format, and the reason does not have to be formatted as a complete sentence. Simply listing a time and stating an issue the student is having is enough.\r\n\r\nPlease check if the following request is complete. If the post is complete, or if the post indicates that the issue has already been resolved, please respond with the word ï¿½Completeï¿½ with no other output. If it is not complete, please write a reply to the student that indicates which expected aspects are missing and provides a suggestion for an improved response. Address the student directly in your response. You do not need to be formal or include a salutation.\r\n\r\n**Studentï¿½s office hour request:**\r\n[OFFICE_HOURS_REQUEST]";
 	
 	// KEEP THE OLD PROMPTS HERE FOR FUTURE DISCUSSION IN A PAPER
 
@@ -67,13 +61,13 @@ public class APiazzaClassRecursivePostsML extends APiazzaClassRecursivePosts {
 	final private String OH_REQUEST_FEEDBACK_MESSAGE = "Hi [STUDENT_NAME],\n\nYou posted the following office hours request on [REQUEST_DATETIME]:\n\n<blockquote>[STUDENT_REQUEST]</blockquote>\n\nOur system marked this request as incomplete, and gave the following suggestion to fix it:\n\n<b>[GPT_SUGGESTION]</b>\n\nIf you feel this suggestion is reasonable, please edit your original request and add the missing information so we can better assist you during office hours. When you make the edit, also remove the incomplete marker (which looks like [INCOMPLETE_MARKER]) so that our system can reprocess the request.\n\nNote that this suggestion was generated using AI, so if you think it's asking for more information than makes sense (or requires more work than is warranted) feel free to ignore it. If you do, please manually mark your request as complete by editing your request and changing the incomplete marker to [COMPLETE_MARKER]. Thanks, and apologies for any inconveniences!\n\n<hr/>\n\nThis post is private, so feel free to reply with any code or further information that will be helpful for the office hours session.";
 
 	final private String SUGGESTED_PUBLIC_POST_NAME = "Suggested Public Visibility Message";
-	final private String SUGGESTED_PUBLIC_MESSAGE = "Based on the folder tags associated with your post, it looks like the post visibility can be changed from private to public. In order to help as many students as possible, all posts should be made public unless they include code you’ve written or personal information. If your post meets these private criteria, please add the appropriate folder tags to your post (<code>includes_code</code>, <code>grading_error</code>, <code>personal_situation</code>, etc.) and keep the visibility as private. Otherwise, please edit your post and change the “Post To” setting from “Individual Student(s) / Instructor(s)” to “Entire Class”. Thanks!";
+	final private String SUGGESTED_PUBLIC_MESSAGE = "Based on the folder tags associated with your post, it looks like the post visibility can be changed from private to public. In order to help as many students as possible, all posts should be made public unless they include code youï¿½ve written or personal information. If your post meets these private criteria, please add the appropriate folder tags to your post (<code>includes_code</code>, <code>grading_error</code>, <code>personal_situation</code>, etc.) and keep the visibility as private. Otherwise, please edit your post and change the ï¿½Post Toï¿½ setting from ï¿½Individual Student(s) / Instructor(s)ï¿½ to ï¿½Entire Classï¿½. Thanks!";
 	
 	final private String SUGGESTED_PRIVATE_POST_NAME = "Suggested Private Visibility Message";
-	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code you’ve written or involves a personal situation, please edit your post and change the “Post To” setting from “Entire Class” to “Instructors”. (Note that stack traces and error messages are fine to include in a public post!) Otherwise, please remove the incorrect folder tags from your post. Thanks!";
+	final private String SUGGESTED_PRIVATE_MESSAGE = "Your post is tagged as [FOLDER_TAGS] even though its visibility is set to public. If these tags are correct and your post includes code youï¿½ve written or involves a personal situation, please edit your post and change the ï¿½Post Toï¿½ setting from ï¿½Entire Classï¿½ to ï¿½Instructorsï¿½. (Note that stack traces and error messages are fine to include in a public post!) Otherwise, please remove the incorrect folder tags from your post. Thanks!";
 	
 	final private String SUGGESTED_INSTRUCTORS_POST_NAME = "Suggested All Instructors Visibility Message";
-	final private String SUGGESTED_ALL_INSTRUCTORS = "It appears that you’ve posted this to individual instructors. Please edit your post and select “Instructors” under the “Individual Student(s) / Instructor(s)” dropdown so that the entire instructional team can view your post. Thanks!";
+	final private String SUGGESTED_ALL_INSTRUCTORS = "It appears that youï¿½ve posted this to individual instructors. Please edit your post and select ï¿½Instructorsï¿½ under the ï¿½Individual Student(s) / Instructor(s)ï¿½ dropdown so that the entire instructional team can view your post. Thanks!";
 	
 	final private String IMAGE_DETECTED_POST_NAME = "Image Detected Message";;
 	final private String IMAGE_MESSAGE = "It looks like you may have included a screenshot in your post. If it is a screenshot of code or a console trace, please replace the image with the actual text itself so we can search for issues easier. If it is a screenshot of a Gradescope score displayed in the right tab, please paste the trace text shown in the tab on the left. If it is another type of image, please include any relevant text contained within the image (errors given in Eclipse pop-up windows, etc.). Thanks!";

@@ -1,16 +1,12 @@
 package main;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
 import piazza.nlp.AGPTClass;
-import piazza.nlp.redux.exceptions.LoginFailedException;
-import piazza.nlp.redux.exceptions.NotLoggedInException;
 
 public class GPTTester {
 	
@@ -33,7 +29,7 @@ public class GPTTester {
 		AGPTClass gptTest = new AGPTClass(apiKey, defaultModel);
 		//String testPrompt = "hello, how are you? Can you tell me what's a Fibonacci Number?";
 		String testPrompt = "You are a Teaching Assistant for an upper-level Computer Science course. Please explain the possible sources of this error: I will come by at 5pm to ask questions about nothing";
-		//		"<p>I will come by at 5pm to ask questions about  nothing</p>";
+		//		"<p>I will come by at 5pm to ask questions aboutï¿½ nothing</p>";
 				
 		System.out.println(gptTest.makeCall(testPrompt));
 		

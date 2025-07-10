@@ -1,13 +1,11 @@
 package piazza;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.net.CookieStore;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.ClientContext;
@@ -16,7 +14,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
@@ -30,7 +27,7 @@ public class APiazzaSession implements PiazzaSession {
 	final String piazzaLogic = "https://piazza.com/logic/api";
 	final String piazzaMain = "https://piazza.com/main/api";
 	
-	private CookieStore cookieJar = new BasicCookieStore();
+	private BasicCookieStore cookieJar = new BasicCookieStore();
 	private HttpClientBuilder builder = HttpClientBuilder.create().setDefaultCookieStore(cookieJar);
 	private CloseableHttpClient httpClient = builder.build();
 	

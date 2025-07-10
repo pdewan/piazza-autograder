@@ -1,14 +1,12 @@
  package piazza.bowen;
 
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
@@ -17,10 +15,6 @@ import piazza.PiazzaClass;
 import piazza.PiazzaSession;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
-
-import java.io.File;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 public class APiazzaClassBowen implements PiazzaClass {
 

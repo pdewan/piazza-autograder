@@ -1,22 +1,10 @@
 package piazza.nlp;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import piazza.ANewPiazzaSession;
 import piazza.APiazzaClass;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;

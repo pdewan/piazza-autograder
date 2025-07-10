@@ -15,7 +15,8 @@ public class ReduxTestRunner {
 
 	public static void main(String[] args) {
 		
-		final int DATA_POST_NUMBER = 6;
+		final int DATA_POST_NUMBER = 40;
+		
 		
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
@@ -27,17 +28,26 @@ public class ReduxTestRunner {
 		DataStoreDiscussionForum dsdf = new ADataStoreDiscussionForum(df, dataPostID);
 		MixedInitiativeDiscussionForum midf = new AMixedInitiativeDiscussionForum(dsdf);
 		
+		System.out.println("SYSTEM LOG: " + midf.getSystemLog());
+//		System.out.println(midf.getDataStoreForum().getForum().getPost("mcu3v28kdwc7oc").getPostNumber());
+//		System.out.println(df.getPost(179).getPostID());
+
+		System.exit(0);
+		
+		
 		ImageCheckerAgent img = new ImageCheckerAgent();
 		VisibilityCheckerAgent vis = new VisibilityCheckerAgent();
 		MediatedLLMAgent llm = new MediatedLLMAgent();
 		
-		//dsdf.overwriteWithDataPost(df.getPost(6).getPostID());
+//		dsdf.overwriteWithDataPost(df.getPost(6).getPostID());
 		
+
 		midf.registerAgent(img);
 		midf.registerAgent(vis);
 		midf.registerAgent(llm);
 
-		//midf.createNewSystemLog();
+//		midf.resetSystemLog();
+//		midf.createNewSystemLog();
 		//midf.setUp();
 		//midf.setUpAgents(midf.getRegisteredAgentNames());
 		

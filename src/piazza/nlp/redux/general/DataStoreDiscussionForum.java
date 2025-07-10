@@ -1,6 +1,16 @@
 package piazza.nlp.redux.general;
 
+import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONObject;
+
 public interface DataStoreDiscussionForum {
+	
+	public static JSONObject formatJSONData(String jsonBody) {
+		String formattedJSON = StringEscapeUtils.unescapeHtml4(jsonBody);
+		String cleanedJson = formattedJSON.replaceAll("<br\\s*/?>", "");		
+		JSONObject data = new JSONObject(cleanedJson);
+		return data;
+	}
 	
 	public DiscussionForum getForum(); // NOTE: changed from IS-A to HAS-A between DataStoreDiscussionForum and DiscussionForum
 	

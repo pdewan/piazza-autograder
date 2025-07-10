@@ -3,14 +3,10 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
-import piazza.PiazzaClass;
 import piazza.nlp.redux.exceptions.LoginFailedException;
 import piazza.nlp.redux.exceptions.NotLoggedInException;
 

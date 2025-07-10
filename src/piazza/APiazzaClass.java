@@ -1,18 +1,16 @@
 package piazza;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONObject;
 
@@ -362,7 +360,7 @@ public class APiazzaClass implements PiazzaClass {
  {method: "network.find_similar", params: {query: "Tentat", nid: "k9zvvl9ubao6xa"}}
 
 
- {method: "network.find_similar",…}
+ {method: "network.find_similar",ï¿½}
 method: "network.find_similar"
 params: {query: "Tentative question", old_query: "tent questi", nid: "k9zvvl9ubao6xa"}
 params: {query: "Tentat", nid: "k9zvvl9ubao6xa"}
@@ -410,7 +408,7 @@ nid: "k9zvvl9ubao6xa"
 {"result":[{"role":"ta","name":"Cong Lu","endorser":{},"admin":true,"photo":null,"id":"k6hd7s9zstt65n","photo_url":null,"published":true,"email":"conglu@live.unc.edu","us":false,"admin_permission":5,"facebook_id":null},{"role":"ta","name":"Duy Nguyen","endorser":{},"admin":true,"photo":null,"id":"idjrrmtnu7y4b8","photo_url":null,"published":true,"email":"duyn@email.unc.edu, duyn@cs.unc.edu","us":false,"admin_permission":5,"facebook_id":null},{"role":"professor","name":"Prasun Dewan","endorser":{},"admin":true,"photo":null,"id":"h68jepo6q4z3bk","photo_url":null,"email":"dewan@cs.unc.edu","us":false,"admin_permission":15,"facebook_id":null},{"role":"ta","name":"Sam George","endorser":{"id7hnxcun154a8":1},"admin":true,"photo":null,"id":"i588uvywlmn3b5","photo_url":null,"published":true,"email":"sdgeorge@med.unc.edu, samuel_george@med.unc.edu, sdgeorge@cs.unc.edu, sdgeorge@icloud.com, sdgeorge27518@gmail.com","us":false,"admin_permission":5,"facebook_id":null}],"error":null,"aid":"l650h5icb6z628"}
 
 method: "content.update"
-params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",…}
+params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",ï¿½}
 anonymous: "no"
 cid: "l5qnut4no5p243"
 content: "<p>Followups to this post will indicate posts that have been automatically labeled as active. Active posts are those that describe a problem but no attempt to solve it. An upvite indicates you agree with the labeling.</p>"
@@ -419,9 +417,9 @@ revision: 1
 subject: "Auto Active Post Detection"
 type: "question"
 
-{method: "content.update", params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",…}}
+{method: "content.update", params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",ï¿½}}
 method: "content.update"
-params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",…}
+params: {cid: "l5qnut4no5p243", subject: "Auto Active Post Detection",ï¿½}
 anonymous: "no"
 cid: "l5qnut4no5p243"
 content: "<p>Followups to this post will indicate posts that have been automatically labeled as active. Active posts are those that describe a problem but no attempt to solve it. An upvite indicates you agree with the labeling.</p>"

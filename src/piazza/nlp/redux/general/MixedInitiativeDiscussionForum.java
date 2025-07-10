@@ -15,12 +15,14 @@ public interface MixedInitiativeDiscussionForum {
 	// system log format: map indexed by post ID, value is a map containing the post_number, rev_number, and actions_taken
 	
 	public void setUp();
-	public String createNewSystemLog(); // returns the ID of the new system log post
+	public String createNewSystemLog(boolean replacePreviousLog); // returns the ID of the new system log post
 	public JSONObject getSystemLog(); // TODO: make type Map<Integer, List<AgentAction>>? or this just extra work for no reason?
-    public void addToSystemLog(ForumPost post, AgentAction action);
-    public void resetSystemLog();
+//    public void addToSystemLog(ForumPost post, AgentAction action);
+    public void addToSystemLog(ForumPost post, List<AgentAction> actions);
+	public void resetSystemLog();
     public void registerAgent(ForumAgent agent); // TODO: add parameter so you can insert rather than append (because agents run in order)? for now, we just register in the order we want to run them in
-    public List<String> getRegisteredAgentNames();    
+    public ForumAgent getRegisteredAgent(String agentName);
+    public List<String> getRegisteredAgentNames();
     public void setUpAgents(List<String> agentNames);
     public void runAgents(List<String> agentNames, List<? extends ForumPost> posts); // will fetch dataStoreForum and pastActions using other methods and send them to each agent's processPost()
     public void runAllAgents(List<? extends ForumPost> posts); // will fetch dataStoreForum and pastActions using other methods and send them to each agent's processPost()

@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import piazza.nlp.redux.actions.AgentAction;
 import piazza.nlp.redux.actions.AnEnumAgentAction;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
@@ -14,6 +16,7 @@ import piazza.nlp.redux.general.ForumPost;
 import piazza.nlp.redux.general.DiscussionForum.EditorType;
 import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
+import piazza.nlp.redux.general.ForumUser;
 import piazza.nlp.redux.piazza.APiazzaPostPreview;
 import piazza.nlp.redux.piazza.PiazzaPost;
 
@@ -50,10 +53,11 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 
 		List<String> suggestedMessageTags = new ArrayList<String>();
 		suggestedMessageTags.add("automated");
+		suggestedMessageTags.add("agent_data");
 		
-		String suggestedPublicMessageID = forum.createPost("Suggested Public Message", DEFAULT_SUGGESTED_PUBLIC_MESSAGE, PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
-		String suggestedPrivateMessageID = forum.createPost("Suggested Private Message", DEFAULT_SUGGESTED_PRIVATE_MESSAGE, PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
-		String suggestedAllInstructorsMessageID = forum.createPost("Suggested All Instructors Message", DEFAULT_SUGGESTED_ALL_INSTRUCTORS_MESSAGE, PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
+		String suggestedPublicMessageID = forum.createPost("Suggested Public Message", StringEscapeUtils.unescapeHtml4(DEFAULT_SUGGESTED_PUBLIC_MESSAGE), PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
+		String suggestedPrivateMessageID = forum.createPost("Suggested Private Message", StringEscapeUtils.unescapeHtml4(DEFAULT_SUGGESTED_PRIVATE_MESSAGE), PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
+		String suggestedAllInstructorsMessageID = forum.createPost("Suggested All Instructors Message", StringEscapeUtils.unescapeHtml4(DEFAULT_SUGGESTED_ALL_INSTRUCTORS_MESSAGE), PostType.NOTE, PostVisibility.PRIVATE, suggestedMessageTags, EditorType.MARKDOWN);
 		
 		dataStoreForum.registerData("suggestedPublicMessageID", String.class, suggestedPublicMessageID);	
 		dataStoreForum.registerData("suggestedPrivateMessageID", String.class, suggestedPrivateMessageID);	
@@ -94,14 +98,17 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 			if (visibility == PostVisibility.PRIVATE) {
 				
 				if (post instanceof PiazzaPost) {
-					//System.out.print(post.getAllData());
+
 					Map<String, Object> config = (Map<String, Object>) post.getAllData().get("config");
 					String feedGroups = (String) config.get("feed_groups");
-					//System.out.println(feedGroups);
 					List<String> postedTo = Arrays.asList(feedGroups.split(","));
-					//System.out.println(postedTo);
 
-					suggestAllInstructors = !(postedTo.contains("instr_" + post.getCourseID()) || postedTo.containsAll(dataStoreForum.getForum().getAdministrators()));					
+					List<String> admins = new ArrayList<>();
+					for (ForumUser a : dataStoreForum.getForum().getAdministrators())
+						admins.add(a.getID());
+					
+					suggestAllInstructors = !(postedTo.contains("instr_" + post.getCourseID()) || postedTo.containsAll(admins)) && !(post.getTags().contains("personal_situation"));					
+				
 				}
 				
 				suggestPublic = !containsPrivateTags;
@@ -123,7 +130,10 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 
 				if (suggestPrivate) {
 					
-					String tagString = "<code>" + String.join(", ", post.getTags()) + "</code>";
+					List<String> privateTagsList = Arrays.asList(privateTags);
+					List<String> privateTagsListMutable = new ArrayList<String>(privateTagsList);
+					privateTagsListMutable.retainAll(post.getTags());
+					String tagString = "<code>" + String.join(", ", privateTagsListMutable) + "</code>";
 					
 					String suggestedPrivateMessageID = (String) dataStoreForum.getDataValue("suggestedPrivateMessageID");
 					String suggestedPrivateMessage = dataStoreForum.getForum().getPost(suggestedPrivateMessageID).getBody();
@@ -169,7 +179,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 	
 		}
 		
-		return new AnEnumAgentAction(this, post, new Date(), actionTaken);
+		return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), actionTaken);
 		
 	}
 	
