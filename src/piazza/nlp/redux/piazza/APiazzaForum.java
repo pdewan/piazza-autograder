@@ -239,7 +239,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// create a followup to a given post
 	@Override
-	public String createFollowup(String postID, String body, EditorType editor) {
+	public String createFollowup(String postID, String body, EditorType editor, boolean instructorOnly) {
 	
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
@@ -250,6 +250,12 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				.put("content", "")
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
+		if (instructorOnly) {
+			JSONObject config = new JSONObject()
+				.put("ionly", true);
+			data.put("config", config);
+		}
+		
 		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.create", data);	
 		
 		return (String) resp.get("id");
@@ -349,7 +355,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	
 	// draft a followup to a given post
 	@Override
-	public String createDraftFollowup(String postID, String body, EditorType editor) {
+	public String createDraftFollowup(String postID, String body, EditorType editor, boolean instructorOnly) {
 		
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
@@ -359,6 +365,12 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				.put("editor", this.convertEditorType(editor))
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
+		if (instructorOnly) {
+			JSONObject config = new JSONObject()
+				.put("ionly", true);
+			data.put("config", config);
+		}
+		
 		String resp = (String) makeCallWithBackoff("content.auto_save", data); // should return "OK"
 		
 		return postID; // TODO: not sure what to return here, currently just returning the ID of the question
@@ -466,12 +478,14 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			"editor": "rte"
 		} */
 		
+		// currently doesn't seem like you are able to change whether an existing followup is instructor-only or not
+		
 		return null;
 		
 	}
 	
 	// returns true if followup is created and false if a followup with the same body already exists
-	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor) {
+	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor, boolean instructorOnly) {
 		
 		PiazzaPost parentPost = (PiazzaPost) this.getPost(postID);
 		List<Map<String, Object>> children = (List<Map<String, Object>>) parentPost.getAllData().get("children");
@@ -486,7 +500,7 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 			}
 		}
 		
-		this.createFollowup(postID, body, editor);
+		this.createFollowup(postID, body, editor, instructorOnly);
 		return true;
 		
 		// TODO: need to test
@@ -703,6 +717,24 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 
 
 /* NOTES */
+
+/* instructor-only followups:
+{
+	  "method": "content.create",
+	  "params": {
+	    "nid": "mcic7dhsju035c",
+	    "cid": "mcz8abde7oe2ql",
+	    "type": "followup",
+	    "subject": "Instructor only followup test!",
+	    "content": "",
+	    "anonymous": "no",
+	    "editor": "rte",
+	    "config": {
+	      "ionly": true
+	    }
+	  }
+	}
+ */
 
 /* can filter feed based on various properties using the gear in the ui:
 {
