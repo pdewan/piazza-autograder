@@ -123,7 +123,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 		}
 		
 		DiscussionForum forum = dataStoreForum.getForum();
-		String studentQuestion = post.getSubject();
+		String studentQuestion = post.getBody();
 		
 		String mediatedLLMPromptID = (String) dataStoreForum.getDataValue("mediatedLLMPromptID");
 		String mediatedLLMPrompt = forum.getPost(mediatedLLMPromptID).getBody();
@@ -169,7 +169,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 		try {
 			author = forum.getUser(post.getAuthorID()).getName();
 		} catch (AnonymousDataAccessException e) {
-			e.printStackTrace();
+			System.out.println("WARNING: " + e.getMessage());
 		}
 		String postTime = (new SimpleDateFormat("MMMM d 'at' K:ma")).format(post.getDateCreated());
 		
@@ -207,7 +207,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 		for (ForumPost p : searchResults) {
 			postTags = p.getTags();
 			
-			if (postTags.contains(assignmentTag) && postTags.contains("assignment_instructions")) {
+			if (postTags.contains(assignmentTag) && postTags.contains("agent_data")) {
 				return p.getPostID();
 			}
 			

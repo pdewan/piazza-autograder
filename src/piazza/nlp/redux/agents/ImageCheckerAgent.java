@@ -1,6 +1,7 @@
 package piazza.nlp.redux.agents;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,7 @@ import piazza.nlp.redux.piazza.APiazzaPostPreview;
 public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgent {
 
 	public enum ImageCheckerAction {
-		NO_IMAGE, NEW_FOLLOWUP, FOLLOWUP_EXISTS, IMAGE_REMOVED;
+		NO_IMAGE, NEW_FOLLOWUP, FOLLOWUP_EXISTS, IMAGE_REMOVED, NOT_APPLICABLE;
 	}
 	
 	final protected static String DEFAULT_NAME = "Image Checker Agent";
@@ -71,9 +72,14 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 		if (imageCheckerActions.containsKey(Integer.valueOf(post.getRevisionNumber())))
 			return null;
 		// if the post passed the no-image check, do not reprocess
-		else if (imageCheckerActions.containsValue(ImageCheckerAction.NO_IMAGE) || imageCheckerActions.containsValue(ImageCheckerAction.IMAGE_REMOVED))
+		else if (imageCheckerActions.containsValue(ImageCheckerAction.NO_IMAGE) || imageCheckerActions.containsValue(ImageCheckerAction.IMAGE_REMOVED) || imageCheckerActions.containsValue(ImageCheckerAction.NOT_APPLICABLE))
 			return null;
 		
+		String[] assignmentTags = (String[]) dataStoreForum.getDataValue("assignmentTags");
+		boolean helpNeeded = (post.getType() == PostType.QUESTION) && (post.getTags().stream().anyMatch(Arrays.asList(assignmentTags)::contains)) && !(post.getTags().contains("personal_situation"));
+		if (!helpNeeded)
+			return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), ImageCheckerAction.NOT_APPLICABLE);
+				
 		boolean containedImageBefore = imageCheckerActions.containsValue(ImageCheckerAction.NEW_FOLLOWUP);
 		
 		if (post instanceof APiazzaPostPreview) {

@@ -272,17 +272,29 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 	@Override
 	public void runAgents(List<String> agentNames, List<? extends ForumPost> posts) {
 	
+		// obtain the current system log
+		JSONObject log = this.getSystemLog();
+		List<JSONObject> logs = new ArrayList<JSONObject>();
+		logs.add(log);
+
+		// if the log is extended across multiple posts, traverse the posts like a linked list		
+		while (log.has("logExtension")) {
+			String logExtensionID = log.getJSONObject("logExtension").getString("newPostID");
+			String logBody = this.getDataStoreForum().getForum().getPost(logExtensionID).getBody();
+			log = DataStoreDiscussionForum.formatJSONData(logBody);
+			logs.add(log);
+		}
+		
 		DataStoreDiscussionForum dataStoreForum = this.getDataStoreForum();
 		for (ForumPost p : posts) {
 			
 			boolean newActions = false;
-			List<AgentAction> pastActions = getPastActions(p);
+			List<AgentAction> pastActions = getPastActions(p, logs);
 			for (ForumAgent a : this.registeredAgents) {
 				
 				if (agentNames.contains(a.getAgentName())) {
 					
 					AgentAction action = a.processPost(dataStoreForum, p, pastActions);
-					
 					if (action != null) {
 						pastActions.add(action);
 						newActions = true;
@@ -333,16 +345,14 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 	
 	/* HELPER METHODS */
 	
-	protected List<AgentAction> getPastActions(ForumPost post) {
+	protected List<AgentAction> getPastActions(ForumPost post, List<JSONObject> logs) {
 		
 		List<AgentAction> actionList = new ArrayList<AgentAction>();
         SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
 		String postID = post.getPostID();
         
 		// if the log is extended across multiple posts, traverse the posts like a linked list		
-		JSONObject log = this.getSystemLog();
-		boolean moreLogToSearch = true;
-		while (moreLogToSearch) {
+		for (JSONObject log : logs) {
 			
 			JSONArray pastActions = new JSONArray();
 			
@@ -384,17 +394,6 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 				}
 				
 			}
-			
-			// if this log has an extension, keep searching there
-			if (log.has("logExtension")) {
-				String logExtensionID = log.getJSONObject("logExtension").getString("newPostID");
-				String logBody = this.getDataStoreForum().getForum().getPost(logExtensionID).getBody();
-				log = DataStoreDiscussionForum.formatJSONData(logBody);	
-			}
-			
-			// otherwise, end the search
-			else
-				moreLogToSearch = false;
 			
 		}	
 
