@@ -28,11 +28,11 @@ public class ReduxTestRunner {
 		DataStoreDiscussionForum dsdf = new ADataStoreDiscussionForum(df, dataPostID);
 		MixedInitiativeDiscussionForum midf = new AMixedInitiativeDiscussionForum(dsdf);
 		
-		System.out.println("SYSTEM LOG: " + midf.getSystemLog());
+//		System.out.println("SYSTEM LOG: " + midf.getSystemLog());
 //		System.out.println(midf.getDataStoreForum().getForum().getPost("mcu3v28kdwc7oc").getPostNumber());
 //		System.out.println(df.getPost(179).getPostID());
 
-		System.exit(0);
+//		System.exit(0);
 		
 		
 		ImageCheckerAgent img = new ImageCheckerAgent();

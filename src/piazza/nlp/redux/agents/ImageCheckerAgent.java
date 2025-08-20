@@ -102,7 +102,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 				String automatedSuggestionDisclaimerID = (String) dataStoreForum.getDataValue("automatedSuggestionDisclaimerID");
 				String automatedSuggestionDisclaimer = dataStoreForum.getForum().getPost(automatedSuggestionDisclaimerID).getBody();
 				
-				boolean createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, containsImageMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN);
+				boolean createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, containsImageMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN, false);
 				actionTaken = createdFollowup ? ImageCheckerAction.NEW_FOLLOWUP : ImageCheckerAction.FOLLOWUP_EXISTS;
 				
 			}			

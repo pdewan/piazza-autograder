@@ -25,14 +25,14 @@ public interface DiscussionForum {
 	public List<ForumPost> getAllPosts();
 	public String createPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags, EditorType editor); // returns the ID of the created post
 	public String createInstructorAnswer(String postID, String body, EditorType editor);
-	public String createFollowup(String postID, String body, EditorType editor); // TODO: visibility (public vs instructors-only)?
+	public String createFollowup(String postID, String body, EditorType editor, boolean instructorOnly); // TODO: change boolean instructorOnly to enum visibility (public vs instructors-only)?
 	public String createDraftPost(String subject, String body, PostType type, PostVisibility visibility, List<String> tags, EditorType editor);
 	public String createDraftInstructorAnswer(String postID, String body, EditorType editor);
-	public String createDraftFollowup(String postID, String body, EditorType editor);
+	public String createDraftFollowup(String postID, String body, EditorType editor, boolean instructorOnly);
 	public String updatePost(String postID, String newSubject, String newBody, PostType newType, PostVisibility newVisibility, List<String> newTags, EditorType editor);
 	public String updateInstructorAnswer(String responseID, String newBody, EditorType editor); // NOTE: split updateResponse into two separate methods
 	public String updateFollowup(String responseID, String newBody, EditorType editor);
-	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor); // returns true if followup is created and false if a followup with the same body already exists
+	public boolean createFollowupIfDoesNotExist(String postID, String body, EditorType editor, boolean instructorOnly); // returns true if followup is created and false if a followup with the same body already exists
 	public ForumUser getUser(String userID);
 	public List<ForumUser> getAllUsers(); // figure out what format this should return
 	public List<ForumUser> getAdministrators(); // figure out what format this should return

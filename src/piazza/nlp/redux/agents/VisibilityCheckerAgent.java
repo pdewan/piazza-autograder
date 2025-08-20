@@ -139,7 +139,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 					String suggestedPrivateMessage = dataStoreForum.getForum().getPost(suggestedPrivateMessageID).getBody();
 					suggestedPrivateMessage = suggestedPrivateMessage.replace("[FOLDER_TAGS]", tagString);
 					
-					createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedPrivateMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN);
+					createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedPrivateMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN, false);
 					actionTaken = VisibilityCheckerAction.SUGGESTED_PRIVATE;
 					
 				}
@@ -151,7 +151,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 						String suggestedPublicMessageID = (String) dataStoreForum.getDataValue("suggestedPublicMessageID");
 						String suggestedPublicMessage = dataStoreForum.getForum().getPost(suggestedPublicMessageID).getBody();
 						
-						createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedPublicMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN);
+						createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedPublicMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN, false);
 						actionTaken = VisibilityCheckerAction.SUGGESTED_PUBLIC;			
 						
 					}
@@ -161,7 +161,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 						String suggestedAllInstructorsMessageID = (String) dataStoreForum.getDataValue("suggestedAllInstructorsMessageID");
 						String suggestedAllInstructorsMessage = dataStoreForum.getForum().getPost(suggestedAllInstructorsMessageID).getBody();
 						
-						createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedAllInstructorsMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN);
+						createdFollowup = dataStoreForum.getForum().createFollowupIfDoesNotExist(postID, suggestedAllInstructorsMessage + automatedSuggestionDisclaimer, EditorType.MARKDOWN, false);
 						
 						if (actionTaken == VisibilityCheckerAction.SUGGESTED_PUBLIC)
 							actionTaken = VisibilityCheckerAction.SUGGESTED_PUBLIC_OR_ALL_INSTRUCTORS;
