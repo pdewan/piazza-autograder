@@ -626,6 +626,42 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		return previews;
 		
 	}
+	
+	public String createIndividualPost(String subject, String body, PostType type, String individualID, List<String> tags, EditorType editor) {
+		
+		String typeString;
+		if (type == PostType.QUESTION)
+			typeString = "question";
+		else if (type == PostType.POLL)
+			typeString = "poll";
+		else
+			typeString = "note";
+		
+		JSONObject data = new JSONObject()
+			.put("nid", this.classID)
+			.put("type", typeString)
+			.put("subject", subject)
+			.put("content", body)
+			.put("folders", tags)
+			.put("editor", this.convertEditorType(editor))
+			.put("anonymous", "no"); // TODO: allow other anonymities
+		
+		String recipients = "instr_" + this.classID + "," + individualID; // TODO: allow other individual recipients (should be separated by ',')
+		Map<String, String> config = new HashMap();
+		config.put("feed_groups", recipients);
+		data.put("config", config);
+		data.put("status", "private");
+		
+		Map<String, Object> resp = (Map<String, Object>) makeCallWithBackoff("content.create", data);	
+		
+		return (String) resp.get("id");
+		
+		// TODO: could change the interface to return the post object, if that makes sense with other platforms:
+		// APiazzaPost createdPost = new APiazzaPost(resp, this.classID);
+		// return createdPost.getPostID();
+		
+	}
+
 
 	
 	

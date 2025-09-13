@@ -1,4 +1,4 @@
-package piazza.nlp.redux.agents;
+package piazza.nlp.redux.tools.agents;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -15,7 +15,6 @@ import piazza.nlp.AGPTClass;
 import piazza.nlp.redux.actions.APostAgentAction;
 import piazza.nlp.redux.actions.AgentAction;
 import piazza.nlp.redux.actions.AnEnumAgentAction;
-import piazza.nlp.redux.agents.ImageCheckerAgent.ImageCheckerAction;
 import piazza.nlp.redux.exceptions.AnonymousDataAccessException;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.DiscussionForum;
@@ -24,6 +23,7 @@ import piazza.nlp.redux.general.ForumPost;
 import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
 import piazza.nlp.redux.piazza.APiazzaPostPreview;
+import piazza.nlp.redux.tools.agents.ImageCheckerAgent.ImageCheckerAction;
 
 public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent {
 	
@@ -109,7 +109,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 			if (waitingForImageRemoval)
 				return null;
 			else
-				return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), MediatedLLMAction.WAITING_FOR_IMAGE_REMOVAL);
+				return new AnEnumAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), MediatedLLMAction.WAITING_FOR_IMAGE_REMOVAL);
 		
 		}
 			
@@ -117,7 +117,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 		boolean helpNeeded = (post.getType() == PostType.QUESTION) && (post.getTags().stream().anyMatch(Arrays.asList(assignmentTags)::contains)) && !(post.getTags().contains("personal_situation"));
 		
 		if (!helpNeeded) {
-			return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), MediatedLLMAction.NOT_APPLICABLE);
+			return new AnEnumAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), MediatedLLMAction.NOT_APPLICABLE);
 		}
 		
 		if (post instanceof APiazzaPostPreview) {
@@ -207,7 +207,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 		String draftAnswer = gptResponse + "\n\n---\n\n_This post was drafted automatically using an LLM._";
 		forum.createDraftInstructorAnswer(post.getPostID(), draftAnswer, EditorType.MARKDOWN);
 		
-		return new APostAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), refPostNumber);
+		return new APostAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), refPostNumber);
 		
 	}
 	

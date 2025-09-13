@@ -3,7 +3,9 @@ package piazza.nlp.redux.general;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -120,7 +122,7 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 	@Override
 	public Object getDataValue(String dataName) {
 
-//		System.out.println("Name: " + dataName + "\tRegistered: " + this.isRegistered(dataName));
+		// TODO: switch to something like Gson to make this more robust?
 		
 		if (this.isRegistered(dataName)) {
 			
@@ -130,7 +132,6 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 			Class classType;
 			
 			try {
-//				System.out.println("Name: " + dataName + "\tType: " + classString + "\tValue: " + value);
 				
 				classType = Class.forName(classString);
 				if (classType.isArray()) {
@@ -148,6 +149,19 @@ public class ADataStoreDiscussionForum implements DataStoreDiscussionForum {
 		            }
 		            
 		            return resultArray;
+					
+				} else if (Map.class.isAssignableFrom(classType)) {
+					
+					Map<String, Object> resultMap = new HashMap<>();
+					JSONObject jsonMap = (JSONObject) value;
+					
+					for (String key : jsonMap.keySet()) {
+						Object mapValue = jsonMap.get(key);
+						// NOTE: need recursion to handle nested maps
+						resultMap.put(key, mapValue);
+					}
+					
+					return resultMap;
 					
 				} else {
 					return classType.cast(value);

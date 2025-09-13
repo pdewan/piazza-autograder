@@ -5,15 +5,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.Date;
 
-import piazza.nlp.redux.agents.ImageCheckerAgent;
-import piazza.nlp.redux.agents.MediatedLLMAgent;
-import piazza.nlp.redux.agents.VisibilityCheckerAgent;
 import piazza.nlp.redux.general.ADataStoreDiscussionForum;
 import piazza.nlp.redux.general.AMixedInitiativeDiscussionForum;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.MixedInitiativeDiscussionForum;
 import piazza.nlp.redux.piazza.APiazzaForum;
 import piazza.nlp.redux.piazza.PiazzaForum;
+import piazza.nlp.redux.tools.agents.ImageCheckerAgent;
+import piazza.nlp.redux.tools.agents.MediatedLLMAgent;
+import piazza.nlp.redux.tools.agents.VisibilityCheckerAgent;
 
 public class DeploymentRunner {
 	public static void main(String[] args) {

@@ -6,8 +6,8 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-import piazza.nlp.redux.agents.ForumAgent;
 import piazza.nlp.redux.general.ForumPost;
+import piazza.nlp.redux.tools.agents.ForumAgent;
 
 public class APostAgentAction extends AnAbstractAgentAction implements AgentAction {
 

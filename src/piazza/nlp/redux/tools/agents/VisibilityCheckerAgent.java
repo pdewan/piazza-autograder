@@ -1,4 +1,4 @@
-package piazza.nlp.redux.agents;
+package piazza.nlp.redux.tools.agents;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,7 +72,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 		// TODO: In future, check to see if the post still violates the guidelines, and if not, delete the previously-created followups
 		
 		for (AgentAction a : pastActions) {
-			if (a.getAgentName().equals(this.getAgentName())) {
+			if (a.getAgentName().equals(this.getName())) {
 				return null;
 			}
 		}
@@ -179,7 +179,7 @@ public class VisibilityCheckerAgent extends AnAbstractForumAgent implements Foru
 	
 		}
 		
-		return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), actionTaken);
+		return new AnEnumAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), actionTaken);
 		
 	}
 	

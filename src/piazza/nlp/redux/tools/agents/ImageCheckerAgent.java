@@ -1,4 +1,4 @@
-package piazza.nlp.redux.agents;
+package piazza.nlp.redux.tools.agents;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +63,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 		
 		Map<Integer, ImageCheckerAction> imageCheckerActions = new HashMap<Integer, ImageCheckerAction>();
 		for (AgentAction a : pastActions) {
-			if (a.getAgentName().equals(this.getAgentName())) {				
+			if (a.getAgentName().equals(this.getName())) {				
 				imageCheckerActions.put(Integer.valueOf(a.getRevNumber()), (ImageCheckerAction) ((AnEnumAgentAction)a).getActionTaken());
 			}
 		}
@@ -78,7 +78,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 		String[] assignmentTags = (String[]) dataStoreForum.getDataValue("assignmentTags");
 		boolean helpNeeded = (post.getType() == PostType.QUESTION) && (post.getTags().stream().anyMatch(Arrays.asList(assignmentTags)::contains)) && !(post.getTags().contains("personal_situation"));
 		if (!helpNeeded)
-			return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), ImageCheckerAction.NOT_APPLICABLE);
+			return new AnEnumAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), ImageCheckerAction.NOT_APPLICABLE);
 				
 		boolean containedImageBefore = imageCheckerActions.containsValue(ImageCheckerAction.NEW_FOLLOWUP);
 		
@@ -108,7 +108,7 @@ public class ImageCheckerAgent extends AnAbstractForumAgent implements ForumAgen
 			}			
 		}
 		
-		return new AnEnumAgentAction(this.getAgentName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), actionTaken);
+		return new AnEnumAgentAction(this.getName(), post.getPostNumber(), post.getRevisionNumber(), new Date(), actionTaken);
 		
 	}
 	

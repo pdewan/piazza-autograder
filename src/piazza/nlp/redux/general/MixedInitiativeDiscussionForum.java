@@ -6,7 +6,7 @@ import java.util.Map;
 import org.json.JSONObject;
 
 import piazza.nlp.redux.actions.AgentAction;
-import piazza.nlp.redux.agents.ForumAgent;
+import piazza.nlp.redux.tools.agents.ForumAgent;
 
 public interface MixedInitiativeDiscussionForum {
 	

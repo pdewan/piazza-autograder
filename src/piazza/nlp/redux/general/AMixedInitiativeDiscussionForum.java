@@ -24,15 +24,14 @@ import piazza.nlp.redux.actions.APostAgentAction;
 
 import piazza.nlp.redux.actions.AgentAction;
 import piazza.nlp.redux.actions.AnEnumAgentAction;
-//import piazza.nlp.redux.actions.AgentActionTypeAdapter;
-import piazza.nlp.redux.agents.ForumAgent;
-import piazza.nlp.redux.agents.ImageCheckerAgent.ImageCheckerAction;
-import piazza.nlp.redux.agents.MediatedLLMAgent.MediatedLLMAction;
-import piazza.nlp.redux.agents.VisibilityCheckerAgent.VisibilityCheckerAction;
 import piazza.nlp.redux.general.DiscussionForum.EditorType;
 import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
 import piazza.nlp.redux.piazza.PiazzaForum;
+import piazza.nlp.redux.tools.agents.ForumAgent;
+import piazza.nlp.redux.tools.agents.ImageCheckerAgent.ImageCheckerAction;
+import piazza.nlp.redux.tools.agents.MediatedLLMAgent.MediatedLLMAction;
+import piazza.nlp.redux.tools.agents.VisibilityCheckerAgent.VisibilityCheckerAction;
 
 public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussionForum {
 
@@ -237,7 +236,7 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 	@Override
 	public ForumAgent getRegisteredAgent(String agentName) {
 		for (ForumAgent a : this.registeredAgents) {
-			if (a.getAgentName().equals(agentName)) {
+			if (a.getName().equals(agentName)) {
 				return a;
 			}
 		}
@@ -250,7 +249,7 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 		ArrayList<String> registeredAgentNames = new ArrayList<String>();
 		
 		for (ForumAgent a : this.registeredAgents)
-			registeredAgentNames.add(a.getAgentName());
+			registeredAgentNames.add(a.getName());
 		
 		return registeredAgentNames;
 		
@@ -260,7 +259,7 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 	public void setUpAgents(List<String> agentNames) {
 		
 		for (ForumAgent a : this.registeredAgents) {
-			if (agentNames.contains(a.getAgentName())) {
+			if (agentNames.contains(a.getName())) {
 				a.setUp(this.getDataStoreForum());
 			}
 		}
@@ -292,7 +291,7 @@ public class AMixedInitiativeDiscussionForum implements MixedInitiativeDiscussio
 			List<AgentAction> pastActions = getPastActions(p, logs);
 			for (ForumAgent a : this.registeredAgents) {
 				
-				if (agentNames.contains(a.getAgentName())) {
+				if (agentNames.contains(a.getName())) {
 					
 					AgentAction action = a.processPost(dataStoreForum, p, pastActions);
 					if (action != null) {
