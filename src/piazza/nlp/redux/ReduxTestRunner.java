@@ -1,5 +1,8 @@
 package piazza.nlp.redux;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,10 +20,9 @@ import piazza.nlp.redux.tools.programs.AQuizGradingProgram;
 
 public class ReduxTestRunner {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		
 		final int DATA_POST_NUMBER = 40;
-		
 		
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
@@ -34,9 +36,7 @@ public class ReduxTestRunner {
 		
 //		System.out.println("SYSTEM LOG: " + midf.getSystemLog());
 //		System.out.println(midf.getDataStoreForum().getForum().getPost("mcu3v28kdwc7oc").getPostNumber());
-//		System.out.println(df.getPost(179).getPostID());
-		
-		
+//		System.out.println(df.getPost(179).getPostID());		
 
 //		System.exit(0);
 		
@@ -65,9 +65,15 @@ public class ReduxTestRunner {
 		AQuizGradingProgram qgp = new AQuizGradingProgram("Quiz Grader Test", "A program that grades Google Forms responses.");
 //		qgp.parseCSV("test_files\\File-Systems.csv");
 //		qgp.createFeedbackPosts(dsdf);
-		
-		qgp.testbed(dsdf);
-		
+//		
+//		qgp.testbed(dsdf);
+
+		try {
+			qgp.newCSVtest("grades\\hw1\\quizzes\\File-Systems.csv");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		
 //		Map<String, Object> quizMockupData = df.getPost(234).getAllData();

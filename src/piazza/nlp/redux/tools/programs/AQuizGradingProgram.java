@@ -4,6 +4,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.opencsv.CSVReader;
+
 import piazza.nlp.AGPTClass;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
 import piazza.nlp.redux.general.DiscussionForum;
@@ -11,15 +15,27 @@ import piazza.nlp.redux.general.ForumPost;
 import piazza.nlp.redux.general.DiscussionForum.EditorType;
 import piazza.nlp.redux.general.ForumUser;
 import piazza.nlp.redux.piazza.PiazzaForum;
+import piazza.nlp.redux.tools.programs.intakeCSV.QAEntry;
+import piazza.nlp.redux.tools.programs.intakeCSV.QCols;
+import piazza.nlp.redux.tools.programs.intakeCSV.QuestionBlock;
 import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class AQuizGradingProgram extends AnAbstractForumProgram implements ForumProgram {
@@ -27,6 +43,11 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	final private static String DEFAULT_FEEDBACK_POST_TEMPLATE = "Hi [STUDENT_NAME],\r\n\r\nThis post will be used for providing scores and feedback on your answers to questions on the Google Form quizzes. For each question, a followup to this post will be created containing the question, your answer, and an AI-generated score with feedback. **The scores and feedback may be incorrect, so if you would like to challenge them, please reply to the followup with an explanation of why your answer should be getting more points.** If we agree with your case, we will adjust the scores accordingly. In this way, we can explore the potential of AI-based grading while working together to catch errors and ensuring that a human instructor always has the final say.\r\n\r\nLet us know if you have any questions.\r\n\r\nBest,\r\nMason";
 	final private static String INDIVIDUAL_FEEDBACK_INSTRUCTIONS = "See post @[RUBRIC_NUMBER] for the grading rubric. If you believe the AI system made a mistake or you disagree with its assigned score and feedback, please reply to this followup comment with an explanation of your case.";
 
+	final private static String RUBRIC_CREATION_PROMPT = ""; // TODO
+	final private static String QUESTION_GRADING_PROMPT = ""; // TODO
+	
+
+	
 	protected AGPTClass gpt; // TODO: support for other LLMs
 	
 	public AQuizGradingProgram(String name, String description) {
@@ -159,6 +180,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		
 			TODO
 			
+				what format? JSON or free-flowing?
+			
 				do we need to call parseRubric() to separate out the rubric item for each question?
 					or can GPT handle doing all questions in the quiz at once?
 		
@@ -200,6 +223,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			
 			String individualFeedbackPostID = individualFeedbackPostIDs.get(studentID);
 			String studentUniversityID = studentIDMap.get(studentID);
+			
+			
+			
 			
 			/*
 			
@@ -301,7 +327,35 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	
-	/* HELPER METHODS */
+	/* HELPER CLASSES */
+	
+    public static class QAEntry {
+        public final String answer, score, feedback;
+        public QAEntry(String a, String s, String f) { this.answer = a; this.score = s; this.feedback = f; }
+    }
+
+    public static class QuestionBlock {
+        public String questionType; // "MCQ" or "FreeResponse"
+        public final Map<String, QAEntry> studentSubmissions = new LinkedHashMap<>();
+    }
+
+    static class QCols {
+        final String key; final int ans, score, fb;
+        QCols(String key, int ans, int score, int fb) { this.key = key; this.ans = ans; this.score = score; this.fb = fb; }
+    }
+    
+    
+    
+    /* HELPER METHODS */
+    
+    private static String safe(String[] row, int idx) {
+        return (idx >= 0 && idx < row.length) ? row[idx] : "";
+    }
+
+    // Light normalization so minor spacing/case differences don’t fake uniqueness
+    private static String normalize(String s) {
+        return s.replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT);
+    }
 	
 	// find the rubric for a given quiz and return the post ID
 	protected String fetchRubric(DiscussionForum forum, String quizIdentifier) {
@@ -416,7 +470,79 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	
+	public void newCSVtest(String path) throws Exception {
 
+        // Load all rows
+        List<String[]> rows;
+        CSVReader reader = new CSVReader(new FileReader(path));
+        rows = reader.readAll();
+        if (rows.isEmpty()) return;
+
+        String[] header = rows.get(0);
+        int nCols = header.length;
+
+        // Locate Anonymous ID column
+        int anonIdx = -1;
+        for (int i = 0; i < nCols; i++) if ("Anonymous ID".equals(header[i])) { anonIdx = i; break; }
+        if (anonIdx == -1) throw new IllegalStateException("No 'Anonymous ID' column.");
+
+        // Discover question triplets
+        List<QCols> questions = new ArrayList<>();
+        String lastBaseQ = null;
+        for (int i = 0; i + 2 < nCols; i++) {
+            String q = header[i], s = header[i+1], f = header[i+2];
+            if (s.equals(q + " [Score]") && f.equals(q + " [Feedback]")) {
+                String baseKey = q;
+                if (q.startsWith("Explain your reason")) {
+                    if (lastBaseQ != null) baseKey = lastBaseQ + " — " + q;
+                } else {
+                    lastBaseQ = q;
+                }
+                questions.add(new QCols(baseKey, i, i+1, i+2));
+                i += 2;
+            }
+        }
+
+        // Build: Question -> QuestionBlock (with submissions)
+        Map<String, QuestionBlock> byQuestion = new LinkedHashMap<>();
+        // Also collect answers per question for type inference
+        Map<String, List<String>> answersPerQuestion = new HashMap<>();
+
+        for (int r = 1; r < rows.size(); r++) {
+            String[] row = rows.get(r);
+            if (row.length == 0) continue;
+            String anon = safe(row, anonIdx).trim();
+
+            for (QCols qc : questions) {
+                String ans = safe(row, qc.ans).trim();
+                String score = safe(row, qc.score).trim();
+                String fb = safe(row, qc.fb).trim();
+
+                QuestionBlock qb = byQuestion.computeIfAbsent(qc.key, k -> new QuestionBlock());
+                qb.studentSubmissions.put(anon, new QAEntry(ans, score, fb));
+
+                if (!ans.isEmpty()) {
+                    answersPerQuestion.computeIfAbsent(qc.key, k -> new ArrayList<>()).add(normalize(ans));
+                }
+            }
+        }
+
+        // Infer questionType
+        for (Map.Entry<String, QuestionBlock> e : byQuestion.entrySet()) {
+            List<String> answers = answersPerQuestion.getOrDefault(e.getKey(), Collections.emptyList());
+            int total = answers.size();
+            int unique = new HashSet<>(answers).size();
+            e.getValue().questionType = (total > 0 && unique == total) ? "FreeResponse" : "MCQ";
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(byQuestion);
+        // write to file
+//        Files.write(Path.of("file_systems_quiz_output.json"), json.getBytes(StandardCharsets.UTF_8));
+	    System.out.println(json);
+        
+	}
+	
 	
 	// TODO: clean this up
 	protected void parseCSV(String filepath) {
