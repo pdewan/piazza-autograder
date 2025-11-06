@@ -34,6 +34,9 @@ public class ReduxTestRunner {
 		DataStoreDiscussionForum dsdf = new ADataStoreDiscussionForum(df, dataPostID);
 		MixedInitiativeDiscussionForum midf = new AMixedInitiativeDiscussionForum(dsdf);
 		
+//		System.out.println(df.getPost(239).getAllData());
+//		df.deletePost("mgfvyj0lqkj53p");
+		
 //		System.out.println("SYSTEM LOG: " + midf.getSystemLog());
 //		System.out.println(midf.getDataStoreForum().getForum().getPost("mcu3v28kdwc7oc").getPostNumber());
 //		System.out.println(df.getPost(179).getPostID());		
@@ -68,12 +71,21 @@ public class ReduxTestRunner {
 //		
 //		qgp.testbed(dsdf);
 
-		try {
-			qgp.newCSVtest("grades\\hw1\\quizzes\\File-Systems.csv");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		qgp.setUp(dsdf);
+//		qgp.initializeIndividualFeedbackPosts(dsdf, false);
+//		qgp.createEnhancedRubric(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv", true);
+//		qgp.createPrivateFeedback(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", true);
+//		qgp.makeFeedbackVisible(dsdf, "File-Systems");
+		qgp.exportGrades(dsdf, "File-Systems");
+		
+//		df.createFollowup(postID, body, editor, instructorOnly)
+		
+//		try {
+//			System.out.println(qgp.readQuizGrades("grades\\hw1\\quizzes\\File-Systems.csv", true).toString(2));
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		
 //		Map<String, Object> quizMockupData = df.getPost(234).getAllData();

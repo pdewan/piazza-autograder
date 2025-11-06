@@ -3,10 +3,14 @@ package piazza.nlp.redux.tools.programs;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.RFC4180Parser;
 
 import piazza.nlp.AGPTClass;
 import piazza.nlp.redux.general.DataStoreDiscussionForum;
@@ -15,6 +19,8 @@ import piazza.nlp.redux.general.ForumPost;
 import piazza.nlp.redux.general.DiscussionForum.EditorType;
 import piazza.nlp.redux.general.ForumUser;
 import piazza.nlp.redux.piazza.PiazzaForum;
+import piazza.nlp.redux.tools.AGoogleFormQuizParser;
+import piazza.nlp.redux.tools.programs.intakeCSV.ParsedScore;
 import piazza.nlp.redux.tools.programs.intakeCSV.QAEntry;
 import piazza.nlp.redux.tools.programs.intakeCSV.QCols;
 import piazza.nlp.redux.tools.programs.intakeCSV.QuestionBlock;
@@ -43,12 +49,87 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	final private static String DEFAULT_FEEDBACK_POST_TEMPLATE = "Hi [STUDENT_NAME],\r\n\r\nThis post will be used for providing scores and feedback on your answers to questions on the Google Form quizzes. For each question, a followup to this post will be created containing the question, your answer, and an AI-generated score with feedback. **The scores and feedback may be incorrect, so if you would like to challenge them, please reply to the followup with an explanation of why your answer should be getting more points.** If we agree with your case, we will adjust the scores accordingly. In this way, we can explore the potential of AI-based grading while working together to catch errors and ensuring that a human instructor always has the final say.\r\n\r\nLet us know if you have any questions.\r\n\r\nBest,\r\nMason";
 	final private static String INDIVIDUAL_FEEDBACK_INSTRUCTIONS = "See post @[RUBRIC_NUMBER] for the grading rubric. If you believe the AI system made a mistake or you disagree with its assigned score and feedback, please reply to this followup comment with an explanation of your case.";
 
-	final private static String RUBRIC_CREATION_PROMPT = ""; // TODO
-	final private static String QUESTION_GRADING_PROMPT = ""; // TODO
-	
-
+	final private static String RUBRIC_CREATION_PROMPT = "You are an expert TA for an undergraduate Computer Science course tasked with constructing a structured grading rubric for the free-response QUESTION below. To assist with this task, you will be provided with an INSTRUCTOR ANSWER to the question composed by one of the course instructors, and the STUDENT ANSWERS that were given by students in the course.\r\n" + 
+			"\r\n" + 
+			"You may also be provided with an INITIAL RUBRIC written by the course instructors. The INITIAL RUBRIC was written for the entire assignment, and may or may not apply to this particular question. Only consider the contents of the INITIAL RUBRIC if they are relevant to the QUESTION below.\r\n" + 
+			"\r\n" + 
+			"You should output your answer in STRICT JSON matching the following schema:\r\n" + 
+			"{\r\n" + 
+			"  \"criteria\": [\r\n" + 
+			"    {\"id\": \"C1\", \"description\": [brief, observable criterion], \"points\": <number>},\r\n" + 
+			"    {\"id\": \"C2\", \"description\": [brief, observable criterion], \"points\": <number>}\r\n" + 
+			"    // ...\r\n" + 
+			"  ],\r\n" + 
+			"  \"notes\": <optional brief guidance, 1-2 sentences>\r\n" + 
+			"}\r\n" + 
+			"\r\n" + 
+			"Keep your descriptions short, specific, and observable. The rubric should be synthesized based on a combination of the INITIAL RUBRIC (if present), the INSTRUCTOR ANSWER, the STUDENT ANSWERS, and your own understanding. You will be provided with the MAX POINTS for the QUESTION, and the sum of your criterion points MUST equal MAX POINTS.\r\n" + 
+			"\r\n" + 
+			"The QUESTION, MAX POINTS, INSTRUCTOR ANSWER, STUDENT ANSWERS, and INITIAL RUBRIC are below.\r\n" + 
+			"\r\n" + 
+			"QUESTION: [QUESTION_TEXT]\r\n" + 
+			"\r\n" + 
+			"MAX POINTS: [MAX_POINTS]\r\n" + 
+			"\r\n" + 
+			"INSTRUCTOR ANSWER: [INSTRUCTOR_ANSWER]\r\n" + 
+			"\r\n" + 
+			"STUDENT ANSWERS: [STUDENT_ANSWERS]\r\n" + 
+			"\r\n" + 
+			"INITIAL RUBRIC: [INITIAL_RUBRIC]\r\n" + 
+			"\r\n" + 
+			"Your RUBRIC in JSON:";
+	final private static String EC_RUBRIC_CREATION_PROMPT = "You are an expert TA for an undergraduate Computer Science course tasked with constructing a structured grading rubric for the extra-credit free-response QUESTION below. To assist with this task, you will be provided with the STUDENT ANSWERS that were given by students in response to this question. Since this is an open-ended question for extra credit, students should be scored relative to their classmates. Thus, you should analyze the different STUDENT ANSWERS to determine what the most insightful and high-effort answers are. You should engineer your rubric such that the best answers receive full credit, while the rest of the answers receive partial credit on a relative scale.\r\n" + 
+			"\r\n" + 
+			"You may also be provided with an INITIAL RUBRIC written by the course instructors. The INITIAL RUBRIC was written for the entire assignment, and may or may not apply to this particular question. Only consider the contents of the INITIAL RUBRIC if they are relevant to the QUESTION below. \r\n" + 
+			"\r\n" + 
+			"You should output your answer in STRICT JSON matching the following schema:\r\n" + 
+			"{\r\n" + 
+			"  \"criteria\": [\r\n" + 
+			"    {\"id\": \"C1\", \"description\": [brief, observable criterion], \"points\": <number>},\r\n" + 
+			"    {\"id\": \"C2\", \"description\": [brief, observable criterion], \"points\": <number>}\r\n" + 
+			"    // ...\r\n" + 
+			"  ],\r\n" + 
+			"  \"notes\": <optional brief guidance, 1-2 sentences>\r\n" + 
+			"}\r\n" + 
+			"\r\n" + 
+			"Keep your descriptions short, specific, and observable. The rubric should be synthesized based on a combination of the INITIAL RUBRIC (if present), the STUDENT ANSWERS, and your own understanding. You will be provided with the MAX POINTS for the QUESTION, and the sum of your criterion points MUST equal MAX POINTS.\r\n" + 
+			"\r\n" + 
+			"The QUESTION, MAX POINTS, STUDENT ANSWERS, and INITIAL RUBRIC are below.\r\n" + 
+			"\r\n" + 
+			"QUESTION: [QUESTION_TEXT]\r\n" + 
+			"\r\n" + 
+			"MAX POINTS: [MAX_POINTS]\r\n" + 
+			"\r\n" + 
+			"STUDENT ANSWERS: [STUDENT_ANSWERS]\r\n" + 
+			"\r\n" + 
+			"INITIAL RUBRIC: [INITIAL_RUBRIC] \r\n" + 
+			"\r\n" + 
+			"Your RUBRIC in JSON:";
+	final private static String QUESTION_GRADING_PROMPT = "You are an expert TA for an undergraduate Computer Science course tasked with grading the STUDENT ANSWER to the given free-response QUESTION using the attached RUBRIC. Your grade should consist of a numeric score between 0 and MAX POINTS as well as a short piece of written feedback. You are grading with a structured rubric, and must consider all of the criteria given in the rubric. Pay attention to the question-specific notes in the rubric.\r\n" + 
+			"\r\n" + 
+			"You should output your answer in STRICT JSON matching the following schema:\r\n" + 
+			"{\r\n" + 
+			"     \"score\": <float>, \r\n" + 
+			"     \"feedback\": \"1-2 lines\"\r\n" + 
+			"}\r\n" + 
+			"\r\n" + 
+			"Note that 'score' MUST be between 0 and MAX POINTS. 'feedback' should reference the criterion IDs provided in the RUBRIC (e.g. C1, C2). You may award half credit for criteria that are partially fulfilled in the STUDENT ANSWER.\r\n" + 
+			"\r\n" + 
+			"The QUESTION, MAX POINTS, RUBRIC, and STUDENT ANSWER are below.\r\n" + 
+			"\r\n" + 
+			"QUESTION: [QUESTION_TEXT]\r\n" + 
+			"\r\n" + 
+			"MAX POINTS: [MAX_POINTS]\r\n" + 
+			"\r\n" + 
+			"RUBRIC: [RUBRIC_TEXT]\r\n" + 
+			"\r\n" + 
+			"STUDENT ANSWER: [STUDENT_ANSWER]\r\n" + 
+			"\r\n" + 
+			"Your GRADE in JSON:";
+//	final private static String EC_QUESTION_GRADING_PROMPT = ""; // TODO
 	
 	protected AGPTClass gpt; // TODO: support for other LLMs
+	protected AGoogleFormQuizParser quizParser;
 	
 	public AQuizGradingProgram(String name, String description) {
 		super(name, description);
@@ -56,7 +137,46 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		String apiKey = System.getenv("OPENAI_API_KEY");
 		String defaultModel = System.getenv("DEFAULT_GPT_MODEL");			
 		this.gpt = new AGPTClass(apiKey, defaultModel);
+		this.quizParser = new AGoogleFormQuizParser();
 	}
+	
+	// add links to the rubric creation prompts and question grading prompt in the data store
+	public void setUp(DataStoreDiscussionForum dataStoreForum) {
+		
+		DiscussionForum forum = dataStoreForum.getForum();
+		List<String> promptPostTags = new ArrayList<String>();
+		promptPostTags.add("automated");
+		promptPostTags.add("agent_data");
+		
+		// add default rubric creation prompt to data store
+		if (dataStoreForum.isRegistered("quizRubricCreationPromptID")) {
+			String quizRubricCreationPromptID = (String) dataStoreForum.getDataValue("quizRubricCreationPromptID");
+			forum.updatePost(quizRubricCreationPromptID, "Quiz Rubric Creation Prompt", RUBRIC_CREATION_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+		} else {
+			String quizRubricCreationPromptID = forum.createPost("Quiz Rubric Creation Prompt", RUBRIC_CREATION_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+			dataStoreForum.registerData("quizRubricCreationPromptID", String.class, quizRubricCreationPromptID);
+		}
+		
+		// add extra credit rubric creation prompt to data store
+		if (dataStoreForum.isRegistered("quizECRubricCreationPromptID")) {
+			String quizECRubricCreationPromptID = (String) dataStoreForum.getDataValue("quizECRubricCreationPromptID");
+			forum.updatePost(quizECRubricCreationPromptID, "Quiz EC Rubric Creation Prompt", EC_RUBRIC_CREATION_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+		} else {
+			String quizECRubricCreationPromptID = forum.createPost("Quiz EC Rubric Creation Prompt", EC_RUBRIC_CREATION_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+			dataStoreForum.registerData("quizECRubricCreationPromptID", String.class, quizECRubricCreationPromptID);
+		}
+		
+		// add question grading prompt to data store
+		if (dataStoreForum.isRegistered("quizQuestionGradingPromptID")) {
+			String quizQuestionGradingPromptID = (String) dataStoreForum.getDataValue("quizQuestionGradingPromptID");
+			forum.updatePost(quizQuestionGradingPromptID, "Quiz Question Grading Prompt", QUESTION_GRADING_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+		} else {
+			String quizQuestionGradingPromptID = forum.createPost("Quiz Question Grading Prompt", QUESTION_GRADING_PROMPT, PostType.NOTE, PostVisibility.PRIVATE, promptPostTags, EditorType.PLAIN_TEXT);
+			dataStoreForum.registerData("quizQuestionGradingPromptID", String.class, quizQuestionGradingPromptID);
+		}
+		
+	}
+	
 	
 	
 	// TODO: delete
@@ -82,7 +202,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 //		String fileSystemRubricID = fetchRubric(forum, "Discovery1");
 //		System.out.println(forum.getPost(fileSystemRubricID).getBody());
 		
-		this.parseCSV("test_files\\File-Systems.csv");
+//		this.parseCSV("test_files\\File-Systems.csv");
+		
+//		this.createEnhancedRubric( dataStoreForum, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv");
 		
 	}
 	
@@ -159,7 +281,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	/* STEP 1 (automated): create an LLM-enhanced version of our rubric */
-	public String createEnhancedRubric(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String responsesFilepath, String solutionsFilepath) {
+	public String createEnhancedRubric(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String responsesFilepath, String solutionsFilepath, boolean parseIDFromEmail) {
 		
 		// determine if an initial human-created rubric exists
 		DiscussionForum forum = dataStoreForum.getForum();
@@ -172,23 +294,107 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			rubricID = forum.createPost(quizIdentifier + " Quiz Rubric", "No initial rubric specified.", PostType.NOTE, PostVisibility.PRIVATE, rubricTags, EditorType.MARKDOWN);
 		}
 		
-		// enhance the rubric using an LLM
+		// fetch the rubric creation prompt templates and initial rubric
+		String rubricCreationPromptID = (String) dataStoreForum.getDataValue("quizRubricCreationPromptID");
+		String rubricCreationPrompt = forum.getPost(rubricCreationPromptID).getBody();
+		String ecRubricCreationPromptID = (String) dataStoreForum.getDataValue("quizECRubricCreationPromptID");
+		String ecRubricCreationPrompt = forum.getPost(ecRubricCreationPromptID).getBody();
 		String initialRubric = forum.getPost(rubricID).getBody();
-		String enhancedRubric = initialRubric + " ENHANCED!!"; // TODO: temp line for testing
+
+		// fetch the instructor response
+		JSONObject instructorSolutions = new JSONObject();
+		try {
+			instructorSolutions = quizParser.readInstructorSolutions(solutionsFilepath); // TODO: better exception handling?
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		// fetch the student responses
+		JSONObject quizSubmissions = new JSONObject();
+		try {
+			quizSubmissions = quizParser.readQuizGrades(responsesFilepath, parseIDFromEmail); // TODO: better exception handling?
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		// construct a rubric for each free-response question
+		JSONObject rubricJSON = new JSONObject();
+		int questionNumber = 1;
+		
+//		System.out.println(quizSubmissions.keySet());
+//		System.exit(0);
+//		
+		
+		for (String question : quizSubmissions.keySet()) {
+		
+			JSONObject questionData = quizSubmissions.getJSONObject(question);
+			JSONObject studentSubmissions = questionData.getJSONObject("studentSubmissions");
+			Integer maxScore = questionData.getInt("maxScore");
+			String questionType = questionData.getString("questionType");
+			boolean extraCredit = questionData.getBoolean("extraCredit");
+			
+			// if the question has not been auto-graded by Google Forms, construct a rubric for it
+			// TODO: do we ever need to have it look at other types of questions?
+			if (questionType.equals("FreeResponse")) {
 				
-			/*
-		
-			TODO
+				// create a list of student answers
+				List<String> studentAnswers = new ArrayList<String>();
+				for (String user : studentSubmissions.keySet()) {
+					String answer = studentSubmissions.getJSONObject(user).getString("answer"); // also 'feedback' and 'score'
+					studentAnswers.add(answer);
+				}
+				
+				String filledPrompt;
+				
+				// if the question is extra credit, use an alternate prompt
+				if (extraCredit) {
+
+					filledPrompt = ecRubricCreationPrompt
+							.replace("[QUESTION_TEXT]", question)
+							.replace("[MAX_POINTS]", String.valueOf(maxScore))
+							.replace("[STUDENT_ANSWERS]", studentAnswers.toString())
+							.replace("[INITIAL_RUBRIC]", initialRubric);
+					
+				}
+				
+				// otherwise, use the standard prompt
+				else {
+					
+					String questionKey = question.split(" � Explain your")[0].strip();
+					filledPrompt = rubricCreationPrompt
+							.replace("[QUESTION_TEXT]", question)
+							.replace("[MAX_POINTS]", String.valueOf(maxScore))
+							.replace("[INSTRUCTOR_ANSWER]", instructorSolutions.getString(questionKey))
+							.replace("[STUDENT_ANSWERS]", studentAnswers.toString())
+							.replace("[INITIAL_RUBRIC]", initialRubric);
+					
+				}
+				
+				// enhance the rubric using an LLM
+				String enhancedRubric = null;
+				try {
+					
+					// TODO: look into how to do the proper JSON stuff: https://platform.openai.com/docs/guides/structured-outputs?format=without-parse
+					
+					enhancedRubric = gpt.makeCallWithBackoff(filledPrompt, false);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				// add the enhanced rubric to the JSON rubric for the whole quiz
+				JSONObject questionEntry = new JSONObject(enhancedRubric);
+				questionEntry.put("question number", questionNumber);
+				questionEntry.put("max score", maxScore);
+				rubricJSON.put(question, questionEntry);
+				
+			}
 			
-				what format? JSON or free-flowing?
+			questionNumber++;
 			
-				do we need to call parseRubric() to separate out the rubric item for each question?
-					or can GPT handle doing all questions in the quiz at once?
+		}
 		
-			 */
-		
-		// save the enhanced rubric to Piazza
-		forum.updatePost(rubricID, quizIdentifier + " Quiz Rubric", enhancedRubric, PostType.NOTE, PostVisibility.PRIVATE, rubricTags, EditorType.MARKDOWN);
+		// save the enhanced rubric JSON to Piazza
+		forum.updatePost(rubricID, quizIdentifier + " Quiz Rubric", rubricJSON.toString(2), PostType.NOTE, PostVisibility.PRIVATE, rubricTags, EditorType.MARKDOWN);
 		
 		// return the ID of the created/identified rubric post
 		return rubricID;
@@ -200,22 +406,32 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	/* STEP 2 (automated): generate feedback to students' responses and post privately */
-	// TODO: parameter for spreadsheet of responses
-	public void createPrivateFeedback(DataStoreDiscussionForum dataStoreForum, String quizIdentifier) {
+	public void createPrivateFeedback(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String responsesFilepath, boolean parseIDFromEmail) {
+		
+		// fetch the student responses
+		JSONObject quizSubmissions = new JSONObject();
+		try {
+			quizSubmissions = quizParser.readQuizGrades(responsesFilepath, parseIDFromEmail);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		// fetch the enhanced rubric
 		DiscussionForum forum = dataStoreForum.getForum();
 		String rubricID = fetchRubric(forum, quizIdentifier);
-		String rubricText = forum.getPost(rubricID).getBody();
+		ForumPost rubricPost = forum.getPost(rubricID);
+		int rubricPostNumber = rubricPost.getPostNumber();
+		
+//		System.out.println(rubricPost.getBody());
+	
+		JSONObject quizRubric = new JSONObject(StringEscapeUtils.unescapeHtml4(rubricPost.getBody()));
+		
+		// fetch the rubric creation prompt templates and initial rubric
+		String quizQuestionGradingPromptID = (String) dataStoreForum.getDataValue("quizQuestionGradingPromptID");
+		String questionGradingPrompt = forum.getPost(quizQuestionGradingPromptID).getBody();
 		
 		// fetch the individual feedback posts
 		Map<String, String> individualFeedbackPostIDs = (Map<String, String>) dataStoreForum.getDataValue("individualFeedbackPosts");
-		
-		/*
-		
-		TODO: extract individual question rubrics from quiz rubric using parseRubric()
-		
-		*/
 		
 		// iterate through each student in the Piazza course
 		Map<String, String> studentIDMap = retrieveStudentIDsFromEmails(forum, "unc.edu");
@@ -224,24 +440,59 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			String individualFeedbackPostID = individualFeedbackPostIDs.get(studentID);
 			String studentUniversityID = studentIDMap.get(studentID);
 			
-			
-			
-			
-			/*
-			
-			TODO: access students' responses from the spreadsheet using their university ID
-			TODO: grade responses using LLM
-					per question? per student? how are we batching this?
-					make sure it considers all the different aspects mentioned in the gold standard solutions equally
-			
-			*/
-
-			// create instructor-only followup with feedback
-			String individualFeedback; // TODO: = formatIndividualFeedback();
-			forum.createFollowup(individualFeedbackPostID, individualFeedback, EditorType.MARKDOWN, true);
-
+			// iterate through each question in the quiz
+			for (String question : quizRubric.keySet()) {
+				
+				
+				// TODO: iterate through these in order?
+				
+				
+				// get the rubric for this specific question
+				JSONObject questionRubric = quizRubric.getJSONObject(question);
+				
+				// determine the question type
+				JSONObject questionData = quizSubmissions.getJSONObject(question);
+				String questionType = questionData.getString("questionType");
+				
+				// if the question has not been auto-graded by Google Forms, grade it using the LLM
+				// TODO: do we ever need to have it look at other types of questions?
+				if (questionType.equals("FreeResponse")) {
+					
+					// get the student's answer
+					JSONObject studentSubmissions = questionData.getJSONObject("studentSubmissions");
+					String answer = studentSubmissions.getJSONObject(studentUniversityID).getString("answer");
+					int questionNumber = questionRubric.getInt("question number");
+					double maxScore = questionRubric.getInt("max score");
+					
+					// add relevant info to the prompt
+					String filledPrompt = questionGradingPrompt
+							.replace("[RUBRIC_TEXT]", questionRubric.toString())
+							.replace("[STUDENT_ANSWER]", answer);
+					
+					// grade using the LLM
+					String response = null;
+					try {
+						response = gpt.makeCallWithBackoff(filledPrompt, false);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					
+					// get the score and feedback from the LLM response
+					JSONObject llmGrade = new JSONObject(response);
+					double assignedScore = llmGrade.getDouble("score");
+					String answerFeedback = llmGrade.getString("feedback");
+					
+					// create instructor-only followup with feedback
+					String individualFeedback = formatIndividualFeedback(quizIdentifier, questionNumber, answer, assignedScore, maxScore, answerFeedback, rubricPostNumber);
+					forum.createFollowup(individualFeedbackPostID, individualFeedback, EditorType.MARKDOWN, true);
+				
+					
+					// TODO: works but errors out after all are done?
+					
+					
+				}
+			}
 		}
-		
 	}
 	
 	
@@ -258,16 +509,38 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		for (String studentID : individualFeedbackPostIDs.keySet()) {
 			
 			ForumPost individualFeedbackPost = forum.getPost(individualFeedbackPostIDs.get(studentID));
+			Map<String, Object> individualFeedbackPostData = individualFeedbackPost.getAllData();
+			List<Map<String, Object>> postChildren = (List<Map<String, Object>>) individualFeedbackPostData.get("children");
 			
-			/*
-			
-			TODO: find the follows that correspond to this quiz
-				then, for each followup:
-					copy the body
-					delete it
-					create a new public followup
-			
-			*/
+			// look through all the children of the individual feedback post
+			for (Map<String, Object> c : postChildren) {
+				if (c.get("type").equals("followup")) {
+					
+					// get the text of the followup
+					String currentContent = null;
+					if (c.containsKey("history")) {
+						List<Map<String, Object>> childHistory = (List<Map<String, Object>>) c.get("history");
+						currentContent = (String) childHistory.get(childHistory.size()-1).get("content");
+					} else if (c.containsKey("subject")) {
+						currentContent = (String) c.get("subject");
+					}
+					
+					// get the ID of the followup
+					String followupID = null;
+					if (c.containsKey("cid")) {
+						followupID = (String) c.get("cid");
+					} else if (c.containsKey("id")) {
+						followupID = (String) c.get("id");
+					}
+					
+					// if the followup corresponds to this quiz, copy the body into a public followup and delete the private one
+					if (currentContent.contains("**Quiz:** " + quizIdentifier) || currentContent.contains("Quiz: " + quizIdentifier)) {
+						forum.createFollowup(individualFeedbackPost.getPostID(), currentContent, EditorType.MARKDOWN, false); // MARKDOWN?
+						forum.deletePost(followupID);
+					}
+				
+				}
+			}
 			
 		}
 		
@@ -286,7 +559,18 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	// TODO: parameter for spreadsheet of responses
 	public String exportGrades(DataStoreDiscussionForum dataStoreForum, String quizIdentifier) {
 		
-	
+		// iterate through all of the questions in the spreadsheet
+		
+		// if there is a feedback post for a question, use that
+		
+		// otherwise, use what was in the spreadsheet
+		
+		// make sure to add up for total column
+		
+		
+		
+		// TODO: also export spreadsheet in CLEANED formatting
+		
 		/*
 		
 		TODO:
@@ -329,34 +613,39 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	/* HELPER CLASSES */
 	
-    public static class QAEntry {
-        public final String answer, score, feedback;
-        public QAEntry(String a, String s, String f) { this.answer = a; this.score = s; this.feedback = f; }
-    }
-
-    public static class QuestionBlock {
-        public String questionType; // "MCQ" or "FreeResponse"
-        public final Map<String, QAEntry> studentSubmissions = new LinkedHashMap<>();
-    }
-
-    static class QCols {
-        final String key; final int ans, score, fb;
-        QCols(String key, int ans, int score, int fb) { this.key = key; this.ans = ans; this.score = score; this.fb = fb; }
-    }
+//    public static class QAEntry {
+//        public final String answer;
+//        public final String score;   // keep as string to preserve "--" or partials
+//        public final String feedback;
+//        public QAEntry(String a, String s, String f) {
+//            this.answer = a; this.score = s; this.feedback = f;
+//        }
+//    }
+//
+//    public static class QuestionBlock {
+//        public String questionType; // "MCQ" or "FreeResponse"
+//        public Double maxScore;     // lifted to question level
+//        public final Map<String, QAEntry> studentSubmissions = new LinkedHashMap<>();
+//    }
+//
+//    static class QCols {
+//        final String key; final int ans, score, fb;
+//        QCols(String key, int ans, int score, int fb) { this.key = key; this.ans = ans; this.score = score; this.fb = fb; }
+//    }
+//    
+//    private static class ParsedScore {
+//        final String leftScore; // as shown to the grader (e.g., "--" or "3")
+//        final Double maxScore;  // numeric, lifted to question level
+//        ParsedScore(String leftScore, Double maxScore) {
+//            this.leftScore = leftScore;
+//            this.maxScore = maxScore;
+//        }
+//    }
     
     
     
     /* HELPER METHODS */
     
-    private static String safe(String[] row, int idx) {
-        return (idx >= 0 && idx < row.length) ? row[idx] : "";
-    }
-
-    // Light normalization so minor spacing/case differences don’t fake uniqueness
-    private static String normalize(String s) {
-        return s.replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT);
-    }
-	
 	// find the rubric for a given quiz and return the post ID
 	protected String fetchRubric(DiscussionForum forum, String quizIdentifier) {
 		
@@ -371,20 +660,6 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			}
 			
 		}
-		
-		return null;
-		
-	}
-	
-	// given the rubric text for a quiz, extract the rubric item for each question
-	protected List<String> parseRubric(String rubricText) {
-		
-		/*
-		
-		TODO: split on some sort of token pattern
-			need to make sure GPT adheres to this after enhancement
-		
-		*/
 		
 		return null;
 		
@@ -467,81 +742,6 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	// ---------------------------------------------------
-	
-	
-	
-	public void newCSVtest(String path) throws Exception {
-
-        // Load all rows
-        List<String[]> rows;
-        CSVReader reader = new CSVReader(new FileReader(path));
-        rows = reader.readAll();
-        if (rows.isEmpty()) return;
-
-        String[] header = rows.get(0);
-        int nCols = header.length;
-
-        // Locate Anonymous ID column
-        int anonIdx = -1;
-        for (int i = 0; i < nCols; i++) if ("Anonymous ID".equals(header[i])) { anonIdx = i; break; }
-        if (anonIdx == -1) throw new IllegalStateException("No 'Anonymous ID' column.");
-
-        // Discover question triplets
-        List<QCols> questions = new ArrayList<>();
-        String lastBaseQ = null;
-        for (int i = 0; i + 2 < nCols; i++) {
-            String q = header[i], s = header[i+1], f = header[i+2];
-            if (s.equals(q + " [Score]") && f.equals(q + " [Feedback]")) {
-                String baseKey = q;
-                if (q.startsWith("Explain your reason")) {
-                    if (lastBaseQ != null) baseKey = lastBaseQ + " — " + q;
-                } else {
-                    lastBaseQ = q;
-                }
-                questions.add(new QCols(baseKey, i, i+1, i+2));
-                i += 2;
-            }
-        }
-
-        // Build: Question -> QuestionBlock (with submissions)
-        Map<String, QuestionBlock> byQuestion = new LinkedHashMap<>();
-        // Also collect answers per question for type inference
-        Map<String, List<String>> answersPerQuestion = new HashMap<>();
-
-        for (int r = 1; r < rows.size(); r++) {
-            String[] row = rows.get(r);
-            if (row.length == 0) continue;
-            String anon = safe(row, anonIdx).trim();
-
-            for (QCols qc : questions) {
-                String ans = safe(row, qc.ans).trim();
-                String score = safe(row, qc.score).trim();
-                String fb = safe(row, qc.fb).trim();
-
-                QuestionBlock qb = byQuestion.computeIfAbsent(qc.key, k -> new QuestionBlock());
-                qb.studentSubmissions.put(anon, new QAEntry(ans, score, fb));
-
-                if (!ans.isEmpty()) {
-                    answersPerQuestion.computeIfAbsent(qc.key, k -> new ArrayList<>()).add(normalize(ans));
-                }
-            }
-        }
-
-        // Infer questionType
-        for (Map.Entry<String, QuestionBlock> e : byQuestion.entrySet()) {
-            List<String> answers = answersPerQuestion.getOrDefault(e.getKey(), Collections.emptyList());
-            int total = answers.size();
-            int unique = new HashSet<>(answers).size();
-            e.getValue().questionType = (total > 0 && unique == total) ? "FreeResponse" : "MCQ";
-        }
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(byQuestion);
-        // write to file
-//        Files.write(Path.of("file_systems_quiz_output.json"), json.getBytes(StandardCharsets.UTF_8));
-	    System.out.println(json);
-        
-	}
 	
 	
 	// TODO: clean this up

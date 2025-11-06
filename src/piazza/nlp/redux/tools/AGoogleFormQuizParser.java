@@ -1,19 +1,32 @@
-package piazza.nlp.redux.tools.programs;
+package piazza.nlp.redux.tools;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180Parser;
+import com.opencsv.exceptions.CsvValidationException;
 
-import java.io.FileReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
+//TODO: interface?
 
-public class intakeCSV {
-
+public class AGoogleFormQuizParser {
+	
+	/* HELPER CLASSES */
+	
     public static class QAEntry {
         public final String answer;
         public final String score;   // keep as string to preserve "--" or partials
@@ -26,46 +39,54 @@ public class intakeCSV {
     public static class QuestionBlock {
         public String questionType; // "MCQ" or "FreeResponse"
         public Double maxScore;     // lifted to question level
+        public boolean extraCredit;
         public final Map<String, QAEntry> studentSubmissions = new LinkedHashMap<>();
     }
 
-    static class QCols {
-        final String key; final int ans, score, fb;
-        QCols(String key, int ans, int score, int fb) { this.key = key; this.ans = ans; this.score = score; this.fb = fb; }
-    }
-
-    public static void main(String[] args) throws Exception {
-        String path = "src/resources/File-Systems (Anonymized).csv";
-
-        // Load all rows
-        List<String[]> rows = new ArrayList<>();
-        try (FileReader reader = new FileReader(path)) {
-            RFC4180Parser rfc4180Parser = new RFC4180Parser();
+    
+    
+    public JSONObject readQuizGrades(String path, boolean parseIDFromEmail) throws Exception {
+		
+        // load all rows
+        List<String[]> rows = new ArrayList<String[]>();
+        try (FileReader reader = new FileReader(path)) { // Use try-with-resources for safety
+        	RFC4180Parser rfc4180Parser = new RFC4180Parser();
             CSVReader csvReader = new CSVReaderBuilder(reader)
-                    .withCSVParser(rfc4180Parser)
+                    .withCSVParser(rfc4180Parser) // Attach the powerful parser
                     .build();
             rows = csvReader.readAll();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (rows.isEmpty()) return;
+        if (rows.isEmpty()) return new JSONObject();
 
         String[] header = rows.get(0);
         int nCols = header.length;
 
-        // Locate Anonymous ID column
-        int anonIdx = -1;
-        for (int i = 0; i < nCols; i++) if ("Anonymous ID".equals(header[i])) { anonIdx = i; break; }
-        if (anonIdx == -1) throw new IllegalStateException("No 'Anonymous ID' column.");
+        // if parseIDFromEmail, use email column as identifier (and later extract onyen), otherwise use onyen column as identifier
+        int idIdx = -1;
+    	for (int i = 0; i < nCols; i++) {
+        	if ((!parseIDFromEmail && header[i].toLowerCase().equals("onyen")) || (parseIDFromEmail && header[i].toLowerCase().equals("username"))) {
+        		idIdx = i;
+        		break;
+        	}
+    	}
+        if (idIdx == -1) throw new IllegalStateException("No ID column found.");     
 
         // Discover question triplets
         List<QCols> questions = new ArrayList<>();
         String lastBaseQ = null;
         for (int i = 0; i + 2 < nCols; i++) {
             String q = header[i], s = header[i+1], f = header[i+2];
+        
+            // skip the non-graded questions
+            if (q.toLowerCase().equals("onyen") || q.toLowerCase().equals("anonymous id"))
+            	continue;
+            
+            // parse the graded questions
             if (s.equals(q + " [Score]") && f.equals(q + " [Feedback]")) {
                 String baseKey = q;
-                if (q.startsWith("Explain your")) {
+                if (q.startsWith("Explain your") || q.startsWith("Justify your")) {
                     if (lastBaseQ != null) baseKey = lastBaseQ + " — " + q;
                 } else {
                     lastBaseQ = q;
@@ -73,6 +94,7 @@ public class intakeCSV {
                 questions.add(new QCols(baseKey, i, i+1, i+2));
                 i += 2;
             }
+        
         }
 
         // Build: Question -> QuestionBlock (with submissions)
@@ -83,7 +105,12 @@ public class intakeCSV {
         for (int r = 1; r < rows.size(); r++) {
             String[] row = rows.get(r);
             if (row.length == 0) continue;
-            String anon = safe(row, anonIdx).trim();
+            
+            String user;
+            if (parseIDFromEmail)
+            	user = safe(row, idIdx).split("@")[0].trim();
+        	else
+        		user = safe(row, idIdx).trim();
 
             for (QCols qc : questions) {
                 String ans = safe(row, qc.ans).trim();
@@ -111,7 +138,7 @@ public class intakeCSV {
                 }
 
                 // Store student's visible score (left side), preserving "--" if ungraded
-                qb.studentSubmissions.put(anon, new QAEntry(ans, ps.leftScore, fb));
+                qb.studentSubmissions.put(user, new QAEntry(ans, ps.leftScore, fb));
 
                 if (!ans.isEmpty()) {
                     answersPerQuestion.computeIfAbsent(qc.key, k -> new ArrayList<>()).add(normalize(ans));
@@ -129,9 +156,63 @@ public class intakeCSV {
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(byQuestion);
-        Files.write(Path.of("file_systems_quiz_output.json"), json.getBytes(StandardCharsets.UTF_8));
-    }
+        return new JSONObject(json);
+ 
+	}
+    
+    
+    
+    public JSONObject readInstructorSolutions(String path) throws Exception {
+    	
+    	// This is the main JSON object that will hold all key-value pairs
+        JSONObject questionsAndSolutions = new JSONObject();
 
+        // 1. Instantiate the RFC4180Parser as requested
+        RFC4180Parser rfc4180Parser = new RFC4180Parser();
+
+        // 2. Use try-with-resources to automatically close the readers
+        try (
+            FileReader fileReader = new FileReader(path);
+            
+            // 3. Build the CSVReader using CSVReaderBuilder to inject the RFC4180Parser
+            CSVReader csvReader = new CSVReaderBuilder(fileReader)
+                                    .withCSVParser(rfc4180Parser)
+                                    .build()
+        ) {
+            
+            // 4. Skip the header row ("Question", "Solution")
+            csvReader.readNext();
+
+            // 5. Read all remaining lines one by one
+            String[] nextLine;
+            while ((nextLine = csvReader.readNext()) != null) {
+                
+                // Ensure the line has at least two columns
+                if (nextLine.length >= 2) {
+                    String question = nextLine[0];
+                    String solution = nextLine[1];
+                    
+                    // 6. Add the question and solution to the JSONObject
+                    questionsAndSolutions.put(question, solution);
+                }
+            }
+        }
+
+        return questionsAndSolutions;
+    	
+    }
+    
+    
+    
+    
+    
+    /* HELPER METHODS */
+    
+    static class QCols {
+        final String key; final int ans, score, fb;
+        QCols(String key, int ans, int score, int fb) { this.key = key; this.ans = ans; this.score = score; this.fb = fb; }
+    }
+	
     private static String safe(String[] row, int idx) {
         return (idx >= 0 && idx < row.length) ? row[idx] : "";
     }
@@ -143,7 +224,7 @@ public class intakeCSV {
 
     // ---------- score parsing helpers ----------
 
-    public static class ParsedScore {
+    private static class ParsedScore {
         final String leftScore; // as shown to the grader (e.g., "--" or "3")
         final Double maxScore;  // numeric, lifted to question level
         ParsedScore(String leftScore, Double maxScore) {
@@ -182,4 +263,6 @@ public class intakeCSV {
             return null;
         }
     }
+	
+
 }

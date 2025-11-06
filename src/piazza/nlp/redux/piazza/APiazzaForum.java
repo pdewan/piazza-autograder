@@ -506,6 +506,19 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 		// TODO: need to test
 		
 	}
+	
+	// deletes post/followup/answer with the given ID, returns whether the post was successfully deleted 
+	public boolean deletePost(String postID) {
+		
+		JSONObject data = new JSONObject()
+				.put("network_id", this.classID)
+				.put("cid", postID);
+		
+		String resp = (String) makeCallWithBackoff("content.delete", data);	
+				
+		return resp.equals("OK");
+	
+	}
 
 
 
@@ -691,7 +704,8 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 				String errorMessage = (String) resp.get("error");
 				
 				// if error is not caused by rate limit, raise an exception and don't try again
-				if (!errorMessage.equals("Sorry, too fast -- please wait a second and try again.")) { // TODO:
+				if (!(errorMessage.equals("Sorry, too fast -- please wait a second and try again.")
+						|| errorMessage.equals("Sorry! It looks like you are posting too quickly -- please wait a few seconds and try again."))) {
 					errorString = "Error in response for call to " + method + " with parameters " + params.toString() + ". Error message: " + errorMessage;
 					throw new InvalidCallException(errorString);
 				}

@@ -154,7 +154,7 @@ public class MediatedLLMAgent extends AnAbstractForumAgent implements ForumAgent
 
 		String gptResponse = null;
 		try {
-			gptResponse = gpt.makeCallWithBackoff(filledPrompt);
+			gptResponse = gpt.makeCallWithBackoff(filledPrompt, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

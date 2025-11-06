@@ -22,7 +22,7 @@ public class AGPTClass {
 	}
 	
 	// https://platform.openai.com/docs/api-reference/chat/create
-	public String makeCall(String prompt, String model, String endpoint) throws IOException {
+	public String makeCall(String prompt, String model, String endpoint, boolean jsonOutput) throws IOException {
 
 //		return "GPT calls currently disabled, this would be the response";
 		
@@ -47,6 +47,9 @@ public class AGPTClass {
         test3.put("content", prompt);
         test2.put(test3);
         test.put("messages", test2);
+        
+        if (jsonOutput)
+        	test.put("type", "json_object");
         
         String body = test.toString();
 //        System.out.println(body);
@@ -79,8 +82,8 @@ public class AGPTClass {
 		
 	}
 	
-	public String makeCall(String prompt) throws IOException {
-		return makeCall(prompt, this.defaultModel, "https://api.openai.com/v1/chat/completions");
+	public String makeCall(String prompt, boolean jsonOutput) throws IOException {
+		return makeCall(prompt, this.defaultModel, "https://api.openai.com/v1/chat/completions", jsonOutput);
 	}
 	
 	public static String extractMessageFromJSONResponse(String response) {
@@ -90,13 +93,13 @@ public class AGPTClass {
 		return messageObj.getString("content");
    }
 
-	public String makeCallWithBackoff(String prompt) throws IOException {
+	public String makeCallWithBackoff(String prompt, boolean jsonOutput) throws IOException {
 
 		int waitTime = 5;
 		
 		while (waitTime < 100) {
 			try {
-				String result = makeCall(prompt);
+				String result = makeCall(prompt, jsonOutput);
 				return result;
 			}
 			catch(IOException e) {

@@ -31,7 +31,7 @@ public class GPTTester {
 		String testPrompt = "You are a Teaching Assistant for an upper-level Computer Science course. Please explain the possible sources of this error: I will come by at 5pm to ask questions about nothing";
 		//		"<p>I will come by at 5pm to ask questions about� nothing</p>";
 				
-		System.out.println(gptTest.makeCall(testPrompt));
+		System.out.println(gptTest.makeCall(testPrompt, false));
 		
 		configReader.close();
 	}
