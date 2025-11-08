@@ -87,7 +87,7 @@ public class AGoogleFormQuizParser {
             if (s.equals(q + " [Score]") && f.equals(q + " [Feedback]")) {
                 String baseKey = q;
                 if (q.startsWith("Explain your") || q.startsWith("Justify your")) {
-                    if (lastBaseQ != null) baseKey = lastBaseQ + " — " + q;
+                    if (lastBaseQ != null) baseKey = lastBaseQ + " -- " + q;
                 } else {
                     lastBaseQ = q;
                 }
@@ -217,7 +217,7 @@ public class AGoogleFormQuizParser {
         return (idx >= 0 && idx < row.length) ? row[idx] : "";
     }
 
-    // Light normalization so minor spacing/case differences don’t fake uniqueness
+    // Light normalization so minor spacing/case differences donï¿½t fake uniqueness
     private static String normalize(String s) {
         return s.replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT);
     }

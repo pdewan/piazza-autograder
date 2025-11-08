@@ -360,7 +360,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				// otherwise, use the standard prompt
 				else {
 					
-					String questionKey = question.split(" — Explain your")[0].strip();
+					String questionKey = question.split(" -- Explain your")[0].strip();
 					filledPrompt = rubricCreationPrompt
 							.replace("[QUESTION_TEXT]", question)
 							.replace("[MAX_POINTS]", String.valueOf(maxScore))
@@ -483,7 +483,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 					String answerFeedback = llmGrade.getString("feedback");
 					
 					// create instructor-only followup with feedback
-					String individualFeedback = formatIndividualFeedback(quizIdentifier, questionNumber, answer, assignedScore, maxScore, answerFeedback, rubricPostNumber);
+					String individualFeedback = formatIndividualFeedback(quizIdentifier, questionNumber, question, answer, assignedScore, maxScore, answerFeedback, rubricPostNumber);
 					forum.createFollowup(individualFeedbackPostID, individualFeedback, EditorType.MARKDOWN, true);
 				
 					
@@ -686,7 +686,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	}
 	
 	// format feedback for a student into text for a followup
-	protected String formatIndividualFeedback(String quizID, int questionID, String studentAnswer, double assignedScore, double maxScore, String answerFeedback, int rubricPostNumber) {
+	protected String formatIndividualFeedback(String quizID, int questionID, String questionText, String studentAnswer, double assignedScore, double maxScore, String answerFeedback, int rubricPostNumber) {
 				
 		/*
 	
@@ -696,7 +696,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		
 		String followupText =
 			"Quiz: " + quizID + "\n"
-			+ "Question: " + questionID + "\n"
+			+ "Question Number: " + questionID + "\n"
+			+ "Question Text: " + questionText + "\n"
 			+ "Your Answer: " + studentAnswer + "\n"
 			+ "AI Score: " + assignedScore + "/" + maxScore + "\n"
 			+ "AI Feedback: " + answerFeedback + "\n---\n"
@@ -724,7 +725,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
             	
             	if (key.equals("AI Score") || key.equals("Instructor Score"))
             		items.put(key, Double.valueOf(value.split("/")[0]));
-            	else if (key.equals("Question"))
+            	else if (key.equals("Question Number"))
             		items.put(key, Integer.valueOf(value));            		
             	else
             		items.put(key, value);
