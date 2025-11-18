@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -56,14 +57,18 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			"You should output your answer in STRICT JSON matching the following schema:\r\n" + 
 			"{\r\n" + 
 			"  \"criteria\": [\r\n" + 
-			"    {\"id\": \"C1\", \"description\": [brief, observable criterion], \"points\": <number>},\r\n" + 
-			"    {\"id\": \"C2\", \"description\": [brief, observable criterion], \"points\": <number>}\r\n" + 
+			"    {\"id\": \"C1\", \"description\": <holistic description of the core concept required >, \"points\": <number>},\r\n" + 
+			"    {\"id\": \"C2\", \"description\": <holistic description of the core concept required >, \"points\": <number>}\r\n" + 
 			"    // ...\r\n" + 
 			"  ],\r\n" + 
 			"  \"notes\": <optional brief guidance, 1-2 sentences>\r\n" + 
 			"}\r\n" + 
 			"\r\n" + 
-			"Keep your descriptions short, specific, and observable. The rubric should be synthesized based on a combination of the INITIAL RUBRIC (if present), the INSTRUCTOR ANSWER, the STUDENT ANSWERS, and your own understanding. You will be provided with the MAX POINTS for the QUESTION, and the sum of your criterion points MUST equal MAX POINTS.\r\n" + 
+			"Your criteria should be holistic and focus on the core concepts of the QUESTION. As long as the student demonstrates a fundamental understanding of the main idea (as shown in the INSTRUCTOR ANSWER), they should receive full points.\r\n" + 
+			"\r\n" + 
+			"Avoid creating criteria that deduct points for minor omissions or slightly incorrect terminology, as long as the core concept is correct. Aim to use fewer criteria (ideally one, two, or three) that capture the main goal of the question. For example, a single criterion like \"Demonstrates understanding of [Core Concept]\" for all the points may be sufficient for simpler questions that are designed to test students' understanding of a single idea.\r\n" + 
+			"\r\n" + 
+			"The rubric should be synthesized based on the core idea of the INSTRUCTOR ANSWER. You will be provided with the MAX POINTS for the QUESTION, and the sum of your criterion points MUST equal MAX POINTS.\r\n" + 
 			"\r\n" + 
 			"The QUESTION, MAX POINTS, INSTRUCTOR ANSWER, STUDENT ANSWERS, and INITIAL RUBRIC are below.\r\n" + 
 			"\r\n" + 
@@ -106,6 +111,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			"\r\n" + 
 			"Your RUBRIC in JSON:";
 	final private static String QUESTION_GRADING_PROMPT = "You are an expert TA for an undergraduate Computer Science course tasked with grading the STUDENT ANSWER to the given free-response QUESTION using the attached RUBRIC. Your grade should consist of a numeric score between 0 and MAX POINTS as well as a short piece of written feedback. You are grading with a structured rubric, and must consider all of the criteria given in the rubric. Pay attention to the question-specific notes in the rubric.\r\n" + 
+			"\r\n" + 
+			"IMPORTANT GRADING PHILOSOPHY: Your primary goal is to assess if the STUDENT ANSWER demonstrates a holistic understanding of the core concept from the QUESTION. The RUBRIC criteria are a guide, but you should be lax and grade generously if the student's answer is conceptually correct, even if it doesn't perfectly match every specific detail in the rubric or uses different phrasing. Prioritize the student's main idea over minor omissions.\r\n" + 
 			"\r\n" + 
 			"You should output your answer in STRICT JSON matching the following schema:\r\n" + 
 			"{\r\n" + 
@@ -205,6 +212,18 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 //		this.parseCSV("test_files\\File-Systems.csv");
 		
 //		this.createEnhancedRubric( dataStoreForum, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv");
+		
+		
+		// "HW3 Caching", "grades\\hw3\\quizzes\\Caching.csv", "grades\\hw3\\solutions\\Caching Quiz Solutions.csv"
+		JSONObject quizSubmissions = new JSONObject();
+		try {
+			quizSubmissions = quizParser.readQuizGrades("grades\\hw3\\quizzes\\Caching.csv", false);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		System.out.println(quizSubmissions);
+		
 		
 	}
 	
@@ -317,9 +336,10 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			e.printStackTrace();
 		}
 		
-		// construct a rubric for each free-response question
+		// construct a rubric for each question in the instructor solution list
 		JSONObject rubricJSON = new JSONObject();
-		int questionNumber = 1;
+		
+		int questionNumber = 1; // TODO: this number is meaningless because keySet does not keep the original order.
 		
 //		System.out.println(quizSubmissions.keySet());
 //		System.exit(0);
@@ -333,9 +353,13 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			String questionType = questionData.getString("questionType");
 			boolean extraCredit = questionData.getBoolean("extraCredit");
 			
+			// if the question is listed in the instructor solutions, construct a rubric for it
+			String questionKey = question.split(" -- Explain your")[0].strip();
+			if (instructorSolutions.has(questionKey)) {
+			
 			// if the question has not been auto-graded by Google Forms, construct a rubric for it
 			// TODO: do we ever need to have it look at other types of questions?
-			if (questionType.equals("FreeResponse")) {
+//			if (questionType.equals("FreeResponse")) {
 				
 				// create a list of student answers
 				List<String> studentAnswers = new ArrayList<String>();
@@ -360,7 +384,13 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				// otherwise, use the standard prompt
 				else {
 					
-					String questionKey = question.split(" -- Explain your")[0].strip();
+					//String questionKey = question.split(" -- Explain your")[0].strip();
+					
+//					System.out.println();
+//					System.out.println("questionKey: " + questionKey);
+//					System.out.println("instructorSolutions keys: " + instructorSolutions.keySet());
+//					System.out.println();
+					
 					filledPrompt = rubricCreationPrompt
 							.replace("[QUESTION_TEXT]", question)
 							.replace("[MAX_POINTS]", String.valueOf(maxScore))
@@ -394,7 +424,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		}
 		
 		// save the enhanced rubric JSON to Piazza
-		forum.updatePost(rubricID, quizIdentifier + " Quiz Rubric", rubricJSON.toString(2), PostType.NOTE, PostVisibility.PRIVATE, rubricTags, EditorType.MARKDOWN);
+		// TODO: figure out a way to actually pretty-print this? the Piazza API flattens it out so there's no indentation.
+			// potentially wrap each indented line with <p style="padding-left: 40px;"></p> in plain text mode
+		forum.updatePost(rubricID, quizIdentifier + " Quiz Rubric", rubricJSON.toString(4), PostType.NOTE, PostVisibility.PRIVATE, rubricTags, EditorType.PLAIN_TEXT);
 		
 		// return the ID of the created/identified rubric post
 		return rubricID;
@@ -437,6 +469,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		Map<String, String> studentIDMap = retrieveStudentIDsFromEmails(forum, "unc.edu");
 		for (String studentID : studentIDMap.keySet()) {
 			
+//			System.out.println("STUDENT ID: " + studentID);
+			
 			String individualFeedbackPostID = individualFeedbackPostIDs.get(studentID);
 			String studentUniversityID = studentIDMap.get(studentID);
 			
@@ -445,7 +479,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				
 				
 				// TODO: iterate through these in order?
-				
+//				System.out.println("quizSubmissions: " + quizSubmissions);
+
 				
 				// get the rubric for this specific question
 				JSONObject questionRubric = quizRubric.getJSONObject(question);
@@ -454,13 +489,19 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				JSONObject questionData = quizSubmissions.getJSONObject(question);
 				String questionType = questionData.getString("questionType");
 				
+				// if the student has no answer for this question, skip it
+				JSONObject studentSubmissions = questionData.getJSONObject("studentSubmissions");
+				if (!studentSubmissions.has(studentUniversityID))
+					continue;
+				
+				// otherwise, get the student's answer
+				String answer = studentSubmissions.getJSONObject(studentUniversityID).getString("answer");
+				
 				// if the question has not been auto-graded by Google Forms, grade it using the LLM
-				// TODO: do we ever need to have it look at other types of questions?
-				if (questionType.equals("FreeResponse")) {
+//				if (questionType.equals("FreeResponse")) { // TODO: do we ever need to have it look at other types of questions?
+				if (answer.equals("--")) {
 					
-					// get the student's answer
-					JSONObject studentSubmissions = questionData.getJSONObject("studentSubmissions");
-					String answer = studentSubmissions.getJSONObject(studentUniversityID).getString("answer");
+					// get the question info
 					int questionNumber = questionRubric.getInt("question number");
 					double maxScore = questionRubric.getInt("max score");
 					
@@ -486,9 +527,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 					String individualFeedback = formatIndividualFeedback(quizIdentifier, questionNumber, question, answer, assignedScore, maxScore, answerFeedback, rubricPostNumber);
 					forum.createFollowup(individualFeedbackPostID, individualFeedback, EditorType.MARKDOWN, true);
 				
-					
-					// TODO: works but errors out after all are done?
-					
+					// TODO: seems to work but errors out after all are done sayinf "Error message: Missing content id"
 					
 				}
 			}
@@ -557,7 +596,21 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	/* STEP 4 (automated): retrieve the (potentially modified) feedback scores from Piazza, export as CSV in Canvas format */
 	/*		also exports a log of followup interactions, and deletes the feedback followups */
 	// TODO: parameter for spreadsheet of responses
-	public String exportGrades(DataStoreDiscussionForum dataStoreForum, String quizIdentifier) {
+	public String exportGrades(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, Map<Date, Double> submissionDateMultipliers) {
+		
+		// if no map of due dates and score multipliers is provided, create an empty map
+//		if (submissionDateMultipliers == null) {
+//			submissionDateMultipliers = new HashMap<Date, Double>();
+//		}
+		//date parameter, if present then will add other row to the spreadsheet, otherwise will keep the same as is
+		
+		
+		
+		
+		
+		// TODO: dead with submissionMultipliers
+		
+		
 		
 		// iterate through all of the questions in the spreadsheet
 		
@@ -605,6 +658,108 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		return null; // TODO: return path of exported file (or directory?)
 		
 	}
+	
+	/* STEP 4 (automated): retrieve the (potentially modified) feedback scores from Piazza, export as CSV in Canvas format */
+	/*		also exports a log of followup interactions, and deletes the feedback followups */
+	public String exportGradedSubmissions(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String exportDirectory, boolean parseIDFromEmail) {
+		
+		
+		
+		
+		
+		
+		
+		// fetch the feedback posts for each student
+		DiscussionForum forum = dataStoreForum.getForum();
+		Map<String, String> individualFeedbackPostIDs = (Map<String, String>) dataStoreForum.getDataValue("individualFeedbackPosts");
+
+		for (String studentID : individualFeedbackPostIDs.keySet()) {
+			
+			ForumPost individualFeedbackPost = forum.getPost(individualFeedbackPostIDs.get(studentID));
+			Map<String, Object> individualFeedbackPostData = individualFeedbackPost.getAllData();
+			List<Map<String, Object>> postChildren = (List<Map<String, Object>>) individualFeedbackPostData.get("children");
+			
+			// look through all the children of the individual feedback post
+			for (Map<String, Object> c : postChildren) {
+				if (c.get("type").equals("followup")) {
+					
+					// get the text of the followup
+					String currentContent = null;
+					if (c.containsKey("history")) {
+						List<Map<String, Object>> childHistory = (List<Map<String, Object>>) c.get("history");
+						currentContent = (String) childHistory.get(childHistory.size()-1).get("content");
+					} else if (c.containsKey("subject")) {
+						currentContent = (String) c.get("subject");
+					}
+					
+					// get the ID of the followup
+					String followupID = null;
+					if (c.containsKey("cid")) {
+						followupID = (String) c.get("cid");
+					} else if (c.containsKey("id")) {
+						followupID = (String) c.get("id");
+					}
+					
+					// if the followup corresponds to this quiz, add it to the log and delete it
+					if (currentContent.contains("**Quiz:** " + quizIdentifier) || currentContent.contains("Quiz: " + quizIdentifier)) {
+						
+						
+						// TODO: NEED TO APPEND TO THIS LOG FILE SO THAT IF IT ERRORS OUT WE DON'T LOSE ANYTHING
+						
+						// TODO: NEED TO GET REPLIES TO THOSE CHILDREN
+						
+						System.out.println(c);
+						String authorName = forum.getUser((String) c.get("uid")).getName();
+						
+						
+						/*
+						{anon=no, folders=[], data=null, no_upvotes=0, subject=Quiz: HW3 Caching
+						Question Text: 12. In the absolute name problem, explain the reasoning for giving preference to cache entries for nodes at higher-levels in the tree. Let us call this the Higher-Level policy.
+						Your Answer: The higher-level nodes have the most descendants. If we assume that all nodes are equally likely to be accessed, the nodes with the most descendants provide the most opportunities to speed up accesses by using their cached values.
+						AI Score: 5.0/5.0
+						AI Feedback: Strong explanation that higher-level nodes have more descendants, so their caches benefit many lookups; noting equal-likelihood supports the argument (C1). Well done.
+						---
+						See post @255 for the grading rubric. If you believe the AI system made a mistake or you disagree with its assigned score and feedback, please reply to this followup comment with an explanation of your case., created=2025-11-12T22:16:10Z, bucket_order=3, bucket_name=Today, type=followup, tag_good=[], uid=lljvnbpqdze3xm, children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}], tag_good_arr=[], no_answer=1, id=mhwk7io4rt456y, updated=2025-11-18T20:04:17Z, config={editor=md, ionly=true}}
+
+						 */
+						
+						// children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}]
+						
+						
+					}
+				
+				}
+			}
+		
+		
+		
+		}
+		
+		
+		return null;
+		
+	}
+	
+		
+	// STEP 4.25 (automated): given a (graded) spreadsheet of submissions, creates a spreadsheet in the Canvas gradebook import format, and a "cleaned" spreadsheet of grades for easy analysis
+	public String convertSubmissionsToGradebook(String quizIdentifier, String gradedResponsesFilepath, Map<Date, Double> submissionDateMultipliers, boolean parseIDFromEmail) {
+	
+		
+		
+		
+		
+		
+		
+		
+		
+		return null;
+		
+	}
+	
+	
+	
+	
+	
 	
 	
 	/* STEP 4.5 (manual): upload the exported scores to Canvas */
@@ -673,13 +828,15 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		for (ForumUser u : forum.getAllUsers()) {
 			List<String> emails = u.getEmails();
 			for (String e : emails) {
-				if (e.contains(universityDomain)) {
+				if (e.contains(universityDomain) && !u.getAdmin()) {
 					String studentUniversityID = e.split("@")[0];
 					studentIDMap.put(u.getID(), studentUniversityID);
 					break;					
 				}
 			}
 		}
+		
+//		System.out.print(studentIDMap);
 		
 		return studentIDMap;
 		
@@ -694,9 +851,14 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 
 		*/
 		
+		int maxAnswerLength = 4096;
+		if (studentAnswer.length() > maxAnswerLength) {
+			studentAnswer = studentAnswer.substring(0, maxAnswerLength);
+		}
+		
 		String followupText =
 			"Quiz: " + quizID + "\n"
-			+ "Question Number: " + questionID + "\n"
+//			+ "Question Number: " + questionID + "\n"
 			+ "Question Text: " + questionText + "\n"
 			+ "Your Answer: " + studentAnswer + "\n"
 			+ "AI Score: " + assignedScore + "/" + maxScore + "\n"
@@ -746,47 +908,47 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	// TODO: clean this up
-	protected void parseCSV(String filepath) {
-		
-		try (Reader reader = new FileReader(filepath);
-			@SuppressWarnings("deprecation")
-			CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
-			
-			for (CSVRecord csvRecord : csvParser) {
-				
-				System.out.println("\n\n\n\n");
-				Map<String, String> recordMap = csvRecord.toMap();
-				System.out.println(recordMap.keySet());
-//				System.out.println(recordMap.get("Username"));
-				
-				
-//				for (String v : csvRecord.toList()) {
-//					System.out.println(v);
-//				}
-				
-//				String timestamp = csvRecord.get("Timestamp");
-//				String username = csvRecord.get("Username");
-//				String totalScore = csvRecord.get("Total score");
-//				String anonymousID = csvRecord.get("Anonymous ID");
+//	protected void parseCSV(String filepath) {
+//		
+//		try (Reader reader = new FileReader(filepath);
+//			@SuppressWarnings("deprecation")
+//			CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader().withIgnoreHeaderCase().withTrim())) {
+//			
+//			for (CSVRecord csvRecord : csvParser) {
 //				
-//				// TODO: make this work for all quizzes
+//				System.out.println("\n\n\n\n");
+//				Map<String, String> recordMap = csvRecord.toMap();
+//				System.out.println(recordMap.keySet());
+////				System.out.println(recordMap.get("Username"));
 //				
-//				// test prints
-//				System.out.println("Timestamp: " + timestamp);
-//				System.out.println("Username: " + username);
-//				System.out.println("Total Score: " + totalScore);
-//				System.out.println("Anonymous ID: " + anonymousID);	
-				
-//				System.out.println("Record values: " + csvRecord.toList());
-				
-			}
-			
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-	}
+//				
+////				for (String v : csvRecord.toList()) {
+////					System.out.println(v);
+////				}
+//				
+////				String timestamp = csvRecord.get("Timestamp");
+////				String username = csvRecord.get("Username");
+////				String totalScore = csvRecord.get("Total score");
+////				String anonymousID = csvRecord.get("Anonymous ID");
+////				
+////				// TODO: make this work for all quizzes
+////				
+////				// test prints
+////				System.out.println("Timestamp: " + timestamp);
+////				System.out.println("Username: " + username);
+////				System.out.println("Total Score: " + totalScore);
+////				System.out.println("Anonymous ID: " + anonymousID);	
+//				
+////				System.out.println("Record values: " + csvRecord.toList());
+//				
+//			}
+//			
+//			
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//	}
 
 	// try to get them to mark as resolved if they think it looks good
 	

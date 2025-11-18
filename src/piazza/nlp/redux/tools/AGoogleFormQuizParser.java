@@ -3,6 +3,9 @@ package piazza.nlp.redux.tools;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 
 import org.json.JSONObject;
 
@@ -49,7 +53,7 @@ public class AGoogleFormQuizParser {
 		
         // load all rows
         List<String[]> rows = new ArrayList<String[]>();
-        try (FileReader reader = new FileReader(path)) { // Use try-with-resources for safety
+        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8)) { // Use UTF-8
         	RFC4180Parser rfc4180Parser = new RFC4180Parser();
             CSVReader csvReader = new CSVReaderBuilder(reader)
                     .withCSVParser(rfc4180Parser) // Attach the powerful parser
@@ -80,7 +84,7 @@ public class AGoogleFormQuizParser {
             String q = header[i], s = header[i+1], f = header[i+2];
         
             // skip the non-graded questions
-            if (q.toLowerCase().equals("onyen") || q.toLowerCase().equals("anonymous id"))
+            if (q.toLowerCase().equals("onyen") || q.toLowerCase().equals("anonymous id") || q.toLowerCase().contains("text file")) // TODO: is this okay?
             	continue;
             
             // parse the graded questions
@@ -118,7 +122,15 @@ public class AGoogleFormQuizParser {
                 String fb = safe(row, qc.fb).trim();
 
                 // Ensure QuestionBlock exists
-                QuestionBlock qb = byQuestion.computeIfAbsent(qc.key, k -> new QuestionBlock());
+                QuestionBlock qb = byQuestion.computeIfAbsent(qc.key, k -> {
+                    QuestionBlock newQb = new QuestionBlock();
+                    
+                    // Check if the question text (the key 'k') contains "extra credit"
+                    // We use toLowerCase(Locale.ROOT) for a case-insensitive check
+                    newQb.extraCredit = k.toLowerCase(Locale.ROOT).contains("extra credit");
+                    
+                    return newQb;
+                });
 
                 // Parse "score / maxScore"
                 ParsedScore ps = parseScore(rawScore);
@@ -138,6 +150,7 @@ public class AGoogleFormQuizParser {
                 }
 
                 // Store student's visible score (left side), preserving "--" if ungraded
+                // This handles multiple submissions by one user, since put() overwrites and the rows are in chronological order
                 qb.studentSubmissions.put(user, new QAEntry(ans, ps.leftScore, fb));
 
                 if (!ans.isEmpty()) {
@@ -172,13 +185,13 @@ public class AGoogleFormQuizParser {
 
         // 2. Use try-with-resources to automatically close the readers
         try (
-            FileReader fileReader = new FileReader(path);
-            
-            // 3. Build the CSVReader using CSVReaderBuilder to inject the RFC4180Parser
-            CSVReader csvReader = new CSVReaderBuilder(fileReader)
-                                    .withCSVParser(rfc4180Parser)
-                                    .build()
-        ) {
+	        InputStreamReader fileReader = new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8);
+	        
+	        // 3. Build the CSVReader using CSVReaderBuilder to inject the RFC4180Parser
+	        CSVReader csvReader = new CSVReaderBuilder(fileReader)
+	                                .withCSVParser(rfc4180Parser)
+	                                .build()
+            ) {
             
             // 4. Skip the header row ("Question", "Solution")
             csvReader.readNext();
@@ -189,8 +202,8 @@ public class AGoogleFormQuizParser {
                 
                 // Ensure the line has at least two columns
                 if (nextLine.length >= 2) {
-                    String question = nextLine[0];
-                    String solution = nextLine[1];
+                    String question = nextLine[0].strip();
+                    String solution = nextLine[1].strip();
                     
                     // 6. Add the question and solution to the JSONObject
                     questionsAndSolutions.put(question, solution);

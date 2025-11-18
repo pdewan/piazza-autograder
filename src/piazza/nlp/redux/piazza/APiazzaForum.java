@@ -241,15 +241,20 @@ public class APiazzaForum implements PiazzaForum { // MixedInitiativeDiscussionF
 	@Override
 	public String createFollowup(String postID, String body, EditorType editor, boolean instructorOnly) {
 	
+//		System.out.println("CID: " + postID);
+		
 		JSONObject data = new JSONObject()
 				.put("network_id", this.classID)
 				.put("cid", postID)
 				.put("subject", body)
 				.put("type", "followup")
 				.put("editor", this.convertEditorType(editor))
-				.put("content", "")
+				.put("content", "body")
+//				.put("content", "")
 				.put("anonymous", "no"); // TODO: allow other anonymyities? (not sure if possible)
 
+//		System.out.println(data.toString(4));
+		
 		if (instructorOnly) {
 			JSONObject config = new JSONObject()
 				.put("ionly", true);

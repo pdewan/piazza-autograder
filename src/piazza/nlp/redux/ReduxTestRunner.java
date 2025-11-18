@@ -22,11 +22,12 @@ public class ReduxTestRunner {
 
 	public static void main(String[] args) {		
 		
-		final int DATA_POST_NUMBER = 40;
+		final int DATA_POST_NUMBER = 40; // TODO: was 40 - 33
 		
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
 		String classID = System.getenv("PIAZZA_CLASS_ID");
+//		String classID = "mdrjw1sfh122nw"; // TODO
 
 		PiazzaForum df = new APiazzaForum("TestPiazzaCourse", classID, email, password);
 		String dataPostID = df.getPost(DATA_POST_NUMBER).getPostID();
@@ -73,10 +74,31 @@ public class ReduxTestRunner {
 
 //		qgp.setUp(dsdf);
 //		qgp.initializeIndividualFeedbackPosts(dsdf, false);
+		
+		List<String[]> quizzesToGrade = new ArrayList();
+		quizzesToGrade.add(new String[] {"HW3 Caching", "grades\\hw3\\quizzes\\Caching.csv", "grades\\hw3\\solutions\\Caching Quiz Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"HW3 Docker", "grades\\hw3\\quizzes\\Docker.csv", "grades\\hw3\\solutions\\Docker Quiz Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"HW3 Client-Server", "grades\\hw3\\quizzes\\Client Server.csv", "grades\\hw3\\solutions\\Client-Server Quiz Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"HW3 Bash", "grades\\hw3\\quizzes\\Bash.csv", "grades\\hw3\\solutions\\Bash Quiz Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"HW3 Second Exam Practice", "grades\\hw3\\quizzes\\Second Exam Practice.csv", "grades\\hw3\\solutions\\Second Exam Practice Solutions.csv"});
+
+		
+//		for (String[] quizTriple : quizzesToGrade)
+//			qgp.createEnhancedRubric(dsdf, quizTriple[0], quizTriple[1], quizTriple[2], false);
+//		
+//		for (String[] quizTriple : quizzesToGrade)
+//			qgp.createPrivateFeedback(dsdf, quizTriple[0], quizTriple[1], false);
+//
+//		for (String[] quizTriple : quizzesToGrade)
+//			qgp.makeFeedbackVisible(dsdf, quizTriple[0]);
+		
+		for (String[] quizTriple : quizzesToGrade)
+			qgp.exportGradedSubmissions(dsdf, quizTriple[0], "grades\\hw3\\exports", false);
+		
 //		qgp.createEnhancedRubric(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv", true);
 //		qgp.createPrivateFeedback(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", true);
 //		qgp.makeFeedbackVisible(dsdf, "File-Systems");
-		qgp.exportGrades(dsdf, "File-Systems");
+//		qgp.exportGrades(dsdf, "File-Systems");
 		
 //		df.createFollowup(postID, body, editor, instructorOnly)
 		
