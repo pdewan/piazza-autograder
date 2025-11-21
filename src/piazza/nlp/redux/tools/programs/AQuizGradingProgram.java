@@ -4,6 +4,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.text.StringEscapeUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
@@ -28,6 +29,7 @@ import piazza.nlp.redux.general.ForumPost.PostType;
 import piazza.nlp.redux.general.ForumPost.PostVisibility;
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,6 +47,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AQuizGradingProgram extends AnAbstractForumProgram implements ForumProgram {
 
@@ -344,6 +349,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 //		System.out.println(quizSubmissions.keySet());
 //		System.exit(0);
 //		
+		System.out.println(instructorSolutions.keySet());
 		
 		for (String question : quizSubmissions.keySet()) {
 		
@@ -353,10 +359,12 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			String questionType = questionData.getString("questionType");
 			boolean extraCredit = questionData.getBoolean("extraCredit");
 			
-			// if the question is listed in the instructor solutions, construct a rubric for it
-			String questionKey = question.split(" -- Explain your")[0].strip();
-			if (instructorSolutions.has(questionKey)) {
+//			System.out.println(question);
 			
+			// if the question is listed in the instructor solutions, construct a rubric for it
+			String questionKey = question.split(" -- Explain your")[0].split(" -- Justify your")[0].strip();
+			if (instructorSolutions.has(questionKey)) {
+				
 			// if the question has not been auto-graded by Google Forms, construct a rubric for it
 			// TODO: do we ever need to have it look at other types of questions?
 //			if (questionType.equals("FreeResponse")) {
@@ -479,8 +487,13 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				
 				
 				// TODO: iterate through these in order?
-//				System.out.println("quizSubmissions: " + quizSubmissions);
-
+				System.out.println("Question: " + question);
+				
+				System.out.println(quizSubmissions.keySet());
+				System.out.println();
+				System.out.println();
+				System.out.println();
+				
 				
 				// get the rubric for this specific question
 				JSONObject questionRubric = quizRubric.getJSONObject(question);
@@ -496,10 +509,15 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 				
 				// otherwise, get the student's answer
 				String answer = studentSubmissions.getJSONObject(studentUniversityID).getString("answer");
+				String score = studentSubmissions.getJSONObject(studentUniversityID).getString("score");
+				
+				System.out.println(question);
+				System.out.println(score);
+				System.out.println();
 				
 				// if the question has not been auto-graded by Google Forms, grade it using the LLM
 //				if (questionType.equals("FreeResponse")) { // TODO: do we ever need to have it look at other types of questions?
-				if (answer.equals("--")) {
+				if (score.equals("--")) {			
 					
 					// get the question info
 					int questionNumber = questionRubric.getInt("question number");
@@ -553,7 +571,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 			
 			// look through all the children of the individual feedback post
 			for (Map<String, Object> c : postChildren) {
-				if (c.get("type").equals("followup")) {
+				
+				Map<String, Object> config = (Map<String, Object>) c.getOrDefault("config", new HashMap());
+				if (c.get("type").equals("followup") && (Boolean) config.getOrDefault("ionly", false)) {
 					
 					// get the text of the followup
 					String currentContent = null;
@@ -594,9 +614,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	
 	
 	/* STEP 4 (automated): retrieve the (potentially modified) feedback scores from Piazza, export as CSV in Canvas format */
-	/*		also exports a log of followup interactions, and deletes the feedback followups */
+	/*		also exports a log of followup interactions, and deletes the feedback followups (if desired) */
 	// TODO: parameter for spreadsheet of responses
-	public String exportGrades(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, Map<Date, Double> submissionDateMultipliers) {
+//	public String exportGrades(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, Map<Date, Double> submissionDateMultipliers) {
 		
 		// if no map of due dates and score multipliers is provided, create an empty map
 //		if (submissionDateMultipliers == null) {
@@ -619,6 +639,9 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		// otherwise, use what was in the spreadsheet
 		
 		// make sure to add up for total column
+		
+		
+		//deleteFollowupsAfterExporting
 		
 		
 		
@@ -655,32 +678,59 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		
 		*/
 		
-		return null; // TODO: return path of exported file (or directory?)
-		
-	}
+//		return null; // TODO: return path of exported file (or directory?)
+//		
+//	}
 	
-	/* STEP 4 (automated): retrieve the (potentially modified) feedback scores from Piazza, export as CSV in Canvas format */
-	/*		also exports a log of followup interactions, and deletes the feedback followups */
-	public String exportGradedSubmissions(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String exportDirectory, boolean parseIDFromEmail) {
+	
+	
+	/*
+	{anon=no, folders=[], data=null, no_upvotes=0, subject=Quiz: HW3 Caching
+	Question Text: 12. In the absolute name problem, explain the reasoning for giving preference to cache entries for nodes at higher-levels in the tree. Let us call this the Higher-Level policy.
+	Your Answer: The higher-level nodes have the most descendants. If we assume that all nodes are equally likely to be accessed, the nodes with the most descendants provide the most opportunities to speed up accesses by using their cached values.
+	AI Score: 5.0/5.0
+	AI Feedback: Strong explanation that higher-level nodes have more descendants, so their caches benefit many lookups; noting equal-likelihood supports the argument (C1). Well done.
+	---
+	See post @255 for the grading rubric. If you believe the AI system made a mistake or you disagree with its assigned score and feedback, please reply to this followup comment with an explanation of your case., created=2025-11-12T22:16:10Z, bucket_order=3, bucket_name=Today, type=followup, tag_good=[], uid=lljvnbpqdze3xm, children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}], tag_good_arr=[], no_answer=1, id=mhwk7io4rt456y, updated=2025-11-18T20:04:17Z, config={editor=md, ionly=true}}
+
+	 */
+	
+	// children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}]
+	
+	
+	
+	// TODO: create parseIDFromEmail version, or just scrap that altogether?
+	
+	
+	
+	/* STEP 4 (automated): retrieve the (potentially modified) feedback scores from Piazza, export as CSV in Google Forms format */
+	/*		also exports a log of followup interactions, and optionally deletes the feedback followups */
+	public String exportGradedSubmissions(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String responsesFilepath, String exportDirectory, boolean deleteFollowupsAfterExporting) {
 		
-		
-		
-		
-		
-		
+		// create an empty JSON objecy for the log file
+		String logFilename = quizIdentifier + "_followup_log.json";
+		JSONObject followupLog = new JSONObject();
 		
 		// fetch the feedback posts for each student
 		DiscussionForum forum = dataStoreForum.getForum();
 		Map<String, String> individualFeedbackPostIDs = (Map<String, String>) dataStoreForum.getDataValue("individualFeedbackPosts");
-
+		Map<String, String> studentIDMap = retrieveStudentIDsFromEmails(forum, "unc.edu");
+		
 		for (String studentID : individualFeedbackPostIDs.keySet()) {
 			
+			// fetch the student's feedback
+			String studentUniversityID = studentIDMap.get(studentID);
 			ForumPost individualFeedbackPost = forum.getPost(individualFeedbackPostIDs.get(studentID));
 			Map<String, Object> individualFeedbackPostData = individualFeedbackPost.getAllData();
 			List<Map<String, Object>> postChildren = (List<Map<String, Object>>) individualFeedbackPostData.get("children");
 			
+			// initialize an array of entries for the log
+			JSONArray studentEntries = new JSONArray();
+			followupLog.put(studentUniversityID, studentEntries);
+			
 			// look through all the children of the individual feedback post
 			for (Map<String, Object> c : postChildren) {
+				
 				if (c.get("type").equals("followup")) {
 					
 					// get the text of the followup
@@ -692,49 +742,69 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 						currentContent = (String) c.get("subject");
 					}
 					
-					// get the ID of the followup
-					String followupID = null;
-					if (c.containsKey("cid")) {
-						followupID = (String) c.get("cid");
-					} else if (c.containsKey("id")) {
-						followupID = (String) c.get("id");
-					}
-					
 					// if the followup corresponds to this quiz, add it to the log and delete it
 					if (currentContent.contains("**Quiz:** " + quizIdentifier) || currentContent.contains("Quiz: " + quizIdentifier)) {
 						
+						// collect the followup information to be logged
+						Map<String, Object> followupData = parseIndividualFeedback(currentContent);
+						JSONObject logEntry = new JSONObject(followupData);
+						logEntry.put("User", forum.getUser((String) c.get("uid")).getName());
+						logEntry.put("Last Updated", c.get("updated"));
 						
-						// TODO: NEED TO APPEND TO THIS LOG FILE SO THAT IF IT ERRORS OUT WE DON'T LOSE ANYTHING
+						// add any replies to the log
+						List<Map<String, Object>> followupChilren = (List<Map<String, Object>>) c.get("children");
+						JSONArray replies = new JSONArray();
+						for (Map<String, Object> r : followupChilren) {
+							JSONObject reply = new JSONObject();
+							reply.put("User", forum.getUser((String) r.get("uid")).getName());
+							reply.put("Text", r.get("subject"));
+							reply.put("Last Updated", r.get("updated"));
+							replies.put(reply);
+						}
+						logEntry.put("Replies", replies);
 						
-						// TODO: NEED TO GET REPLIES TO THOSE CHILDREN
+						// update the log object and write it to the log file
+						studentEntries.put(logEntry);
+						followupLog.put(studentUniversityID, studentEntries);
+						try (FileWriter file = new FileWriter(exportDirectory + "/" + logFilename)) {
+						    file.write(followupLog.toString(4)); // Use toString(4) for pretty printing (indentation of 4)
+						    file.flush();
+						} catch (IOException e) {
+							System.err.println("Error writing to log file: " + e.getMessage());
+						}			
 						
-						System.out.println(c);
-						String authorName = forum.getUser((String) c.get("uid")).getName();
-						
-						
-						/*
-						{anon=no, folders=[], data=null, no_upvotes=0, subject=Quiz: HW3 Caching
-						Question Text: 12. In the absolute name problem, explain the reasoning for giving preference to cache entries for nodes at higher-levels in the tree. Let us call this the Higher-Level policy.
-						Your Answer: The higher-level nodes have the most descendants. If we assume that all nodes are equally likely to be accessed, the nodes with the most descendants provide the most opportunities to speed up accesses by using their cached values.
-						AI Score: 5.0/5.0
-						AI Feedback: Strong explanation that higher-level nodes have more descendants, so their caches benefit many lookups; noting equal-likelihood supports the argument (C1). Well done.
-						---
-						See post @255 for the grading rubric. If you believe the AI system made a mistake or you disagree with its assigned score and feedback, please reply to this followup comment with an explanation of your case., created=2025-11-12T22:16:10Z, bucket_order=3, bucket_name=Today, type=followup, tag_good=[], uid=lljvnbpqdze3xm, children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}], tag_good_arr=[], no_answer=1, id=mhwk7io4rt456y, updated=2025-11-18T20:04:17Z, config={editor=md, ionly=true}}
-
-						 */
-						
-						// children=[{anon=no, folders=[], data=null, subject=I DISAGREE WITH THIS!!, created=2025-11-18T20:04:10Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi504v6gogg5x6, updated=2025-11-18T20:04:10Z, config={editor=plain, ionly=true}}, {anon=no, folders=[], data=null, subject=why do you disagree?, created=2025-11-18T20:04:17Z, bucket_order=3, bucket_name=Today, type=feedback, tag_good=[], uid=lljvnbpqdze3xm, children=[], tag_good_arr=[], id=mi50516auqe692, updated=2025-11-18T20:04:17Z, config={editor=plain, ionly=true}}]
+						// extract grading info from the followup
+						double score = (double) followupData.getOrDefault("Instructor Score", followupData.get("AI Score"));
+						String feedback = (String) followupData.getOrDefault("Instructor Feedback", followupData.get("AI Feedback"));
 						
 						
-					}
+		
+						// TODO: load the responses from responsesFilepath, and create a new spreadsheet in exportDirectory with the same format
+							// this new spreadsheet should be updated with the new score and feedback for each question
+							// the "Onyen" column should be used as the identifying column, with studentUniversityID as the key
+						
 				
+						
+						// if specified, delete the feedback followup
+						if (deleteFollowupsAfterExporting) {
+							
+							// get the ID of the followup
+							String followupID = null;
+							if (c.containsKey("cid")) {
+								followupID = (String) c.get("cid");
+							} else if (c.containsKey("id")) {
+								followupID = (String) c.get("id");
+							}
+							
+							forum.deletePost(followupID);
+							
+						}
+
+					}
 				}
 			}
-		
-		
-		
+
 		}
-		
 		
 		return null;
 		
@@ -745,7 +815,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	public String convertSubmissionsToGradebook(String quizIdentifier, String gradedResponsesFilepath, Map<Date, Double> submissionDateMultipliers, boolean parseIDFromEmail) {
 	
 		
-		
+		// extra credit
 		
 		
 		
@@ -869,35 +939,41 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		
 	}
 	
+	
+	
 	// given followup text, parse out the individual feedback items
 	protected Map<String, Object> parseIndividualFeedback(String followupText) {
 		
-        Map<String, Object> items = new HashMap<>();
-        
-        // TODO: make sure AI response is a single line.
-        
-        String[] lines = followupText.split("\n");
-		for (String l : lines) {
+		// trim instructions from the end
+		followupText = followupText.split("\\n---\\nSee post")[0];
+		
+		// define the possible keys
+		Map<String, Object> items = new HashMap<>();
+		List<String> keys = new ArrayList<>(Arrays.asList("Quiz", "Question Number", "Question Text", "Your Answer", "AI Score", "AI Feedback", "Instructor Score", "Instructor Feedback"));
+		
+		// iterate through the list in reverse order, parsing out the keys
+		// TODO: make this more robust so the order doesn't matter
+		Collections.reverse(keys);
+		for (String k : keys) {
+			if (followupText.contains(k + ":")) {
 			
-			String[] parts = l.split(":", 2);
-            if (parts.length == 2) {
-            
-            	String key = parts[0].trim();
-            	String value = parts[1].trim();
-            	
-            	if (key.equals("AI Score") || key.equals("Instructor Score"))
+				String[] splitText = followupText.split(k + ":");
+				String key = k;
+				String value = splitText[1].trim();
+				followupText = splitText[0];
+				
+				if (key.equals("AI Score") || key.equals("Instructor Score"))
             		items.put(key, Double.valueOf(value.split("/")[0]));
             	else if (key.equals("Question Number"))
             		items.put(key, Integer.valueOf(value));            		
             	else
             		items.put(key, value);
-            	
-            }
-            
+				
+			}
 		}
-        		
-        return items;
 		
+		return items;
+			
 	}
 	
 	

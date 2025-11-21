@@ -84,7 +84,7 @@ public class AGoogleFormQuizParser {
             String q = header[i], s = header[i+1], f = header[i+2];
         
             // skip the non-graded questions
-            if (q.toLowerCase().equals("onyen") || q.toLowerCase().equals("anonymous id") || q.toLowerCase().contains("text file")) // TODO: is this okay?
+            if (q.toLowerCase().equals("onyen") || q.toLowerCase().equals("anonymous id") || q.toLowerCase().contains("(alt)")) // TODO: is this okay?
             	continue;
             
             // parse the graded questions

@@ -22,7 +22,8 @@ public class ReduxTestRunner {
 
 	public static void main(String[] args) {		
 		
-		final int DATA_POST_NUMBER = 40; // TODO: was 40 - 33
+		final int DATA_POST_NUMBER = 40; // TEST
+//		final int DATA_POST_NUMBER = 33; // COMP89
 		
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
@@ -77,23 +78,32 @@ public class ReduxTestRunner {
 		
 		List<String[]> quizzesToGrade = new ArrayList();
 		quizzesToGrade.add(new String[] {"HW3 Caching", "grades\\hw3\\quizzes\\Caching.csv", "grades\\hw3\\solutions\\Caching Quiz Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"HW3 Docker", "grades\\hw3\\quizzes\\Docker.csv", "grades\\hw3\\solutions\\Docker Quiz Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"HW3 Client-Server", "grades\\hw3\\quizzes\\Client Server.csv", "grades\\hw3\\solutions\\Client-Server Quiz Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"HW3 Bash", "grades\\hw3\\quizzes\\Bash.csv", "grades\\hw3\\solutions\\Bash Quiz Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"HW3 Second Exam Practice", "grades\\hw3\\quizzes\\Second Exam Practice.csv", "grades\\hw3\\solutions\\Second Exam Practice Solutions.csv"});
+		quizzesToGrade.add(new String[] {"HW3 Docker", "grades\\hw3\\quizzes\\Docker.csv", "grades\\hw3\\solutions\\Docker Quiz Solutions.csv"});
+		quizzesToGrade.add(new String[] {"HW3 Client-Server", "grades\\hw3\\quizzes\\Client Server.csv", "grades\\hw3\\solutions\\Client-Server Quiz Solutions.csv"});
+		quizzesToGrade.add(new String[] {"HW3 Bash", "grades\\hw3\\quizzes\\Bash.csv", "grades\\hw3\\solutions\\Bash Quiz Solutions.csv"});
+		quizzesToGrade.add(new String[] {"HW3 Second Exam Practice", "grades\\hw3\\quizzes\\Second Exam Practice.csv", "grades\\hw3\\solutions\\Second Exam Practice Solutions.csv"});
+
+//		quizzesToGrade.add(new String[] {"CW2 Command Anatomy", "grades\\cw2\\quizzes\\Anatomy of a Command.csv", "grades\\cw2\\solutions\\Anatomy of a Command Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"CW3 Basic Bash Application", "grades\\cw3\\quizzes\\BasicBashApplication.csv", "grades\\cw3\\solutions\\Basic Bash Application Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"CW3 Bash RNA Analysis", "grades\\cw3\\quizzes\\RNA-Bash.csv", "grades\\cw3\\solutions\\Bash RNA Analysis Solutions.csv"});
+		
+//		quizzesToGrade.add(new String[] {"CW4 Variables", "grades\\cw4\\quizzes\\Variables.csv", "grades\\cw4\\solutions\\Variables Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"CW4 PATH", "grades\\cw4\\quizzes\\PATH.csv", "grades\\cw4\\solutions\\PATH Solutions.csv"});
+//		quizzesToGrade.add(new String[] {"CW4 Parameters", "grades\\cw4\\quizzes\\Parameters Formal and Actual.csv", "grades\\cw4\\solutions\\Parameters Solutions.csv"});
 
 		
+
 //		for (String[] quizTriple : quizzesToGrade)
 //			qgp.createEnhancedRubric(dsdf, quizTriple[0], quizTriple[1], quizTriple[2], false);
-//		
+		
 //		for (String[] quizTriple : quizzesToGrade)
 //			qgp.createPrivateFeedback(dsdf, quizTriple[0], quizTriple[1], false);
-//
+
 //		for (String[] quizTriple : quizzesToGrade)
 //			qgp.makeFeedbackVisible(dsdf, quizTriple[0]);
 		
 		for (String[] quizTriple : quizzesToGrade)
-			qgp.exportGradedSubmissions(dsdf, quizTriple[0], "grades\\hw3\\exports", false);
+			qgp.exportGradedSubmissions(dsdf, quizTriple[0], quizTriple[1], "grades\\hw3\\exports", false);
 		
 //		qgp.createEnhancedRubric(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv", true);
 //		qgp.createPrivateFeedback(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", true);
