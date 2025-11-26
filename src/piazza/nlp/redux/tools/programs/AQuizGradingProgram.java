@@ -419,6 +419,8 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 					e.printStackTrace();
 				}
 				
+				System.out.println(enhancedRubric);
+				
 				// add the enhanced rubric to the JSON rubric for the whole quiz
 				JSONObject questionEntry = new JSONObject(enhancedRubric);
 				questionEntry.put("question number", questionNumber);
@@ -707,9 +709,12 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 	/*		also exports a log of followup interactions, and optionally deletes the feedback followups */
 	public String exportGradedSubmissions(DataStoreDiscussionForum dataStoreForum, String quizIdentifier, String responsesFilepath, String exportDirectory, boolean deleteFollowupsAfterExporting) {
 		
-		// create an empty JSON objecy for the log file
+		// create an empty JSON object for the log file
 		String logFilename = quizIdentifier + "_followup_log.json";
 		JSONObject followupLog = new JSONObject();
+		
+		// create a map for the grade updates
+		Map<String, Map<String, Object>> allStudentGradingData = new HashMap<>();
 		
 		// fetch the feedback posts for each student
 		DiscussionForum forum = dataStoreForum.getForum();
@@ -774,30 +779,26 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 						}			
 						
 						// extract grading info from the followup
+						System.out.println("\nFOLLOWUP: " + followupData);
 						double score = (double) followupData.getOrDefault("Instructor Score", followupData.get("AI Score"));
 						String feedback = (String) followupData.getOrDefault("Instructor Feedback", followupData.get("AI Feedback"));
+						String questionText = (String) followupData.get("Question Text");
+						Map<String, Object> grades = new HashMap<>();
+						grades.put("Score", score);
+						grades.put("Feedback", feedback);
 						
-						
-		
-						// TODO: load the responses from responsesFilepath, and create a new spreadsheet in exportDirectory with the same format
-							// this new spreadsheet should be updated with the new score and feedback for each question
-							// the "Onyen" column should be used as the identifying column, with studentUniversityID as the key
-						
-				
+						// add grading info to the main map (creating inner maps if needed)
+						allStudentGradingData
+							.computeIfAbsent(studentUniversityID, k -> new HashMap<>())
+							.put(questionText, grades);
 						
 						// if specified, delete the feedback followup
 						if (deleteFollowupsAfterExporting) {
 							
 							// get the ID of the followup
-							String followupID = null;
-							if (c.containsKey("cid")) {
-								followupID = (String) c.get("cid");
-							} else if (c.containsKey("id")) {
-								followupID = (String) c.get("id");
-							}
-							
+							String followupID = c.containsKey("cid") ? (String) c.get("cid") : (String) c.get("id");
 							forum.deletePost(followupID);
-							
+			
 						}
 
 					}
@@ -806,8 +807,11 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 
 		}
 		
-		return null;
-		
+		// export graded submissions
+		String exportFilename = exportDirectory + "/" + quizIdentifier + "_graded_responses.csv";
+		AGoogleFormQuizParser.updateGradesCSV(responsesFilepath, exportFilename, "Onyen", allStudentGradingData);
+		return exportFilename;
+
 	}
 	
 		
@@ -818,7 +822,7 @@ public class AQuizGradingProgram extends AnAbstractForumProgram implements Forum
 		// extra credit
 		
 		
-		
+		// TODO: do cleaned spreadsheet combined for all quizzes in an assignment?
 		
 		
 		

@@ -22,13 +22,13 @@ public class ReduxTestRunner {
 
 	public static void main(String[] args) {		
 		
-		final int DATA_POST_NUMBER = 40; // TEST
-//		final int DATA_POST_NUMBER = 33; // COMP89
+//		final int DATA_POST_NUMBER = 40; // TEST
+		final int DATA_POST_NUMBER = 33; // COMP89
 		
 		String email = System.getenv("PIAZZA_EMAIL");
 		String password = System.getenv("PIAZZA_PASSWORD");
-		String classID = System.getenv("PIAZZA_CLASS_ID");
-//		String classID = "mdrjw1sfh122nw"; // TODO
+//		String classID = System.getenv("PIAZZA_CLASS_ID");
+		String classID = "mdrjw1sfh122nw"; // TODO
 
 		PiazzaForum df = new APiazzaForum("TestPiazzaCourse", classID, email, password);
 		String dataPostID = df.getPost(DATA_POST_NUMBER).getPostID();
@@ -83,13 +83,31 @@ public class ReduxTestRunner {
 		quizzesToGrade.add(new String[] {"HW3 Bash", "grades\\hw3\\quizzes\\Bash.csv", "grades\\hw3\\solutions\\Bash Quiz Solutions.csv"});
 		quizzesToGrade.add(new String[] {"HW3 Second Exam Practice", "grades\\hw3\\quizzes\\Second Exam Practice.csv", "grades\\hw3\\solutions\\Second Exam Practice Solutions.csv"});
 
-//		quizzesToGrade.add(new String[] {"CW2 Command Anatomy", "grades\\cw2\\quizzes\\Anatomy of a Command.csv", "grades\\cw2\\solutions\\Anatomy of a Command Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"CW3 Basic Bash Application", "grades\\cw3\\quizzes\\BasicBashApplication.csv", "grades\\cw3\\solutions\\Basic Bash Application Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"CW3 Bash RNA Analysis", "grades\\cw3\\quizzes\\RNA-Bash.csv", "grades\\cw3\\solutions\\Bash RNA Analysis Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW2 Command Anatomy", "grades\\cw2\\quizzes\\Anatomy of a Command.csv", "grades\\cw2\\solutions\\Anatomy of a Command Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW3 Basic Bash Application", "grades\\cw3\\quizzes\\BasicBashApplication.csv", "grades\\cw3\\solutions\\Basic Bash Application Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW3 Bash RNA Analysis", "grades\\cw3\\quizzes\\RNA-Bash.csv", "grades\\cw3\\solutions\\Bash RNA Analysis Solutions.csv"});
 		
-//		quizzesToGrade.add(new String[] {"CW4 Variables", "grades\\cw4\\quizzes\\Variables.csv", "grades\\cw4\\solutions\\Variables Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"CW4 PATH", "grades\\cw4\\quizzes\\PATH.csv", "grades\\cw4\\solutions\\PATH Solutions.csv"});
-//		quizzesToGrade.add(new String[] {"CW4 Parameters", "grades\\cw4\\quizzes\\Parameters Formal and Actual.csv", "grades\\cw4\\solutions\\Parameters Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW4 Variables", "grades\\cw4\\quizzes\\Variables.csv", "grades\\cw4\\solutions\\Variables Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW4 PATH", "grades\\cw4\\quizzes\\PATH.csv", "grades\\cw4\\solutions\\PATH Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW4 Parameters", "grades\\cw4\\quizzes\\Parameters Formal and Actual.csv", "grades\\cw4\\solutions\\Parameters Solutions.csv"});
+
+		quizzesToGrade.add(new String[] {"CW5 Compiler vs Interpreter", "grades\\cw5\\quizzes\\Compiler vs Interpreter.csv", "grades\\cw5\\solutions\\CW5 Compiler vs Interpreter Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW5 read and printf", "grades\\cw5\\quizzes\\read and printf.csv", "grades\\cw5\\solutions\\CW5 read and printf Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW5 Tracing Processes and Files", "grades\\cw5\\quizzes\\Tracing Processes and Files.csv", "grades\\cw5\\solutions\\CW5 Tracing Files and Processes Solutions.csv"});
+
+		quizzesToGrade.add(new String[] {"CW6 Directory Grep Head Loops", "grades\\cw6\\quizzes\\DirectoryGrepHeadLoops.csv", "grades\\cw6\\solutions\\CW6 Directory Grep Head Loops Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW6 Other Loops", "grades\\cw6\\quizzes\\OtherLoops.csv", "grades\\cw6\\solutions\\CW6 Other Loops Solutions.csv"});
+
+		quizzesToGrade.add(new String[] {"CW7 Conditionals", "grades\\cw7\\quizzes\\Conditionals.csv", "grades\\cw7\\solutions\\CW7 Conditionals Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW7 Get and Put", "grades\\cw7\\quizzes\\Caching_GetAndPut.csv", "grades\\cw7\\solutions\\CW7 Get and Put Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW7 Caching Recursion", "grades\\cw7\\quizzes\\Caching Recursion.csv", "grades\\cw7\\solutions\\CW7 Caching Recursion Solutions.csv"});
+		
+		quizzesToGrade.add(new String[] {"CW8 Timed Slow Operations", "grades\\cw8\\quizzes\\TimedSlowOperations.csv", "grades\\cw8\\solutions\\CW8 Timed Slow Operations Solutions.csv"});
+		quizzesToGrade.add(new String[] {"CW8 CombForkJoin with Arrays", "grades\\cw8\\quizzes\\CombForkJoinWithArrays.csv", "grades\\cw8\\solutions\\CW8 CombForkJoin with Arrays Solutions.csv"});
+
+		
+		
+//		quizzesToGrade.add(new String[] {"HW1 File Systems UPDATED", "grades\\hw1\\quizzes\\File-Systems UPDATED.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv"});
 
 		
 
@@ -103,7 +121,7 @@ public class ReduxTestRunner {
 //			qgp.makeFeedbackVisible(dsdf, quizTriple[0]);
 		
 		for (String[] quizTriple : quizzesToGrade)
-			qgp.exportGradedSubmissions(dsdf, quizTriple[0], quizTriple[1], "grades\\hw3\\exports", false);
+			qgp.exportGradedSubmissions(dsdf, quizTriple[0], quizTriple[1], "grades\\exports", false);
 		
 //		qgp.createEnhancedRubric(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", "grades\\hw1\\solutions\\File-Systems Solutions.csv", true);
 //		qgp.createPrivateFeedback(dsdf, "File-Systems", "grades\\hw1\\quizzes\\File-Systems.csv", true);

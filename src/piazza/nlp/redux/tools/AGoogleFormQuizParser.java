@@ -1,12 +1,18 @@
 package piazza.nlp.redux.tools;
 
+import org.dflib.csv.Csv;
+import org.dflib.DataFrame;
+import org.dflib.RowMapper;
+import org.dflib.Series;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,8 +28,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
 import com.opencsv.RFC4180Parser;
 import com.opencsv.exceptions.CsvValidationException;
+
+import com.opencsv.CSVWriter;
+import java.io.FileWriter;
+import java.util.regex.Pattern;
+
 
 //TODO: interface?
 
@@ -219,6 +231,251 @@ public class AGoogleFormQuizParser {
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    /**
+     * Updates grades using EXACT String matching.
+     * Uses RFC4180Parser for backslash support.
+     * Disambiguates duplicate columns (e.g. "Explain your...") by prepending the previous question.
+     */
+    public static void updateGradesCSV(String sourceCsvPath, String destCsvPath, String idColumnHeader, Map<String, Map<String, Object>> allStudentGrades) {
+        System.out.println("--- Starting CSV Update (Exact Match + Disambiguation) ---");
+        try {
+            List<String[]> allRows = new ArrayList<>();
+            
+            // 1. Use RFC4180Parser to handle backslashes correctly
+            RFC4180Parser rfc4180Parser = new RFC4180Parser();
+            CSVReaderBuilder builder = new CSVReaderBuilder(new FileReader(sourceCsvPath));
+            builder.withCSVParser(rfc4180Parser);
+            
+            try (CSVReader reader = builder.build()) {
+                allRows = reader.readAll();
+            }
+            
+            if (allRows.isEmpty()) return;
+
+            String[] header = allRows.get(0);
+            
+            // 2. Identify ID and Total Score Columns
+            int idColIdx = -1;
+            int totalScoreIdx = -1;
+            for (int i = 0; i < header.length; i++) {
+                String col = header[i].trim();
+                if (col.equalsIgnoreCase(idColumnHeader)) {
+                    idColIdx = i;
+                } else if (col.equalsIgnoreCase("Total score")) {
+                    totalScoreIdx = i;
+                }
+            }
+
+            if (idColIdx == -1) {
+                System.err.println("CRITICAL ERROR: ID Column '" + idColumnHeader + "' not found.");
+                return;
+            }
+
+            // 3. PRE-CALCULATE Lookup Keys (Disambiguation Logic)
+            // This mirrors the logic in readQuizGrades to handle "Explain your..." columns
+            String[] columnLookupKeys = new String[header.length];
+            String lastBaseQuestion = null;
+
+            for (int i = 0; i < header.length; i++) {
+                String colName = header[i].trim();
+                boolean isScore = colName.endsWith("[Score]");
+                boolean isFeedback = colName.endsWith("[Feedback]");
+
+                if (isScore || isFeedback) {
+                    String baseQ = colName.substring(0, colName.lastIndexOf('[')).trim();
+                    
+                    // Skip identifiers
+                    boolean isIdentifier = baseQ.equalsIgnoreCase("Onyen") || 
+                                           baseQ.equalsIgnoreCase("Anonymous ID") || 
+                                           baseQ.toLowerCase().contains("(alt)"); // TODO: handle this by giving alt questions a 0/0 now instead of ungraded?
+
+                    if (isIdentifier) {
+                        columnLookupKeys[i] = baseQ; // Use as-is, likely won't match student data anyway
+                    } 
+                    // Handle dependent questions
+                    else if (baseQ.startsWith("Explain your") || baseQ.startsWith("Justify your")) {
+                        if (lastBaseQuestion != null) {
+                            columnLookupKeys[i] = lastBaseQuestion + " -- " + baseQ;
+                        } else {
+                            columnLookupKeys[i] = baseQ;
+                        }
+                    } 
+                    // Standard question
+                    else {
+                        columnLookupKeys[i] = baseQ;
+                        lastBaseQuestion = baseQ;
+                    }
+                }
+            }
+
+            // 4. Iterate Rows and Update
+            int updatedRows = 0;
+            for (int i = 1; i < allRows.size(); i++) {
+                String[] row = allRows.get(i);
+                if (row.length <= idColIdx) continue;
+
+                String studentID = row[idColIdx].trim();
+
+                if (allStudentGrades.containsKey(studentID)) {
+                    Map<String, Object> studentQuestions = allStudentGrades.get(studentID);
+                    boolean rowModified = false;
+                    double studentRunningTotal = 0.0;
+
+                    for (int colIdx = 0; colIdx < header.length; colIdx++) {
+                        // Skip if not a graded column
+                        if (columnLookupKeys[colIdx] == null) continue;
+
+                        String lookupKey = columnLookupKeys[colIdx];
+                        boolean isScore = header[colIdx].trim().endsWith("[Score]");
+                        
+                        // EXACT MATCH CHECK
+                        if (studentQuestions.containsKey(lookupKey)) {
+                            Map<String, Object> gradeData = (Map<String, Object>) studentQuestions.get(lookupKey);
+                            
+                            if (isScore) {
+                                Object newScoreObj = getFirst(gradeData, "Score", "Instructor Score", "AI Score");
+                                String currentCellVal = (colIdx < row.length) ? row[colIdx] : "";
+                                double scoreToSum = 0.0;
+
+                                if (newScoreObj != null) {
+                                    String newScoreStr = newScoreObj.toString().trim();
+                                    
+                                    if (newScoreStr.equals("--")) {
+                                        scoreToSum = 0.0;
+                                        String maxSuffix = extractMaxSuffix(currentCellVal);
+                                        String newVal = "--" + maxSuffix;
+                                        if (colIdx >= row.length) row = expandRow(row, header.length);
+                                        row[colIdx] = newVal;
+                                        rowModified = true;
+                                    } else {
+                                        scoreToSum = parseScoreValue(newScoreStr);
+                                        String maxSuffix = extractMaxSuffix(currentCellVal);
+                                        String newVal = String.format(java.util.Locale.US, "%.2f", scoreToSum) + maxSuffix;
+                                        if (colIdx >= row.length) row = expandRow(row, header.length);
+                                        row[colIdx] = newVal;
+                                        rowModified = true;
+                                    }
+                                } else {
+                                    scoreToSum = parseScoreValue(currentCellVal);
+                                }
+                                studentRunningTotal += scoreToSum;
+                            } else {
+                                // Feedback
+                                Object fb = getFirst(gradeData, "Feedback", "Instructor Feedback", "AI Feedback");
+                                if (fb != null) {
+                                    if (colIdx >= row.length) row = expandRow(row, header.length);
+                                    row[colIdx] = String.valueOf(fb);
+                                    rowModified = true;
+                                }
+                            }
+                        } else if (isScore) {
+                            // No match found -> Add existing score to total
+                            String currentCellVal = (colIdx < row.length) ? row[colIdx] : "";
+                            studentRunningTotal += parseScoreValue(currentCellVal);
+                        }
+                    }
+
+                    // 5. Update Total Score
+                    if (totalScoreIdx != -1) {
+                        String currentTotalVal = (totalScoreIdx < row.length) ? row[totalScoreIdx] : "";
+                        String maxTotalSuffix = extractMaxSuffix(currentTotalVal);
+                        
+                        String newTotalStr = String.format(java.util.Locale.US, "%.2f", studentRunningTotal) + maxTotalSuffix;
+                        
+                        if (totalScoreIdx >= row.length) row = expandRow(row, header.length);
+                        row[totalScoreIdx] = newTotalStr;
+                        rowModified = true;
+                    }
+
+                    allRows.set(i, row);
+                    if (rowModified) updatedRows++;
+                }
+            }
+
+            try (CSVWriter writer = new CSVWriter(new FileWriter(destCsvPath))) {
+                writer.writeAll(allRows);
+            }
+            System.out.println("Exported to: " + destCsvPath);
+            System.out.println("Updated Rows: " + updatedRows);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // --- Minimal Helpers (No Fuzzy Logic) ---
+
+    private static Object getFirst(Map<String, Object> map, String... keys) {
+        for (String k : keys) {
+            if (map.containsKey(k)) return map.get(k);
+        }
+        return null;
+    }
+
+    private static double parseScoreValue(String val) {
+        if (val == null || val.trim().isEmpty()) return 0.0;
+        String scorePart = val.split(" / ")[0].trim();
+        if (scorePart.equals("--")) return 0.0;
+        try {
+            return Double.parseDouble(scorePart);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    private static String extractMaxSuffix(String val) {
+        if (val != null && val.contains(" / ")) {
+            return val.substring(val.indexOf(" / "));
+        }
+        return "";
+    }
+
+    private static String[] expandRow(String[] row, int newSize) {
+        String[] newRow = new String[newSize];
+        System.arraycopy(row, 0, newRow, 0, row.length);
+        for(int i=row.length; i<newSize; i++) newRow[i] = "";
+        return newRow;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /* HELPER METHODS */
     
     static class QCols {
@@ -230,7 +487,7 @@ public class AGoogleFormQuizParser {
         return (idx >= 0 && idx < row.length) ? row[idx] : "";
     }
 
-    // Light normalization so minor spacing/case differences don�t fake uniqueness
+    // Light normalization so minor spacing/case differences don't fake uniqueness
     private static String normalize(String s) {
         return s.replaceAll("\\s+", " ").trim().toLowerCase(Locale.ROOT);
     }
